@@ -30,11 +30,11 @@ import org.firstinspires.ftc.robotcore.external.navigation.RelicRecoveryVuMark;
 
 import ftclib.FtcChoiceMenu;
 import ftclib.FtcGamepad;
-import ftclib.FtcMRRangeSensor;
 import ftclib.FtcMenu;
 import ftclib.FtcValueMenu;
 import trclib.TrcEvent;
 import trclib.TrcGameController;
+import trclib.TrcRobot;
 import trclib.TrcStateMachine;
 import trclib.TrcTimer;
 
@@ -52,13 +52,6 @@ public class FtcTest extends FtcTeleOp implements TrcGameController.ButtonHandle
         X_DISTANCE_DRIVE,
         Y_DISTANCE_DRIVE,
         GYRO_TURN,
-        VISION_TEST,
-        VISION_DRIVE,
-        LEFT_RANGE_DRIVE,
-        RIGHT_RANGE_DRIVE,
-        LEFT_SONAR_DRIVE,
-        FRONT_SONAR_DRIVE,
-        RIGHT_SONAR_DRIVE
     }   //enum Test
 
     private enum State
@@ -81,14 +74,9 @@ public class FtcTest extends FtcTeleOp implements TrcGameController.ButtonHandle
     private double driveTime = 0.0;
     private double driveDistance = 0.0;
     private double turnDegrees = 0.0;
-    private double rangeDistance = 0.0;
-    private double sonarDistance = 0.0;
 
     private CmdTimedDrive timedDriveCommand = null;
     private CmdPidDrive pidDriveCommand = null;
-    private CmdVisionDrive visionDriveCommand = null;
-    private CmdPidDrive rangeDriveCommand = null;
-    private CmdPidDrive sonarDriveCommand = null;
 
     private int motorIndex = 0;
 
@@ -140,40 +128,6 @@ public class FtcTest extends FtcTeleOp implements TrcGameController.ButtonHandle
                 pidDriveCommand = new CmdPidDrive(
                         robot, robot.pidDrive, 0.0, 0.0, 0.0, turnDegrees);
                 break;
-
-            case VISION_DRIVE:
-                visionDriveCommand = new CmdVisionDrive(robot);
-                break;
-
-            case LEFT_RANGE_DRIVE:
-            case RIGHT_RANGE_DRIVE:
-                if (Robot.USE_MRRANGE_SENSOR)
-                {
-                    robot.useRightSensorForX = test == Test.RIGHT_RANGE_DRIVE;
-                    robot.rangeXPidCtrl.setInverted(robot.useRightSensorForX);
-                    rangeDriveCommand = new CmdPidDrive(
-                            robot, robot.rangeXPidDrive, 0.0, rangeDistance, 0.0, 0.0);
-                }
-                break;
-
-            case LEFT_SONAR_DRIVE:
-            case RIGHT_SONAR_DRIVE:
-                if (Robot.USE_MAXBOTIX_SONAR_SENSOR)
-                {
-                    robot.useRightSensorForX = test == Test.RIGHT_SONAR_DRIVE;
-                    robot.sonarXPidCtrl.setInverted(robot.useRightSensorForX);
-                    sonarDriveCommand = new CmdPidDrive(
-                            robot, robot.sonarXPidDrive, 0.0, sonarDistance, 0.0, 0.0);
-                }
-                break;
-
-            case FRONT_SONAR_DRIVE:
-                if (Robot.USE_MAXBOTIX_SONAR_SENSOR)
-                {
-                    sonarDriveCommand = new CmdPidDrive(
-                            robot, robot.sonarYPidDrive, 0.0, 0.0, sonarDistance, 0.0);
-                }
-                break;
         }
 
         sm.start(State.START);
@@ -184,53 +138,15 @@ public class FtcTest extends FtcTeleOp implements TrcGameController.ButtonHandle
     //
 
     @Override
-    public void startMode()
+    public void startMode(TrcRobot.RunMode runMode)
     {
-        super.startMode();
-
-        if (test == Test.SENSORS_TEST)
-        {
-            if (robot.jewelColorTrigger != null)
-            {
-                robot.jewelColorTrigger.setEnabled(true);
-            }
-
-            if (robot.cryptoColorTrigger != null)
-            {
-                robot.redCryptoBarCount = 0;
-                robot.blueCryptoBarCount = 0;
-                robot.cryptoColorTrigger.setEnabled(true);
-            }
-        }
-
-        if (robot.sonarArray != null)
-        {
-            robot.sonarArray.startRanging(true);
-        }
+        super.startMode(runMode);
     }   //startMode
 
     @Override
-    public void stopMode()
+    public void stopMode(TrcRobot.RunMode runMode)
     {
-        super.stop();
-
-        if (robot.sonarArray != null)
-        {
-            robot.sonarArray.stopRanging();
-        }
-
-        if (test == Test.SENSORS_TEST)
-        {
-            if (robot.jewelColorTrigger != null)
-            {
-                robot.jewelColorTrigger.setEnabled(false);
-            }
-
-            if (robot.cryptoColorTrigger != null)
-            {
-                robot.cryptoColorTrigger.setEnabled(false);
-            }
-        }
+        super.stopMode(runMode);
 
         printPerformanceMetrics(robot.tracer);
     }   //stopMode
@@ -244,7 +160,6 @@ public class FtcTest extends FtcTeleOp implements TrcGameController.ButtonHandle
         switch (test)
         {
             case SENSORS_TEST:
-            case VISION_TEST:
                 //
                 // Allow TeleOp to run so we can control the robot in sensors test mode.
                 //
@@ -288,62 +203,14 @@ public class FtcTest extends FtcTeleOp implements TrcGameController.ButtonHandle
             case Y_DISTANCE_DRIVE:
             case GYRO_TURN:
                 dashboard.displayPrintf(9, "xPos=%.1f,yPos=%.1f,heading=%.1f",
-                                        robot.getInput(robot.encoderXPidCtrl),
-                                        robot.getInput(robot.encoderYPidCtrl),
-                                        robot.getInput(robot.gyroPidCtrl));
+                                        robot.driveBase.getXPosition(),
+                                        robot.driveBase.getYPosition(),
+                                        robot.driveBase.getHeading());
                 robot.encoderXPidCtrl.displayPidInfo(10);
                 robot.encoderYPidCtrl.displayPidInfo(12);
                 robot.gyroPidCtrl.displayPidInfo(14);
 
                 pidDriveCommand.cmdPeriodic(elapsedTime);
-                break;
-
-            case VISION_DRIVE:
-                dashboard.displayPrintf(9, "visionTarget=%.1f,heading=%.1f",
-                        robot.getInput(robot.visionPidCtrl),
-                        robot.getInput(robot.gyroPidCtrl));
-                robot.visionPidCtrl.displayPidInfo(10);
-                robot.gyroPidCtrl.displayPidInfo(12);
-
-                visionDriveCommand.cmdPeriodic(elapsedTime);
-                break;
-
-            case LEFT_RANGE_DRIVE:
-            case RIGHT_RANGE_DRIVE:
-                if (rangeDriveCommand != null)
-                {
-                    dashboard.displayPrintf(9, "rangeXDist=%.1f,heading=%.1f",
-                            robot.getInput(robot.rangeXPidCtrl), robot.getInput(robot.gyroPidCtrl));
-                    robot.rangeXPidCtrl.displayPidInfo(10);
-                    robot.gyroPidCtrl.displayPidInfo(12);
-
-                    rangeDriveCommand.cmdPeriodic(elapsedTime);
-                }
-                else
-                {
-                    dashboard.displayPrintf(9, "Range sensor is disabled.");
-                }
-                break;
-
-            case LEFT_SONAR_DRIVE:
-            case FRONT_SONAR_DRIVE:
-            case RIGHT_SONAR_DRIVE:
-                if (sonarDriveCommand != null)
-                {
-                    dashboard.displayPrintf(9, "sonarXDist=%.1f,sonarYDist=%.1f,heading=%.1f",
-                            robot.getInput(robot.sonarXPidCtrl),
-                            robot.getInput(robot.sonarYPidCtrl),
-                            robot.getInput(robot.gyroPidCtrl));
-                    robot.sonarXPidCtrl.displayPidInfo(10);
-                    robot.sonarYPidCtrl.displayPidInfo(12);
-                    robot.gyroPidCtrl.displayPidInfo(14);
-
-                    sonarDriveCommand.cmdPeriodic(elapsedTime);
-                }
-                else
-                {
-                    dashboard.displayPrintf(9, "Sonar sensors are disabled.");
-                }
                 break;
         }
     }   //runContinuous
@@ -363,12 +230,6 @@ public class FtcTest extends FtcTeleOp implements TrcGameController.ButtonHandle
         FtcValueMenu turnDegreesMenu = new FtcValueMenu(
                 "Turn degrees:", testMenu, robot, -360.0, 360.0, 5.0, 45.0,
                 " %.0f deg");
-        FtcValueMenu rangeDistanceMenu = new FtcValueMenu(
-                "Range distance:", testMenu, robot, 1.0, 50.0, 1.0, 12.0,
-                " %.0f in");
-        FtcValueMenu sonarDistanceMenu = new FtcValueMenu(
-                "Sonar distance:", testMenu, robot, 6.0, 50.0, 1.0, 12.0,
-                " %.0f in");
 
         //
         // Populate menus.
@@ -380,19 +241,6 @@ public class FtcTest extends FtcTeleOp implements TrcGameController.ButtonHandle
         testMenu.addChoice("X Distance drive", Test.X_DISTANCE_DRIVE, false, driveDistanceMenu);
         testMenu.addChoice("Y Distance drive", Test.Y_DISTANCE_DRIVE, false, driveDistanceMenu);
         testMenu.addChoice("Degrees turn", Test.GYRO_TURN, false, turnDegreesMenu);
-        testMenu.addChoice("Vision test", Test.VISION_TEST, false);
-        testMenu.addChoice("Vision drive", Test.VISION_DRIVE, false);
-        if (robot.USE_RANGE_DRIVE)
-        {
-            testMenu.addChoice("Left Range drive", Test.LEFT_RANGE_DRIVE, false, rangeDistanceMenu);
-            testMenu.addChoice("Right Range drive", Test.RIGHT_RANGE_DRIVE, false, rangeDistanceMenu);
-        }
-        if (robot.USE_SONAR_DRIVE)
-        {
-            testMenu.addChoice("Left Sonar drive", Test.LEFT_SONAR_DRIVE, false, sonarDistanceMenu);
-            testMenu.addChoice("Front Sonar drive", Test.FRONT_SONAR_DRIVE, false, sonarDistanceMenu);
-            testMenu.addChoice("Right Sonar drive", Test.RIGHT_SONAR_DRIVE, false, sonarDistanceMenu);
-        }
         //
         // Traverse menus.
         //
@@ -404,8 +252,6 @@ public class FtcTest extends FtcTeleOp implements TrcGameController.ButtonHandle
         driveTime = driveTimeMenu.getCurrentValue();
         driveDistance = driveDistanceMenu.getCurrentValue();
         turnDegrees = turnDegreesMenu.getCurrentValue();
-        rangeDistance = rangeDistanceMenu.getCurrentValue();
-        sonarDistance = sonarDistanceMenu.getCurrentValue();
         //
         // Show choices.
         //
@@ -433,44 +279,6 @@ public class FtcTest extends FtcTeleOp implements TrcGameController.ButtonHandle
             dashboard.displayPrintf(4, LABEL_WIDTH, "Gyro: ", "Rate=%.3f,Heading=%.1f",
                     robot.gyro.getZRotationRate().value, robot.gyro.getZHeading().value);
         }
-
-        if (robot.sonarArray != null)
-        {
-            dashboard.displayPrintf(5, LABEL_WIDTH, "Sonar: ", "L=%.3f,F=%.3f,R=%.3f",
-                    robot.sonarArray.getDistance(robot.LEFT_SONAR_INDEX).value,
-                    robot.sonarArray.getDistance(robot.FRONT_SONAR_INDEX).value,
-                    robot.sonarArray.getDistance(robot.RIGHT_SONAR_INDEX).value);
-        }
-        else if (robot.USE_MRRANGE_SENSOR)
-        {
-            dashboard.displayPrintf(5, LABEL_WIDTH, "MRRange: ", "L=%.1f,R=%.1f",
-                    robot.getRangeDistance(robot.leftRangeSensor), robot.getRangeDistance(robot.rightRangeSensor));
-        }
-
-        dashboard.displayPrintf(
-                6, LABEL_WIDTH, "Color: ", "Jewel=%s[%.0f/%.2f/%.2f]",
-                robot.getObjectColor(robot.jewelColorSensor), robot.getObjectHsvHue(robot.jewelColorSensor),
-                robot.getObjectHsvSaturation(robot.jewelColorSensor), robot.getObjectHsvValue(robot.jewelColorSensor));
-
-        dashboard.displayPrintf(9, LABEL_WIDTH, "Elevator: ", "Pwr=%.2f,Pos=%.3f,low=%s",
-                robot.glyphElevator.getPower(),
-                robot.glyphElevator.getPosition(),
-                robot.glyphElevator.elevatorLowerLimitSwitch.isActive());
-        robot.glyphElevator.elevatorPidCtrl.displayPidInfo(10);
-
-        dashboard.displayPrintf(12, LABEL_WIDTH, "RelicArm: ",
-                "Elbow:Pwr=%.2f,Pos=%.1f,low=%s,high=%s",
-                robot.relicArm.getElbowPower(),
-                robot.relicArm.elbow.getPosition(),
-                robot.relicArm.elbowLowerLimitSwitch.isActive(),
-                robot.relicArm.elbowUpperLimitSwitch.isActive());
-        robot.relicArm.elbowPidCtrl.displayPidInfo(13);
-
-        dashboard.displayPrintf(15, LABEL_WIDTH, "Extender: ",
-                "pwr=%.2f,low=%s,high=%s",
-                robot.relicArm.extender.getPower(),
-                robot.relicArm.extenderLowerLimitSwitch.isActive(),
-                robot.relicArm.extenderUpperLimitSwitch.isActive());
     }   //doSensorsTest
 
     private void doVisionTest()
@@ -673,43 +481,15 @@ public class FtcTest extends FtcTeleOp implements TrcGameController.ButtonHandle
             switch (button)
             {
                 case FtcGamepad.GAMEPAD_DPAD_UP:
-                    if (pressed)
-                    {
-                        robot.jewelArm.setExtended(false);
-                    }
-                    processed = true;
                     break;
 
                 case FtcGamepad.GAMEPAD_DPAD_DOWN:
-                    if (pressed)
-                    {
-                        robot.jewelArm.setExtended(true);
-                    }
-                    processed = true;
                     break;
 
                 case FtcGamepad.GAMEPAD_DPAD_LEFT:
-                    if (pressed)
-                    {
-                        robot.jewelArm.setSweepPosition(RobotInfo.JEWEL_ARM_BACKWARD);
-                    }
-                    else
-                    {
-                        robot.jewelArm.setSweepPosition(RobotInfo.JEWEL_ARM_NEUTRAL);
-                    }
-                    processed = true;
                     break;
 
                 case FtcGamepad.GAMEPAD_DPAD_RIGHT:
-                    if (pressed)
-                    {
-                        robot.jewelArm.setSweepPosition(RobotInfo.JEWEL_ARM_FORWARD);
-                    }
-                    else
-                    {
-                        robot.jewelArm.setSweepPosition(RobotInfo.JEWEL_ARM_NEUTRAL);
-                    }
-                    processed = true;
                     break;
             }
         }

@@ -15,5 +15,5 @@
 apply from: '../build.common.gradle'
 
 dependencies {
-    compile project(path: ':OpenCVLib310')
+    implementation project(path: ':OpenCVLib310')
 }

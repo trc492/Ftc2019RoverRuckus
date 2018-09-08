@@ -75,16 +75,16 @@ public class FtcTeleOp extends FtcOpMode implements TrcGameController.ButtonHand
     //
 
     @Override
-    public void startMode()
+    public void startMode(TrcRobot.RunMode runMode)
     {
         dashboard.clearDisplay();
-        robot.startMode(TrcRobot.RunMode.TELEOP_MODE);
+        robot.startMode(runMode);
     }   //startMode
 
     @Override
-    public void stopMode()
+    public void stopMode(TrcRobot.RunMode runMode)
     {
-        robot.stopMode(TrcRobot.RunMode.TELEOP_MODE);
+        robot.stopMode(runMode);
         printPerformanceMetrics(robot.tracer);
     }   //stopMode
 
@@ -114,15 +114,6 @@ public class FtcTeleOp extends FtcOpMode implements TrcGameController.ButtonHand
                                         x, y, rot, Boolean.toString(invertedDrive));
                 break;
         }
-
-        double glyphElevatorPower = operatorGamepad.getRightStickY(true);
-        double relicElbowPower = operatorGamepad.getLeftStickY(true);
-        double relicExtenderPower =
-                operatorGamepad.getRightTrigger(true) - operatorGamepad.getLeftTrigger(true);
-
-        robot.glyphElevator.setPower(glyphElevatorPower);
-        robot.relicArm.elbow.setPower(relicElbowPower);
-        robot.relicArm.extender.setPower(relicExtenderPower);
 
         dashboard.displayPrintf(2, "xPos=%.2f,yPos=%.2f,heading=%.2f",
                 robot.driveBase.getXPosition(),
@@ -174,39 +165,21 @@ public class FtcTeleOp extends FtcOpMode implements TrcGameController.ButtonHand
             switch (button)
             {
                 case FtcGamepad.GAMEPAD_A:
-                    if (pressed)
-                    {
-                        robot.glyphGrabber.close();
-                    }
                     break;
 
                 case FtcGamepad.GAMEPAD_B:
-                    if (pressed)
-                    {
-                        robot.glyphGrabber.open();
-                    }
                     break;
 
                 case FtcGamepad.GAMEPAD_X:
-                    if (pressed)
-                    {
-                        robot.relicArm.grabber.setPosition(RobotInfo.RELIC_GRABBER_CLOSE);
-                    }
                     break;
 
                 case FtcGamepad.GAMEPAD_Y:
-                    if (pressed)
-                    {
-                        robot.relicArm.grabber.setPosition(RobotInfo.RELIC_GRABBER_OPEN);
-                    }
                     break;
 
                 case FtcGamepad.GAMEPAD_LBUMPER:
-                    //robot.relicArm.elbow.setManualOverride(pressed);
                     break;
 
                 case FtcGamepad.GAMEPAD_RBUMPER:
-                    robot.glyphElevator.setManualOverride(pressed);
                     break;
 
                 case FtcGamepad.GAMEPAD_DPAD_UP:
@@ -222,17 +195,9 @@ public class FtcTeleOp extends FtcOpMode implements TrcGameController.ButtonHand
                     break;
 
                 case FtcGamepad.GAMEPAD_BACK:
-                    if (pressed)
-                    {
-                        robot.relicArm.elbow.zeroCalibrate(RobotInfo.RELIC_ELBOW_CAL_POWER);
-                    }
                     break;
 
                 case FtcGamepad.GAMEPAD_START:
-                    if (pressed)
-                    {
-                        robot.glyphElevator.zeroCalibrate();
-                    }
                     break;
             }
         }

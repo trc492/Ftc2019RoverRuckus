@@ -28,8 +28,6 @@ import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 
-import hallib.HalVideoSource;
-
 /**
  * This class implements a generic OpenCV detector. Typically, it is extended by a specific detector that provides
  * the algorithm to process an image for detecting objects using OpenCV APIs.
@@ -38,16 +36,17 @@ import hallib.HalVideoSource;
  */
 public abstract class TrcOpenCvDetector<O> implements TrcVisionTask.VisionProcessor<Mat, O>
 {
-    private static final String moduleName = "TrcOpenCvDetector";
-    private static final boolean debugEnabled = false;
-    private static final boolean tracingEnabled = false;
-    private static final TrcDbgTrace.TraceLevel traceLevel = TrcDbgTrace.TraceLevel.API;
-    private static final TrcDbgTrace.MsgLevel msgLevel = TrcDbgTrace.MsgLevel.INFO;
-    private TrcDbgTrace dbgTrace = null;
-    private static final boolean USE_VISIONTASK = false;
+    protected static final String moduleName = "TrcOpenCvDetector";
+    protected static final boolean debugEnabled = false;
+    protected static final boolean tracingEnabled = false;
+    protected static final boolean useGlobalTracer = false;
+    protected static final TrcDbgTrace.TraceLevel traceLevel = TrcDbgTrace.TraceLevel.API;
+    protected static final TrcDbgTrace.MsgLevel msgLevel = TrcDbgTrace.MsgLevel.INFO;
+    protected TrcDbgTrace dbgTrace = null;
+    protected static final boolean USE_VISIONTASK = false;
 
     private final String instanceName;
-    private HalVideoSource<Mat> videoSource;
+    private TrcVideoSource<Mat> videoSource;
     private TrcVisionTask<Mat, O> visionTask;
 
     /**
@@ -59,11 +58,13 @@ public abstract class TrcOpenCvDetector<O> implements TrcVisionTask.VisionProces
      * @param detectedObjectBuffers specifies the array of preallocated detected object buffers.
      */
     public TrcOpenCvDetector(
-        final String instanceName, HalVideoSource<Mat> videoSource, int numImageBuffers, O[] detectedObjectBuffers)
+        final String instanceName, TrcVideoSource<Mat> videoSource, int numImageBuffers, O[] detectedObjectBuffers)
     {
         if (debugEnabled)
         {
-            dbgTrace = new TrcDbgTrace(moduleName, tracingEnabled, traceLevel, msgLevel);
+            dbgTrace = useGlobalTracer?
+                TrcDbgTrace.getGlobalTracer():
+                new TrcDbgTrace(moduleName + "." + instanceName, tracingEnabled, traceLevel, msgLevel);
         }
 
         this.instanceName = instanceName;

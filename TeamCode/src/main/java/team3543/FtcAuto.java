@@ -51,24 +51,6 @@ public class FtcAuto extends FtcOpMode
         BLUE_ALLIANCE
     }   //enum Alliance
 
-    enum StartPos
-    {
-        NEAR,
-        FAR
-    }
-
-    enum DoJewel
-    {
-        YES,
-        NO
-    }
-
-    enum DoCrypto
-    {
-        YES,
-        NO
-    }
-
     private enum Strategy
     {
         FULL_AUTO,
@@ -85,10 +67,7 @@ public class FtcAuto extends FtcOpMode
     private int matchNumber = 0;
     private Alliance alliance = Alliance.RED_ALLIANCE;
     private double delay = 0.0;
-    private StartPos startPos = StartPos.NEAR;
     private Strategy strategy = Strategy.DO_NOTHING;
-    private DoJewel jewelChoice = DoJewel.YES;
-    private DoCrypto cryptoChoice = DoCrypto.YES;
     private double driveDistance = 0.0;
     private double driveTime = 0.0;
     private double drivePower = 0.0;
@@ -121,9 +100,7 @@ public class FtcAuto extends FtcOpMode
         switch (strategy)
         {
             case FULL_AUTO:
-                autoCommand = new CmdAutoFull(
-                        robot, alliance, delay, startPos, jewelChoice == DoJewel.YES,
-                        cryptoChoice == DoCrypto.YES);
+                autoCommand = new CmdAutoFull(robot, alliance, delay);
                 break;
 
             case DISTANCE_DRIVE:
@@ -147,19 +124,19 @@ public class FtcAuto extends FtcOpMode
     //
 
     @Override
-    public void startMode()
+    public void startMode(TrcRobot.RunMode runMode)
     {
         robot.tracer.traceInfo(moduleName, "%s: ***** Starting autonomous *****", new Date());
         robot.startMode(TrcRobot.RunMode.AUTO_MODE);
-        robot.battery.setEnabled(true);
+        robot.battery.setTaskEnabled(true);
         robot.dashboard.clearDisplay();
     }   //startMode
 
     @Override
-    public void stopMode()
+    public void stopMode(TrcRobot.RunMode runMode)
     {
         robot.stopMode(TrcRobot.RunMode.AUTO_MODE);
-        robot.battery.setEnabled(false);
+        robot.battery.setTaskEnabled(false);
         printPerformanceMetrics(robot.tracer);
 
         if (USE_TRACELOG)
@@ -190,10 +167,7 @@ public class FtcAuto extends FtcOpMode
         FtcValueMenu delayMenu = new FtcValueMenu(
                 "Delay time:", allianceMenu, robot,
                 0.0, 30.0, 1.0, 0.0, " %.0f sec");
-        FtcChoiceMenu<StartPos> startPositionMenu = new FtcChoiceMenu<>("Start Position:", delayMenu, robot);
-        FtcChoiceMenu<Strategy> strategyMenu = new FtcChoiceMenu<>("Strategies:", startPositionMenu, robot);
-        FtcChoiceMenu<DoJewel> jewelMenu = new FtcChoiceMenu<>("Do Jewel?", strategyMenu, robot);
-        FtcChoiceMenu<DoCrypto> cryptoMenu = new FtcChoiceMenu<>("Do Crypto?", jewelMenu, robot);
+        FtcChoiceMenu<Strategy> strategyMenu = new FtcChoiceMenu<>("Strategies:", delayMenu, robot);
         FtcValueMenu driveDistanceMenu = new FtcValueMenu(
                 "Distance:", strategyMenu, robot,
                 -12.0, 12.0, 0.5, 4.0, " %.0f ft");
@@ -203,7 +177,6 @@ public class FtcAuto extends FtcOpMode
                 "Drive power:", strategyMenu, robot, -1.0, 1.0, 0.1, 0.5, " %.1f");
 
         matchNumberMenu.setChildMenu(allianceMenu);
-        delayMenu.setChildMenu(startPositionMenu);
         driveTimeMenu.setChildMenu(drivePowerMenu);
 
         //
@@ -217,19 +190,10 @@ public class FtcAuto extends FtcOpMode
         allianceMenu.addChoice("Red", Alliance.RED_ALLIANCE, true, delayMenu);
         allianceMenu.addChoice("Blue", Alliance.BLUE_ALLIANCE, false, delayMenu);
 
-        startPositionMenu.addChoice("Near", StartPos.NEAR, true, strategyMenu);
-        startPositionMenu.addChoice("Far", StartPos.FAR, false, strategyMenu);
-
-        strategyMenu.addChoice("Full Auto", Strategy.FULL_AUTO, true, jewelMenu);
+        strategyMenu.addChoice("Full Auto", Strategy.FULL_AUTO, true);
         strategyMenu.addChoice("Distance Drive", Strategy.DISTANCE_DRIVE, false, driveDistanceMenu);
         strategyMenu.addChoice("Timed Drive", Strategy.TIMED_DRIVE, false, driveTimeMenu);
         strategyMenu.addChoice("Do nothing", Strategy.DO_NOTHING, false);
-
-        jewelMenu.addChoice("Yes", DoJewel.YES, true, cryptoMenu);
-        jewelMenu.addChoice("No", DoJewel.NO, false, cryptoMenu);
-
-        cryptoMenu.addChoice("Yes", DoCrypto.YES, true);
-        cryptoMenu.addChoice("No", DoCrypto.NO, false);
 
         //
         // Traverse menus.
@@ -242,10 +206,7 @@ public class FtcAuto extends FtcOpMode
         matchNumber = (int)matchNumberMenu.getCurrentValue();
         alliance = allianceMenu.getCurrentChoiceObject();
         delay = delayMenu.getCurrentValue();
-        startPos = startPositionMenu.getCurrentChoiceObject();
         strategy = strategyMenu.getCurrentChoiceObject();
-        jewelChoice = jewelMenu.getCurrentChoiceObject();
-        cryptoChoice = cryptoMenu.getCurrentChoiceObject();
         driveDistance = driveDistanceMenu.getCurrentValue();
         driveTime = driveTimeMenu.getCurrentValue();
         drivePower = drivePowerMenu.getCurrentValue();
@@ -256,10 +217,7 @@ public class FtcAuto extends FtcOpMode
                                       matchType.toString() + "_" + matchNumber);
         robot.dashboard.displayPrintf(2, "Auto Strategy: %s", strategyMenu.getCurrentChoiceText());
         robot.dashboard.displayPrintf(3, "Alliance=%s,Delay=%.0f sec", alliance.toString(), delay);
-        robot.dashboard.displayPrintf(4, "StartPos=%s", startPos.toString());
-        robot.dashboard.displayPrintf(5, "DoJewel=%s,DoCrypto=%s",
-                                      jewelChoice.toString(), cryptoChoice.toString());
-        robot.dashboard.displayPrintf(6, "Drive: distance=%.0f ft,Time=%.0f,Power=%.1f",
+        robot.dashboard.displayPrintf(4, "Drive: distance=%.0f ft,Time=%.0f,Power=%.1f",
                                       driveDistance, driveTime, drivePower);
     }   //doMenus
 
