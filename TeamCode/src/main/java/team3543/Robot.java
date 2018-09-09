@@ -36,8 +36,8 @@ import ftclib.FtcOpMode;
 import ftclib.FtcRobotBattery;
 import hallib.HalDashboard;
 import trclib.TrcDbgTrace;
-import trclib.TrcDriveBase;
 import trclib.TrcGyro;
+import trclib.TrcMecanumDriveBase;
 import trclib.TrcPidController;
 import trclib.TrcPidDrive;
 import trclib.TrcRobot;
@@ -75,7 +75,7 @@ public class Robot implements FtcMenu.MenuButtons
     FtcDcMotor rightFrontWheel = null;
     FtcDcMotor leftRearWheel = null;
     FtcDcMotor rightRearWheel = null;
-    TrcDriveBase driveBase = null;
+    TrcMecanumDriveBase driveBase = null;
 
     TrcPidController encoderXPidCtrl = null;
     TrcPidController encoderYPidCtrl = null;
@@ -140,9 +140,8 @@ public class Robot implements FtcMenu.MenuButtons
         rightFrontWheel.setBrakeModeEnabled(true);
         rightRearWheel.setBrakeModeEnabled(true);
 
-        driveBase = new TrcDriveBase(leftFrontWheel, leftRearWheel, rightFrontWheel, rightRearWheel, gyro);
-        driveBase.setXPositionScale(RobotInfo.ENCODER_X_INCHES_PER_COUNT);
-        driveBase.setYPositionScale(RobotInfo.ENCODER_Y_INCHES_PER_COUNT);
+        driveBase = new TrcMecanumDriveBase(leftFrontWheel, leftRearWheel, rightFrontWheel, rightRearWheel, gyro);
+        driveBase.setPositionScales(RobotInfo.ENCODER_X_INCHES_PER_COUNT, RobotInfo.ENCODER_Y_INCHES_PER_COUNT);
         //
         // Initialize PID drive.
         //
@@ -197,7 +196,7 @@ public class Robot implements FtcMenu.MenuButtons
         //
         // Reset all X, Y and heading values.
         //
-        driveBase.resetPosition();
+        driveBase.resetOdometry();
         targetHeading = 0.0;
     }   //startMode
 

@@ -346,40 +346,40 @@ public class FtcTest extends FtcTeleOp implements TrcGameController.ButtonHandle
                             //
                             // Run the left front wheel.
                             //
-                            robot.leftFrontWheel.setPower(0.5);
-                            robot.rightFrontWheel.setPower(0.0);
-                            robot.leftRearWheel.setPower(0.0);
-                            robot.rightRearWheel.setPower(0.0);
+                            robot.leftFrontWheel.set(0.5);
+                            robot.rightFrontWheel.set(0.0);
+                            robot.leftRearWheel.set(0.0);
+                            robot.rightRearWheel.set(0.0);
                             break;
 
                         case 1:
                             //
                             // Run the right front wheel.
                             //
-                            robot.leftFrontWheel.setPower(0.0);
-                            robot.rightFrontWheel.setPower(0.5);
-                            robot.leftRearWheel.setPower(0.0);
-                            robot.rightRearWheel.setPower(0.0);
+                            robot.leftFrontWheel.set(0.0);
+                            robot.rightFrontWheel.set(0.5);
+                            robot.leftRearWheel.set(0.0);
+                            robot.rightRearWheel.set(0.0);
                             break;
 
                         case 2:
                             //
                             // Run the left rear wheel.
                             //
-                            robot.leftFrontWheel.setPower(0.0);
-                            robot.rightFrontWheel.setPower(0.0);
-                            robot.leftRearWheel.setPower(0.5);
-                            robot.rightRearWheel.setPower(0.0);
+                            robot.leftFrontWheel.set(0.0);
+                            robot.rightFrontWheel.set(0.0);
+                            robot.leftRearWheel.set(0.5);
+                            robot.rightRearWheel.set(0.0);
                             break;
 
                         case 3:
                             //
                             // Run the right rear wheel.
                             //
-                            robot.leftFrontWheel.setPower(0.0);
-                            robot.rightFrontWheel.setPower(0.0);
-                            robot.leftRearWheel.setPower(0.0);
-                            robot.rightRearWheel.setPower(0.5);
+                            robot.leftFrontWheel.set(0.0);
+                            robot.rightFrontWheel.set(0.0);
+                            robot.leftRearWheel.set(0.0);
+                            robot.rightRearWheel.set(0.5);
                             break;
                     }
                     motorIndex = motorIndex + 1;
@@ -391,10 +391,10 @@ public class FtcTest extends FtcTeleOp implements TrcGameController.ButtonHandle
                     //
                     // We are done, stop all wheels.
                     //
-                    robot.leftFrontWheel.setPower(0.0);
-                    robot.rightFrontWheel.setPower(0.0);
-                    robot.leftRearWheel.setPower(0.0);
-                    robot.rightRearWheel.setPower(0.0);
+                    robot.leftFrontWheel.set(0.0);
+                    robot.rightFrontWheel.set(0.0);
+                    robot.leftRearWheel.set(0.0);
+                    robot.rightRearWheel.set(0.0);
                     sm.setState(State.DONE);
                     break;
 

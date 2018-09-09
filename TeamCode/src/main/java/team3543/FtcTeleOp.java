@@ -109,7 +109,7 @@ public class FtcTeleOp extends FtcOpMode implements TrcGameController.ButtonHand
                 double y = driverGamepad.getRightStickY(true)*drivePowerScale;
                 double rot = (driverGamepad.getRightTrigger(true) -
                               driverGamepad.getLeftTrigger(true))*drivePowerScale;
-                robot.driveBase.mecanumDrive_Cartesian(x, y, rot, invertedDrive);
+                robot.driveBase.holonomicDrive(x, y, rot, invertedDrive);
                 dashboard.displayPrintf(1, "Mecan:x=%.1f,y=%.1f,rot=%.1f,inv=%s",
                                         x, y, rot, Boolean.toString(invertedDrive));
                 break;
