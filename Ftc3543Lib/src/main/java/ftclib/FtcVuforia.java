@@ -153,7 +153,8 @@ public class FtcVuforia implements TrcVideoSource<Mat>
      */
     public FtcVuforia(String licenseKey, int cameraViewId, VuforiaLocalizer.CameraDirection cameraDir)
     {
-        this(licenseKey, cameraViewId, cameraDir, null, 0, VuforiaLocalizer.Parameters.CameraMonitorFeedback.AXES);
+        this(licenseKey, cameraViewId, cameraDir, null, 0,
+                VuforiaLocalizer.Parameters.CameraMonitorFeedback.AXES);
     }   //FtcVuforia
 
     /**
