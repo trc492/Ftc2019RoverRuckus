@@ -34,6 +34,7 @@ import java.util.Locale;
 public class TrcUtil
 {
     public static final double INCHES_PER_CM = 0.393701;
+    public static final double MM_PER_INCH = 25.4;
 
     /**
      * This method returns the current time in seconds with nano-second precision.

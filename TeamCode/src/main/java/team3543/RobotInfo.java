@@ -26,8 +26,6 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 
 class RobotInfo
 {
-    static final float MM_PER_INCH                      = 25.4f;
-
     //
     // DriveBase subsystem.
     //

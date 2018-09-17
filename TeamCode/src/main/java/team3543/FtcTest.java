@@ -26,7 +26,9 @@ import android.speech.tts.TextToSpeech;
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
-import org.firstinspires.ftc.robotcore.external.navigation.RelicRecoveryVuMark;
+import org.firstinspires.ftc.robotcore.external.matrices.OpenGLMatrix;
+import org.firstinspires.ftc.robotcore.external.matrices.VectorF;
+import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 
 import ftclib.FtcChoiceMenu;
 import ftclib.FtcGamepad;
@@ -37,6 +39,7 @@ import trclib.TrcGameController;
 import trclib.TrcRobot;
 import trclib.TrcStateMachine;
 import trclib.TrcTimer;
+import trclib.TrcUtil;
 
 @TeleOp(name="Test", group="3543Test")
 public class FtcTest extends FtcTeleOp implements TrcGameController.ButtonHandler
@@ -285,31 +288,18 @@ public class FtcTest extends FtcTeleOp implements TrcGameController.ButtonHandle
     {
         if (robot.vuforiaVision != null)
         {
-            robot.vuforiaVision.getVuMarkPosition();
-            robot.vuforiaVision.getVuMarkOrientation();
-            RelicRecoveryVuMark vuMark = robot.vuforiaVision.getVuMark();
-            if (vuMark != robot.prevVuMark)
+            OpenGLMatrix robotLocation = robot.vuforiaVision.getRobotLocation();
+            if (robotLocation != null)
             {
-                String sentence = null;
-                if (vuMark != RelicRecoveryVuMark.UNKNOWN)
-                {
-                    sentence = String.format("%s is %s.", vuMark.toString(), "in view");
-                }
-                else if (robot.prevVuMark != null)
-                {
-                    sentence = String.format("%s is %s.", robot.prevVuMark.toString(), "out of view");
-                }
-
-                if (sentence != null)
-                {
-                    robot.dashboard.displayPrintf(11, sentence);
-                    if (robot.textToSpeech != null)
-                    {
-                        robot.textToSpeech.speak(sentence, TextToSpeech.QUEUE_FLUSH, null);
-                    }
-                }
+                VectorF translation = robot.vuforiaVision.getRobotTranslation(robotLocation);
+                Orientation orientation = robot.vuforiaVision.getRobotOrientation(robotLocation);
+                robot.dashboard.displayPrintf(11, "Translation: x=%6.2f,y=%6.2f,z=%6.2f",
+                        translation.get(0)/ TrcUtil.MM_PER_INCH,
+                        translation.get(1)/TrcUtil.MM_PER_INCH,
+                        translation.get(2)/TrcUtil.MM_PER_INCH);
+                robot.dashboard.displayPrintf(12, "Orientation: roll=%6.2f, pitch=%6.2f, heading=%6.2f",
+                        orientation.firstAngle, orientation.secondAngle, orientation.thirdAngle);
             }
-            robot.prevVuMark = vuMark;
         }
     }   //doVisionTest
 

@@ -117,7 +117,7 @@ public class FtcVuforia implements TrcVideoSource<Mat>
         params.vuforiaLicenseKey = licenseKey;
         params.cameraDirection = cameraDir;
         params.cameraMonitorFeedback = cameraMonitorFeedback;
-        localizer = ClassFactory.createVuforiaLocalizer(params);
+        localizer = ClassFactory.getInstance().createVuforia(params);
         Vuforia.setHint(HINT.HINT_MAX_SIMULTANEOUS_IMAGE_TARGETS, numTargets);
         if (trackablesFile != null)
         {
@@ -267,6 +267,16 @@ public class FtcVuforia implements TrcVideoSource<Mat>
     {
         return targetList;
     }   //getTargetList
+
+    /**
+     * This method returns the number of targets in the list.
+     *
+     * @return number of targets in the list.
+     */
+    public int getNumTargets()
+    {
+        return targetList.size();
+    }   //getNumTargets
 
     /**
      * This method returns the target object with the specified index in the target list.
