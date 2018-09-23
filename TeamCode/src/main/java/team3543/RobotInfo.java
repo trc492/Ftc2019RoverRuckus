@@ -51,4 +51,17 @@ class RobotInfo
 
     static final double PIDDRIVE_STALL_TIMEOUT          = 0.25;     //in msec.
 
+    //
+    // PixyVision subsystem.
+    //
+
+    public static final int PIXYCAM_WIDTH                       = 320;
+    public static final int PIXYCAM_HEIGHT                      = 200;
+    public static final int PIXY_GOLD_MINERAL_SIGNATURE         = 1;
+    public static final int PIXY_SILVER_MINERAL_SIGNATURE       = 2;
+    public static final int PIXY_TEAM_MARKER1_SIGNATURE         = 3;
+    public static final int PIXY_TEAM_MARKER2_SIGNATURE         = 4;
+    public static final int PIXY_BRIGHTNESS                     = 80;
+    public static final double PIXY_CAM_OFFSET                  = 8.0;
+    public static final PixyVision.Orientation PIXY_ORIENTATION = PixyVision.Orientation.NORMAL_LANDSCAPE;
 }   //class RobotInfo
