@@ -50,7 +50,6 @@ public class FtcI2cDevice extends TrcSerialBusDevice
     private I2cAddr i2cAddr;
     private I2cDeviceSynchImpl syncDevice;
     private ArrayList<FtcI2cDeviceReader> readers = new ArrayList<>();
-    private FtcI2cDeviceState deviceState;
 
     /**
      * Constructor: Creates an instance of the object.
@@ -70,7 +69,6 @@ public class FtcI2cDevice extends TrcSerialBusDevice
         }
 
         device = hardwareMap.i2cDevice.get(instanceName);
-        deviceState = new FtcI2cDeviceState(instanceName, device);
         setI2cAddress(i2cAddress, addressIs7Bit);
     }   //FtcI2cDevice
 
@@ -151,7 +149,7 @@ public class FtcI2cDevice extends TrcSerialBusDevice
     public boolean isDeviceEnabled()
     {
         final String funcName = "isDeviceEnabled";
-        boolean enabled = deviceState.isEnabled();
+        boolean enabled = syncDevice.isEngaged();
 
         if (debugEnabled)
         {
@@ -178,7 +176,14 @@ public class FtcI2cDevice extends TrcSerialBusDevice
             dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
         }
 
-        deviceState.setEnabled(enabled);
+        if (enabled)
+        {
+            syncDevice.engage();
+        }
+        else
+        {
+            syncDevice.disengage();
+        }
     }   //setDeviceEnabled
 
     /**
