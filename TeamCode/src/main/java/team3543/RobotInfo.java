@@ -52,6 +52,18 @@ class RobotInfo
     static final double PIDDRIVE_STALL_TIMEOUT          = 0.25;     //in msec.
 
     //
+    // Elevator subsystem
+    //
+    public static final double ELEVATOR_INCHES_PER_COUNT = 5.625/8498;
+    public static final double ELEVATOR_ZERO_OFFSET = 15.8;
+    public static final double ELEVATOR_KP = 3.0;
+    public static final double ELEVATOR_KI = 0.0;
+    public static final double ELEVATOR_KD = 0.0;
+    public static final double ELEVATOR_TOLERANCE = 0.2;
+    public static final double ELEVATOR_MIN_HEIGHT = ELEVATOR_ZERO_OFFSET - 0.1;
+    public static final double ELEVATOR_MAX_HEIGHT = 24.0;
+    public static final double ELEVATOR_CAL_POWER = 0.3;
+    //
     // PixyVision subsystem.
     //
 

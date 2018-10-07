@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Titan Robotics Club (http://www.titanrobotics.com)
+ * Copyright (c) 2018 Titan Robotics Club (http://www.titanrobotics.com)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -84,6 +84,7 @@ public class Robot implements FtcMenu.MenuButtons
     //
     // Other subsystems.
     //
+    Elevator elevator;
 
     public Robot(TrcRobot.RunMode runMode)
     {
@@ -170,6 +171,7 @@ public class Robot implements FtcMenu.MenuButtons
         //
         // Initialize other subsystems.
         //
+        elevator = new Elevator();
 
         //
         // Tell the driver initialization is complete.
