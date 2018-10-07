@@ -22,7 +22,8 @@
 
 package ftclib;
 
-import com.qualcomm.robotcore.hardware.I2cDeviceSynch;
+import com.qualcomm.robotcore.hardware.HardwareDevice;
+import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import java.util.Arrays;
 
@@ -35,9 +36,25 @@ import trclib.TrcPixyCam;
  */
 public class FtcPixyCam extends TrcPixyCam
 {
-    public static final int DEF_I2C_ADDRESS = 0x54;
-//    private FtcI2cDeviceSynch pixyCam = null;
-    private FtcI2cDevice pixyCam = null;
+    private static final int DEF_I2C_ADDRESS = 0x54;
+    private final FtcI2cDeviceAsync i2cDevice;
+
+    /**
+     * Constructor: Create an instance of the object.
+     *
+     * @param hardwareMap specifies the global hardware map.
+     * @param instanceName specifies the instance name.
+     * @param devAddress specifies the I2C address of the device.
+     * @param addressIs7Bit specifies true if the I2C address is a 7-bit address, false if it is 8-bit.
+     */
+    public FtcPixyCam(HardwareMap hardwareMap, String instanceName, int devAddress, boolean addressIs7Bit)
+    {
+        super(instanceName, false);
+
+        i2cDevice = new FtcI2cDeviceAsync(hardwareMap, instanceName, devAddress, addressIs7Bit);
+        i2cDevice.setDeviceInfo(HardwareDevice.Manufacturer.Other, "Pixy Camera v1");
+        super.start();
+    }   //FtcPixyCam
 
     /**
      * Constructor: Create an instance of the object.
@@ -46,20 +63,9 @@ public class FtcPixyCam extends TrcPixyCam
      * @param devAddress specifies the I2C address of the device.
      * @param addressIs7Bit specifies true if the I2C address is a 7-bit address, false if it is 8-bit.
      */
-    public FtcPixyCam(final String instanceName, int devAddress, boolean addressIs7Bit)
+    public FtcPixyCam(String instanceName, int devAddress, boolean addressIs7Bit)
     {
-        super(instanceName, false);
-
-        if (debugEnabled)
-        {
-            dbgTrace = new TrcDbgTrace(
-                    moduleName + "." + instanceName, tracingEnabled, traceLevel, msgLevel);
-        }
-
-//        pixyCam = new FtcI2cDeviceSynch(instanceName, devAddress, true,
-//                1, 26, I2cDeviceSynch.ReadMode.REPEAT);
-        pixyCam = new FtcI2cDevice(instanceName, devAddress, addressIs7Bit);
-        start();
+        this(FtcOpMode.getInstance().hardwareMap, instanceName, devAddress, addressIs7Bit);
     }   //FtcPixyCam
 
     /**
@@ -67,9 +73,9 @@ public class FtcPixyCam extends TrcPixyCam
      *
      * @param instanceName specifies the instance name.
      */
-    public FtcPixyCam(final String instanceName)
+    public FtcPixyCam(String instanceName)
     {
-        this(instanceName, DEF_I2C_ADDRESS, true);
+        this(FtcOpMode.getInstance().hardwareMap, instanceName, DEF_I2C_ADDRESS, true);
     }   //FtcPixyCam
 
     /**
@@ -80,7 +86,7 @@ public class FtcPixyCam extends TrcPixyCam
     public boolean isEnabled()
     {
         final String funcName = "isEnabled";
-        boolean enabled = pixyCam.isDeviceEnabled();
+        boolean enabled = i2cDevice.isDeviceEnabled();
 
         if (debugEnabled)
         {
@@ -105,7 +111,7 @@ public class FtcPixyCam extends TrcPixyCam
             dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "enanbled=%b", enabled);
         }
 
-        pixyCam.setDeviceEnabled(enabled);
+        i2cDevice.setDeviceEnabled(enabled);
 
         if (debugEnabled)
         {
@@ -120,16 +126,7 @@ public class FtcPixyCam extends TrcPixyCam
      */
     public boolean isTaskTerminatedAbnormally()
     {
-        final String funcName = "isTaskTerminatedAbnormally";
-        boolean taskTerminatedAbnormally = pixyCam.isTaskTerminatedAbnormally();
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%b", taskTerminatedAbnormally);
-        }
-
-        return taskTerminatedAbnormally;
+        return i2cDevice.isTaskTerminatedAbnormally();
     }   //isTaskTerminatedAbnormally
 
     //
@@ -153,7 +150,7 @@ public class FtcPixyCam extends TrcPixyCam
                     requestTag != null? requestTag: "null", length);
         }
 
-        pixyCam.asyncRead(requestTag, length, null, this);
+        i2cDevice.asyncRead(requestTag, length, null, this);
 
         if (debugEnabled)
         {
@@ -178,7 +175,7 @@ public class FtcPixyCam extends TrcPixyCam
                     requestTag != null? requestTag: "null", Arrays.toString(data), data.length);
         }
 
-        pixyCam.asyncWrite(requestTag, data, data.length, null, null);
+        i2cDevice.asyncWrite(requestTag, data, data.length, null, null);
 
         if (debugEnabled)
         {

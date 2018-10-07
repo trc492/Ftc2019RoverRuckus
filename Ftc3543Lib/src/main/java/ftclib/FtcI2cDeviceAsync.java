@@ -22,110 +22,96 @@
 
 package ftclib;
 
+import com.qualcomm.robotcore.hardware.HardwareDevice;
 import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.qualcomm.robotcore.hardware.I2cAddr;
 import com.qualcomm.robotcore.hardware.I2cDeviceSynch;
-import com.qualcomm.robotcore.hardware.I2cWaitControl;
 
 import java.util.Arrays;
 
+import hallib.HalDashboard;
 import trclib.TrcDbgTrace;
 import trclib.TrcSerialBusDevice;
 
 /**
- * This class implements a FTC wrapper to the I2cDeviceSynch class.
+ * This class implements an FTC wrapper to the I2cDeviceSynch class that provides asynchronous read/write access
+ * to the rawDevice by using a separate thread processing a request queue.
  */
-public class FtcI2cDeviceSynch extends TrcSerialBusDevice
+public class FtcI2cDeviceAsync extends TrcSerialBusDevice
 {
-    private static final String moduleName = "FtcI2cDeviceSynch";
+    private static final String moduleName = "FtcI2cDeviceAsync";
     private static final boolean debugEnabled = false;
     private static final boolean tracingEnabled = false;
     private static final TrcDbgTrace.TraceLevel traceLevel = TrcDbgTrace.TraceLevel.API;
     private static final TrcDbgTrace.MsgLevel msgLevel = TrcDbgTrace.MsgLevel.INFO;
     private TrcDbgTrace dbgTrace = null;
 
-    private I2cDeviceSynch device;
-    private FtcI2cDeviceState deviceState;
+    private FtcRawI2cDeviceSynch rawDevice;
+    private I2cDeviceSynch deviceClient;
 
     /**
      * Constructor: Creates an instance of the object.
      *
      * @param hardwareMap specifies the global hardware map.
      * @param instanceName specifies the instance name.
-     * @param i2cAddress specifies the I2C address of the device.
+     * @param i2cAddress specifies the I2C address of the rawDevice.
      * @param addressIs7Bit specifies true if the I2C address is a 7-bit address, false if it is 8-bit.
-     * @param startRegBlock specifies the start of the register block.
-     * @param lenRegBlock specifies the length of the register block
      */
-    public FtcI2cDeviceSynch(HardwareMap hardwareMap, String instanceName, int i2cAddress, boolean addressIs7Bit,
-                             int startRegBlock, int lenRegBlock, I2cDeviceSynch.ReadMode readMode)
+    public FtcI2cDeviceAsync(HardwareMap hardwareMap, String instanceName, int i2cAddress, boolean addressIs7Bit)
     {
         super(instanceName);
 
         if (debugEnabled)
         {
-            dbgTrace = new TrcDbgTrace(moduleName + "." + instanceName, tracingEnabled, traceLevel, msgLevel);
+            dbgTrace = new TrcDbgTrace(
+                    moduleName + "." + instanceName, tracingEnabled, traceLevel, msgLevel);
         }
 
-        device = hardwareMap.i2cDeviceSynch.get(instanceName);
-        device.setI2cAddress(addressIs7Bit? I2cAddr.create7bit(i2cAddress): I2cAddr.create8bit(i2cAddress));
-        deviceState = new FtcI2cDeviceState(instanceName, device);
+        rawDevice = hardwareMap.get(FtcRawI2cDeviceSynch.class, instanceName);
+        rawDevice.setI2cAddress(i2cAddress, addressIs7Bit);
+        deviceClient = rawDevice.getDeviceClient();
+    }   //FtcI2cDeviceAsync
 
-        if (lenRegBlock > 0)
+    /**
+     * Constructor: Creates an instance of the object.
+     *
+     * @param instanceName specifies the instance name.
+     * @param i2cAddress specifies the I2C address of the rawDevice.
+     * @param addressIs7Bit specifies true if the I2C address is a 7-bit address, false if it is 8-bit.
+     */
+    public FtcI2cDeviceAsync(String instanceName, int i2cAddress, boolean addressIs7Bit)
+    {
+        this(FtcOpMode.getInstance().hardwareMap, instanceName, i2cAddress, addressIs7Bit);
+    }   //FtcI2cDeviceAsync
+
+    /**
+     * This method sets the rawDevice manufacturer and name.
+     *
+     * @param manufacturer specifies rawDevice manufacturer.
+     * @param deviceName specifies rawDevice name.
+     */
+    public void setDeviceInfo(HardwareDevice.Manufacturer manufacturer, String deviceName)
+    {
+        final String funcName = "setDeviceInfo";
+
+        if (debugEnabled)
         {
-            device.setReadWindow(new I2cDeviceSynch.ReadWindow(startRegBlock, lenRegBlock, readMode));
+            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API,
+                    "manu=%s,name=%s", manufacturer, deviceName);
+            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
         }
-    }   //FtcI2cDeviceSynch
+
+        rawDevice.setDeviceInfo(manufacturer, deviceName);
+    }   //setDeviceInfo
 
     /**
-     * Constructor: Creates an instance of the object.
+     * This method check if the I2C rawDevice is enabled.
      *
-     * @param instanceName specifies the instance name.
-     * @param i2cAddress specifies the I2C address of the device.
-     * @param addressIs7Bit specifies true if the I2C address is a 7-bit address, false if it is 8-bit.
-     * @param startRegBlock specifies the start of the register block.
-     * @param lenRegBlock specifies the length of the register block
-     */
-    public FtcI2cDeviceSynch(String instanceName, int i2cAddress, boolean addressIs7Bit,
-                             int startRegBlock, int lenRegBlock, I2cDeviceSynch.ReadMode readMode)
-    {
-        this(FtcOpMode.getInstance().hardwareMap, instanceName, i2cAddress, addressIs7Bit,
-                startRegBlock, lenRegBlock, readMode);
-    }   //FtcI2cDeviceSynch
-
-    /**
-     * Constructor: Creates an instance of the object.
-     *
-     * @param instanceName specifies the instance name.
-     * @param i2cAddress specifies the I2C address of the device.
-     * @param addressIs7Bit specifies true if the I2C address is a 7-bit address, false if it is 8-bit.
-     */
-    public FtcI2cDeviceSynch(String instanceName, int i2cAddress, boolean addressIs7Bit)
-    {
-        this(FtcOpMode.getInstance().hardwareMap, instanceName, i2cAddress, addressIs7Bit, 0, 0, null);
-    }   //FtcI2cDeviceSynch
-
-    /**
-     * Constructor: Creates an instance of the object.
-     *
-     * @param instanceName specifies the instance name.
-     * @param i2cAddress specifies the I2C address of the device.
-     */
-    public FtcI2cDeviceSynch(final String instanceName, int i2cAddress)
-    {
-        this(FtcOpMode.getInstance().hardwareMap, instanceName, i2cAddress, false,
-                0, 0, null);
-    }   //FtcI2cDeviceSynch
-
-    /**
-     * This method check if the I2C device is enabled.
-     *
-     * @return true if the device state indicates it is enabled, false otherwise.
+     * @return true if the rawDevice state indicates it is enabled, false otherwise.
      */
     public boolean isDeviceEnabled()
     {
         final String funcName = "isDeviceEnabled";
-        boolean enabled = deviceState.isEnabled();
+        boolean enabled = deviceClient.isEngaged();
 
         if (debugEnabled)
         {
@@ -137,10 +123,10 @@ public class FtcI2cDeviceSynch extends TrcSerialBusDevice
     }   //isDeviceEnabled
 
     /**
-     * This method is called to enable/disable the I2C device so that it will not unnecessarily bog down the I2C bus
+     * This method is called to enable/disable the I2C rawDevice so that it will not unnecessarily bog down the I2C bus
      * bandwidth if it is not needed.
      *
-     * @param enabled specifies true to enable device, false otherwise.
+     * @param enabled specifies true to enable rawDevice, false otherwise.
      */
     public void setDeviceEnabled(boolean enabled)
     {
@@ -152,15 +138,24 @@ public class FtcI2cDeviceSynch extends TrcSerialBusDevice
             dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
         }
 
-        deviceState.setEnabled(enabled);
+        if (enabled)
+        {
+            deviceClient.engage();
+            setTaskEnabled(true);
+        }
+        else
+        {
+            setTaskEnabled(false);
+            deviceClient.disengage();
+        }
     }   //setDeviceEnabled
 
     /**
-     * This method is doing an asynchronous write to the device with the specified starting address and data of the
+     * This method is doing an asynchronous write to the rawDevice with the specified starting address and data of the
      * register block.
      *
      * @param startAddress specifies the starting register to read from.
-     * @param data specifies the data to write to the device.
+     * @param data specifies the data to write to the rawDevice.
      */
     public void asyncWrite(int startAddress, byte[] data)
     {
@@ -173,11 +168,11 @@ public class FtcI2cDeviceSynch extends TrcSerialBusDevice
             dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
         }
 
-        device.write(startAddress, data, I2cWaitControl.ATOMIC);
+        rawDevice.writeData(startAddress, data, false);
     }   //asyncWrite
 
     /**
-     * This method sends a byte command to the device.
+     * This method sends a byte command to the rawDevice.
      *
      * @param regAddress specifies the register address to write to.
      * @param command specifies the command byte.
@@ -189,7 +184,7 @@ public class FtcI2cDeviceSynch extends TrcSerialBusDevice
         byte[] data = new byte[1];
 
         data[0] = command;
-        device.write(regAddress, data, waitForCompletion? I2cWaitControl.WRITTEN: I2cWaitControl.ATOMIC);
+        rawDevice.writeData(regAddress, data, waitForCompletion);
 
         if (debugEnabled)
         {
@@ -199,7 +194,7 @@ public class FtcI2cDeviceSynch extends TrcSerialBusDevice
     }   //sendByteCommand
 
     /**
-     * This method sends a 16-bit command to the device.
+     * This method sends a 16-bit command to the rawDevice.
      *
      * @param regAddress specifies the register address to write to.
      * @param command specifies the 16-bit command.
@@ -212,7 +207,7 @@ public class FtcI2cDeviceSynch extends TrcSerialBusDevice
 
         data[0] = (byte)(command & 0xff);
         data[1] = (byte)(command >> 8);
-        device.write(regAddress, data, waitForCompletion? I2cWaitControl.WRITTEN: I2cWaitControl.ATOMIC);
+        rawDevice.writeData(regAddress, data, waitForCompletion);
 
         if (debugEnabled)
         {
@@ -226,7 +221,7 @@ public class FtcI2cDeviceSynch extends TrcSerialBusDevice
     //
 
     /**
-     * This method is called to read data from the device synchronously with the specified length.
+     * This method is called to read data from the rawDevice synchronously with the specified length.
      *
      * @param address specifies the data address if any, can be -1 if no address is required.
      * @param length specifies the number of bytes to read.
@@ -236,22 +231,23 @@ public class FtcI2cDeviceSynch extends TrcSerialBusDevice
     public byte[] readData(int address, int length)
     {
         final String funcName = "readData";
-        byte[] data = device.read(address, length);
+        byte[] data = rawDevice.readData(address, length);
 
         if (debugEnabled)
         {
             dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "start=0x%02x,len=%d", address, length);
             dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%s", Arrays.toString(data));
         }
+        HalDashboard.getInstance().displayPrintf(4, "read(%d,%d):%s", address, length, Arrays.toString(data));
 
         return data;
     }   //readData
 
     /**
-     * This method is called to write data to the device synchronously with the specified data buffer and length.
+     * This method is called to write data to the rawDevice synchronously with the specified data buffer and length.
      *
      * @param address specifies the data address if any, can be -1 if no address is required.
-     * @param buffer specifies the buffer containing the data to be written to the device.
+     * @param buffer specifies the buffer containing the data to be written to the rawDevice.
      * @param length specifies the number of bytes to write.
      * @return number of bytes written.
      */
@@ -267,8 +263,9 @@ public class FtcI2cDeviceSynch extends TrcSerialBusDevice
             dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
         }
 
-        device.write(address, buffer, I2cWaitControl.WRITTEN);
+        rawDevice.writeData(address, buffer, true);
+        HalDashboard.getInstance().displayPrintf(5, "write(%d,%d):%s", address, length, Arrays.toString(buffer));
         return length;
     }   //writeData
 
-}   //class FtcI2cDevice
+}   //class FtcI2cDeviceAsync
