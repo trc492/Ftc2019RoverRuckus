@@ -36,6 +36,21 @@ public class TrcUtil
     public static final double MM_PER_INCH = 25.4;
 
     /**
+     * This interface provides the method to get data of the specified type. This is to replaced the Supplier
+     * interface that Java SDK provides but Android API level 19 does not have.
+     */
+    public interface DataSupplier<T>
+    {
+        /**
+         * This method returns the data of the designated type.
+         *
+         * @return data of the designated type.
+         */
+        T get();
+
+    }   //interface DataSupplier
+
+    /**
      * This method returns the current time in seconds with nano-second precision.
      *
      * @return current time in seconds.
