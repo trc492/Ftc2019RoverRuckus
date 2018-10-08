@@ -62,7 +62,7 @@ public class VuforiaVision
         final String TRACKABLES_FILE = "RoverRuckus";
 
         this.robot = robot;
-        vuforia = new FtcVuforia(VUFORIA_LICENSE_KEY, cameraViewId, CAMERA_DIR, TRACKABLES_FILE, 4);
+        vuforia = new FtcVuforia(VUFORIA_LICENSE_KEY, cameraViewId, CAMERA_DIR, 4, TRACKABLES_FILE);
         vuforia.configVideoSource(IMAGE_WIDTH, IMAGE_HEIGHT, FRAME_QUEUE_CAPACITY);
 
         /*
