@@ -99,11 +99,6 @@ public class PixyVision
         return pixyCamera.isEnabled();
     }   //isEnabled
 
-    public boolean isTaskTerminatedAbnormally()
-    {
-        return pixyCamera.isTaskTerminatedAbnormally();
-    }   //isTaskTerminatedAbnormally
-
     /**
      * This method gets the rectangle of the last detected target from the camera. If the camera does not have
      * any. It may mean the camera is still busy analyzing a frame or it can't find any valid target in a frame.

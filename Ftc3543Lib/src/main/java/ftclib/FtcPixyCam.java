@@ -24,6 +24,7 @@ package ftclib;
 
 import com.qualcomm.robotcore.hardware.HardwareDevice;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.I2cDeviceSynch;
 
 import java.util.Arrays;
 
@@ -36,8 +37,10 @@ import trclib.TrcPixyCam;
  */
 public class FtcPixyCam extends TrcPixyCam
 {
+    private static final boolean USE_BUFFERED_READ = true;
     private static final int DEF_I2C_ADDRESS = 0x54;
-    private final FtcI2cDeviceAsync i2cDevice;
+
+    private final FtcI2cDeviceSynch i2cDevice;
 
     /**
      * Constructor: Create an instance of the object.
@@ -51,9 +54,13 @@ public class FtcPixyCam extends TrcPixyCam
     {
         super(instanceName, false);
 
-        i2cDevice = new FtcI2cDeviceAsync(hardwareMap, instanceName, devAddress, addressIs7Bit);
+        i2cDevice = hardwareMap.get(FtcI2cDeviceSynch.class, instanceName);
         i2cDevice.setDeviceInfo(HardwareDevice.Manufacturer.Other, "Pixy Camera v1");
-        super.start();
+        if (USE_BUFFERED_READ)
+        {
+            i2cDevice.setBufferedReadWindow(1, I2cDeviceSynch.ReadWindow.READ_REGISTER_COUNT_MAX,
+                    I2cDeviceSynch.ReadMode.REPEAT, 14);
+        }
     }   //FtcPixyCam
 
     /**
@@ -86,7 +93,7 @@ public class FtcPixyCam extends TrcPixyCam
     public boolean isEnabled()
     {
         final String funcName = "isEnabled";
-        boolean enabled = i2cDevice.isDeviceEnabled();
+        boolean enabled = i2cDevice.isEnabled();
 
         if (debugEnabled)
         {
@@ -111,7 +118,8 @@ public class FtcPixyCam extends TrcPixyCam
             dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "enanbled=%b", enabled);
         }
 
-        i2cDevice.setDeviceEnabled(enabled);
+        i2cDevice.setEnabled(enabled);
+        super.setEnabled(enabled);
 
         if (debugEnabled)
         {
@@ -119,68 +127,60 @@ public class FtcPixyCam extends TrcPixyCam
         }
     }   //setEnabled
 
-    /**
-     * Indicates whether the background task encountered a problem and terminated unexpectedly.
-     *
-     * @return true if the background task has terminated unexpectedly, false otherwise.
-     */
-    public boolean isTaskTerminatedAbnormally()
-    {
-        return i2cDevice.isTaskTerminatedAbnormally();
-    }   //isTaskTerminatedAbnormally
-
     //
     // Implements TrcPixyCam abstract methods.
     //
 
     /**
-     * This method issues an asynchronous read of the specified number of bytes from the device.
+     * This method issues an synchronous read of the specified number of bytes from the device.
      *
-     * @param requestTag specifies the tag to identify the request. Can be null if none was provided.
      * @param length specifies the number of bytes to read.
+     * @return data read.
      */
     @Override
-    public void asyncReadData(RequestTag requestTag, int length)
+    public byte[] readData(int length)
     {
-        final String funcName = "asyncReadData";
+        final String funcName = "readData";
+        byte[] data;
 
         if (debugEnabled)
         {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "tag=%s,length=%d",
-                    requestTag != null? requestTag: "null", length);
+            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "length=%d", length);
         }
 
-        i2cDevice.asyncRead(requestTag, length, null, this);
+        data = i2cDevice.readData(length);
 
         if (debugEnabled)
         {
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
+            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%s", Arrays.toString(data));
         }
-    }   //asyncReadData
+
+        return data;
+    }   //readData
 
     /**
-     * This method writes the data buffer to the device asynchronously.
+     * This method writes the data buffer to the device.
      *
-     * @param requestTag specifies the tag to identify the request. Can be null if none was provided.
      * @param data specifies the data buffer.
+     * @param waitForCompletion specifies true to wait for write completion, false otherwise.
      */
     @Override
-    public void asyncWriteData(RequestTag requestTag, byte[] data)
+    public void writeData(byte[] data, boolean waitForCompletion)
     {
-        final String funcName = "asyncWriteData";
+        final String funcName = "writeData";
 
         if (debugEnabled)
         {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "tag=%s,data=%s,length=%d",
-                    requestTag != null? requestTag: "null", Arrays.toString(data), data.length);
+            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "data=%s,waitForCompletion=%s",
+                    Arrays.toString(data), waitForCompletion);
         }
 
-        i2cDevice.asyncWrite(requestTag, data, data.length, null, null);
+        i2cDevice.writeData(0, data, waitForCompletion);
 
         if (debugEnabled)
         {
             dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
         }
-    }   //asyncWriteData
+    }   //writeData
 
 }   //class FtcPixyCam
