@@ -55,6 +55,7 @@ public class FtcTest extends FtcTeleOp implements TrcGameController.ButtonHandle
         X_DISTANCE_DRIVE,
         Y_DISTANCE_DRIVE,
         GYRO_TURN,
+        PIXY_DRIVE
     }   //enum Test
 
     private enum State
@@ -130,6 +131,9 @@ public class FtcTest extends FtcTeleOp implements TrcGameController.ButtonHandle
             case GYRO_TURN:
                 pidDriveCommand = new CmdPidDrive(
                         robot, robot.pidDrive, 0.0, 0.0, 0.0, turnDegrees);
+                break;
+
+            case PIXY_DRIVE:
                 break;
         }
 
@@ -215,6 +219,9 @@ public class FtcTest extends FtcTeleOp implements TrcGameController.ButtonHandle
 
                 pidDriveCommand.cmdPeriodic(elapsedTime);
                 break;
+
+            case PIXY_DRIVE:
+                break;
         }
     }   //runContinuous
 
@@ -281,6 +288,17 @@ public class FtcTest extends FtcTeleOp implements TrcGameController.ButtonHandle
         {
             dashboard.displayPrintf(4, LABEL_WIDTH, "Gyro: ", "Rate=%.3f,Heading=%.1f",
                     robot.gyro.getZRotationRate().value, robot.gyro.getZHeading().value);
+        }
+
+        if (robot.pixyVision != null)
+        {
+            PixyVision.TargetInfo targetInfo = robot.pixyVision.getTargetInfo(RobotInfo.PIXY_GOLD_MINERAL_SIGNATURE);
+            if (targetInfo != null)
+            {
+                dashboard.displayPrintf(7, LABEL_WIDTH,
+                        "Pixy: ", "x=%.1f,y=%.1f,angle=%.1f %s",
+                        targetInfo.xDistance, targetInfo.yDistance, targetInfo.angle, targetInfo.rect);
+            }
         }
     }   //doSensorsTest
 

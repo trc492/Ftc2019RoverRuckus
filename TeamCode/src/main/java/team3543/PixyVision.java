@@ -67,24 +67,19 @@ public class PixyVision
         UPSIDEDOWN_LANDSCAPE
     }   //enum Orientation
 
-    private static final double PIXY_DISTANCE_SCALE = 2300.0;   //DistanceInInches*targetWidthdInPixels
-    //CodeReview: why diagonal???
-    private static final double TARGET_WIDTH_INCHES = 2.0 * Math.sqrt(2.0);// 13x13 square, diagonal is 13*sqrt(2) inches
+    private static final double PIXY_DISTANCE_SCALE = 14.0*40.0;   //DistanceInInches*targetWidthdInPixels
+    private static final double TARGET_WIDTH_INCHES = 4.0 * Math.sqrt(2.0);// 13x13 square, diagonal is 13*sqrt(2) inches
 
     private FtcPixyCam pixyCamera;
     private Robot robot;
-    private int signature;
     private Orientation orientation;
     private Rect lastTargetRect = null;
     private double lastTargetRectExpireTime = TrcUtil.getCurrentTime();
 
-    public PixyVision(
-            String instanceName, Robot robot, int signature, int brightness, Orientation orientation,
-            int i2cAddress)
+    public PixyVision(String instanceName, Robot robot, Orientation orientation, int brightness)
     {
         pixyCamera = new FtcPixyCam(instanceName);
         this.robot = robot;
-        this.signature = signature;
         this.orientation = orientation;
         pixyCamera.setBrightness((byte)brightness);
     }   //PixyVision
@@ -111,7 +106,7 @@ public class PixyVision
      * @return rectangle of the detected target last received from the camera or last cached target if cached
      *         data has not expired. Null if no object was seen and last cached data has expired.
      */
-    private Rect getTargetRect()
+    private Rect getTargetRect(int signature)
     {
         final String funcName = "getTargetRect";
         Rect targetRect = null;
@@ -124,7 +119,7 @@ public class PixyVision
                     funcName, "%s object(s) found", detectedObjects != null? "" + detectedObjects.length: "null");
         }
 
-        if (detectedObjects != null && detectedObjects.length >= 1)
+        if (detectedObjects != null && detectedObjects.length > 0)
         {
             //
             // Make sure the camera detected at least one objects.
@@ -223,11 +218,11 @@ public class PixyVision
         return targetRect;
     }   //getTargetRect
 
-    public TargetInfo getTargetInfo()
+    public TargetInfo getTargetInfo(int signature)
     {
         final String funcName = "getTargetInfo";
         TargetInfo targetInfo = null;
-        Rect targetRect = getTargetRect();
+        Rect targetRect = getTargetRect(signature);
 
         if (targetRect != null)
         {

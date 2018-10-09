@@ -45,7 +45,8 @@ import trclib.TrcRobot;
 public class Robot implements FtcMenu.MenuButtons
 {
     static final boolean USE_SPEECH = true;
-    static final boolean USE_VUFORIA = true;
+    static final boolean USE_VUFORIA = false;
+    static final boolean USE_PIXY = true;
 
     private static final String moduleName = "Robot";
     //
@@ -68,6 +69,7 @@ public class Robot implements FtcMenu.MenuButtons
     //
     VuforiaVision vuforiaVision = null;
     RelicRecoveryVuMark prevVuMark = null;
+    PixyVision pixyVision = null;
     //
     // DriveBase subsystem.
     //
@@ -107,7 +109,7 @@ public class Robot implements FtcMenu.MenuButtons
         //
         // Initialize sensors.
         //
-        imu = new FtcBNO055Imu("imu2");
+        imu = new FtcBNO055Imu("imu");
         gyro = imu.gyro;
         //
         // Initialize vision subsystems.
@@ -118,13 +120,19 @@ public class Robot implements FtcMenu.MenuButtons
                     "cameraMonitorViewId", "id", opMode.hardwareMap.appContext.getPackageName());
             vuforiaVision = new VuforiaVision(this, -1);//cameraViewId);
         }
+
+        if (USE_PIXY)
+        {
+            pixyVision = new PixyVision("pixy", this,
+                    RobotInfo.PIXY_ORIENTATION, RobotInfo.PIXY_BRIGHTNESS);
+        }
         //
         // Initialize DriveBase.
         //
-        leftFrontWheel = new FtcDcMotor("leftFrontWheel");
-        rightFrontWheel = new FtcDcMotor("rightFrontWheel");
-        leftRearWheel = new FtcDcMotor("leftRearWheel");
-        rightRearWheel = new FtcDcMotor("rightRearWheel");
+        leftFrontWheel = new FtcDcMotor("lfWheel");
+        rightFrontWheel = new FtcDcMotor("rfWheel");
+        leftRearWheel = new FtcDcMotor("lrWheel");
+        rightRearWheel = new FtcDcMotor("rrWheel");
 
         leftFrontWheel.motor.setMode(RobotInfo.DRIVE_MOTOR_MODE);
         rightFrontWheel.motor.setMode(RobotInfo.DRIVE_MOTOR_MODE);
@@ -150,17 +158,17 @@ public class Robot implements FtcMenu.MenuButtons
                 "encoderXPidCtrl",
                 new TrcPidController.PidCoefficients(
                         RobotInfo.ENCODER_X_KP, RobotInfo.ENCODER_X_KI, RobotInfo.ENCODER_X_KD),
-                RobotInfo.ENCODER_X_TOLERANCE, () -> driveBase.getXPosition());
+                RobotInfo.ENCODER_X_TOLERANCE, driveBase::getXPosition);
         encoderYPidCtrl = new TrcPidController(
                 "encoderYPidCtrl",
                 new TrcPidController.PidCoefficients(
                         RobotInfo.ENCODER_Y_KP, RobotInfo.ENCODER_Y_KI, RobotInfo.ENCODER_Y_KD),
-                RobotInfo.ENCODER_Y_TOLERANCE, () -> driveBase.getYPosition());
+                RobotInfo.ENCODER_Y_TOLERANCE, driveBase::getYPosition);
         gyroPidCtrl = new TrcPidController(
                 "gyroPidCtrl",
                 new TrcPidController.PidCoefficients(
                         RobotInfo.GYRO_KP, RobotInfo.GYRO_KI, RobotInfo.GYRO_KD),
-                RobotInfo.GYRO_TOLERANCE, () -> driveBase.getHeading());
+                RobotInfo.GYRO_TOLERANCE, driveBase::getHeading);
         gyroPidCtrl.setAbsoluteSetPoint(true);
         gyroPidCtrl.setOutputRange(-RobotInfo.TURN_POWER_LIMIT, RobotInfo.TURN_POWER_LIMIT);
 
@@ -195,6 +203,10 @@ public class Robot implements FtcMenu.MenuButtons
             vuforiaVision.setEnabled(true);
         }
 
+        if (pixyVision != null)
+        {
+            pixyVision.setEnabled(true);
+        }
         //
         // Reset all X, Y and heading values.
         //
@@ -208,7 +220,11 @@ public class Robot implements FtcMenu.MenuButtons
         {
             vuforiaVision.setEnabled(false);
         }
-        //
+
+        if (pixyVision != null)
+        {
+            pixyVision.setEnabled(false);
+        }        //
         // Disable the gyro integrator.
         //
         gyro.setEnabled(false);
