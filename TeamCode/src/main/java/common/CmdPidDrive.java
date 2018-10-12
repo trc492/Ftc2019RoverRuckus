@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Titan Robotics Club (http://www.titanrobotics.com)
+ * Copyright (c) 2018 Titan Robotics Club (http://www.titanrobotics.com)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -20,65 +20,70 @@
  * SOFTWARE.
  */
 
-package team3543;
+package common;
 
 import trclib.TrcEvent;
+import trclib.TrcPidDrive;
 import trclib.TrcRobot;
 import trclib.TrcStateMachine;
 import trclib.TrcTimer;
 
-class CmdTimedDrive implements TrcRobot.RobotCommand
+public class CmdPidDrive implements TrcRobot.RobotCommand
 {
+    private static final boolean debugXPid = true;
+    private static final boolean debugYPid = true;
+    private static final boolean debugTurnPid = true;
+
     private enum State
     {
         DO_DELAY,
-        DRIVE_BY_TIME,
+        DO_PID_DRIVE,
         DONE
     }   //enum State
 
-    private static final String moduleName = "CmdTimedDrive";
+    private static final String moduleName = "CmdPidDrive";
 
     private Robot robot;
+    private TrcPidDrive pidDrive;
     private double delay;
-    private double driveTime;
-    private double xDrivePower;
-    private double yDrivePower;
-    private double turnPower;
+    private double xDistance;
+    private double yDistance;
+    private double heading;
     private TrcEvent event;
     private TrcTimer timer;
     private TrcStateMachine<State> sm;
 
-    CmdTimedDrive(Robot robot, double delay, double driveTime, double xDrivePower, double yDrivePower, double turnPower)
+    public CmdPidDrive(
+            Robot robot, TrcPidDrive pidDrive, double delay, double xDistance, double yDistance, double heading)
     {
         this.robot = robot;
+        this.pidDrive = pidDrive;
         this.delay = delay;
-        this.driveTime = driveTime;
-        this.xDrivePower = xDrivePower;
-        this.yDrivePower = yDrivePower;
-        this.turnPower = turnPower;
+        this.xDistance = xDistance;
+        this.yDistance = yDistance;
+        this.heading = heading;
         event = new TrcEvent(moduleName);
         timer = new TrcTimer(moduleName);
         sm = new TrcStateMachine<>(moduleName);
         sm.start(State.DO_DELAY);
-    }   //CmdTimedDrive
+    }   //CmdPidDrive
 
     //
-    // Implements the TrcRobot.AutoStrategy interface.
+    // Implements the TrcRobot.RobotCommand interface.
     //
 
     @Override
     public boolean cmdPeriodic(double elapsedTime)
     {
-        boolean done = !sm.isEnabled();
-        //
-        // Print debug info.
-        //
-        State state = sm.getState();
-        robot.dashboard.displayPrintf(1, "State: %s", state != null? state.toString(): "Disabled");
+        State state = sm.checkReadyAndGetState();
 
-        if (sm.isReady())
+        if (state == null)
         {
-            state = sm.getState();
+            robot.dashboard.displayPrintf(1, "State: Disabled");
+        }
+        else
+        {
+            robot.dashboard.displayPrintf(1, "State: %s", state);
 
             switch (state)
             {
@@ -88,21 +93,20 @@ class CmdTimedDrive implements TrcRobot.RobotCommand
                     //
                     if (delay == 0.0)
                     {
-                        sm.setState(State.DRIVE_BY_TIME);
+                        sm.setState(State.DO_PID_DRIVE);
                     }
                     else
                     {
                         timer.set(delay, event);
-                        sm.waitForSingleEvent(event, State.DRIVE_BY_TIME);
+                        sm.waitForSingleEvent(event, State.DO_PID_DRIVE);
                     }
                     break;
 
-                case DRIVE_BY_TIME:
+                case DO_PID_DRIVE:
                     //
-                    // Drive the robot with the given power for a set amount of time.
+                    // Drive the set distance and heading.
                     //
-                    robot.driveBase.holonomicDrive(xDrivePower, yDrivePower, turnPower);
-                    timer.set(driveTime, event);
+                    pidDrive.setTarget(xDistance, yDistance, heading, false, event);
                     sm.waitForSingleEvent(event, State.DONE);
                     break;
 
@@ -111,15 +115,34 @@ class CmdTimedDrive implements TrcRobot.RobotCommand
                     //
                     // We are done.
                     //
-                    robot.driveBase.holonomicDrive(0.0, 0.0, 0.0);
-                    done = true;
                     sm.stop();
                     break;
             }
-            robot.traceStateInfo(elapsedTime, state.toString(), 0.0, 0.0, 0.0);
+            robot.traceStateInfo(elapsedTime, state.toString(), xDistance, yDistance, heading);
         }
 
-        return done;
+        if (pidDrive.isActive() && (debugXPid || debugYPid || debugTurnPid))
+        {
+            robot.tracer.traceInfo("Battery", "Voltage=%5.2fV (%5.2fV)",
+                                   robot.battery.getVoltage(), robot.battery.getLowestVoltage());
+
+            if (debugXPid)
+            {
+                pidDrive.getXPidCtrl().printPidInfo(robot.tracer, elapsedTime);
+            }
+
+            if (debugYPid)
+            {
+                pidDrive.getYPidCtrl().printPidInfo(robot.tracer, elapsedTime);
+            }
+
+            if (debugTurnPid)
+            {
+                pidDrive.getTurnPidCtrl().printPidInfo(robot.tracer, elapsedTime);
+            }
+        }
+
+        return !sm.isEnabled();
     }   //cmdPeriodic
 
-}   //class CmdTimedDrive
+}   //class CmdPidDrive

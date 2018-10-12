@@ -22,6 +22,30 @@
 
 package team3543;
 
-public class TeamMarkerDeployer
+import ftclib.FtcServo;
+
+public class TeamMarkerDeployer3543
 {
-}   //class TeamMarkerDeployer
+    private FtcServo teamMarkerDeployer;
+
+    public TeamMarkerDeployer3543()
+    {
+        teamMarkerDeployer = new FtcServo("deployerServo");
+    }
+
+    public void setPosition(double pos)
+    {
+        teamMarkerDeployer.setPosition(pos);
+    }
+
+    public void open()
+    {
+        teamMarkerDeployer.setPosition(Robot3543Info.DEPLOYER_OPEN_POSITION);
+    }
+
+    public void close()
+    {
+        teamMarkerDeployer.setPosition(Robot3543Info.DEPLOYER_CLOSE_POSITION);
+    }
+
+}   //class TeamMarkerDeployer3543

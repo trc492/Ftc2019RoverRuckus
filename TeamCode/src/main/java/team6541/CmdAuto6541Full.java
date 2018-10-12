@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Titan Robotics Club (http://www.titanrobotics.com)
+ * Copyright (c) 2018 Titan Robotics Club (http://www.titanrobotics.com)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -20,15 +20,16 @@
  * SOFTWARE.
  */
 
-package team3543;
+package team6541;
+
+import org.firstinspires.ftc.robotcore.external.navigation.RelicRecoveryVuMark;
 
 import trclib.TrcEvent;
-import trclib.TrcPidDrive;
 import trclib.TrcRobot;
 import trclib.TrcStateMachine;
 import trclib.TrcTimer;
 
-class CmdPidDrive implements TrcRobot.RobotCommand
+class CmdAuto6541Full implements TrcRobot.RobotCommand
 {
     private static final boolean debugXPid = true;
     private static final boolean debugYPid = true;
@@ -37,35 +38,34 @@ class CmdPidDrive implements TrcRobot.RobotCommand
     private enum State
     {
         DO_DELAY,
-        DO_PID_DRIVE,
         DONE
     }   //enum State
 
-    private static final String moduleName = "CmdPidDrive";
+    private static final String moduleName = "CmdAuto6541Full";
 
-    private Robot robot;
-    private TrcPidDrive pidDrive;
+    private Robot6541 robot;
+    private FtcAuto6541.Alliance alliance;
     private double delay;
-    private double xDistance;
-    private double yDistance;
-    private double heading;
     private TrcEvent event;
     private TrcTimer timer;
     private TrcStateMachine<State> sm;
+    private double targetX = 0.0;
+    private double targetY = 0.0;
+    private RelicRecoveryVuMark vuMark;
 
-    CmdPidDrive(Robot robot, TrcPidDrive pidDrive, double delay, double xDistance, double yDistance, double heading)
+    CmdAuto6541Full(Robot6541 robot, FtcAuto6541.Alliance alliance, double delay)
     {
+        robot.tracer.traceInfo(
+                moduleName, "alliance=%s, delay=%.0f", alliance, delay);
         this.robot = robot;
-        this.pidDrive = pidDrive;
+        this.alliance = alliance;
         this.delay = delay;
-        this.xDistance = xDistance;
-        this.yDistance = yDistance;
-        this.heading = heading;
+
         event = new TrcEvent(moduleName);
         timer = new TrcTimer(moduleName);
         sm = new TrcStateMachine<>(moduleName);
         sm.start(State.DO_DELAY);
-    }   //CmdPidDrive
+    }   //CmdAuto6541Full
 
     //
     // Implements the TrcRobot.RobotCommand interface.
@@ -74,16 +74,15 @@ class CmdPidDrive implements TrcRobot.RobotCommand
     @Override
     public boolean cmdPeriodic(double elapsedTime)
     {
-        boolean done = !sm.isEnabled();
-        //
-        // Print debug info.
-        //
-        State state = sm.getState();
-        robot.dashboard.displayPrintf(1, "State: %s", state != null? sm.getState().toString(): "Disabled");
+        State state = sm.checkReadyAndGetState();
 
-        if (sm.isReady())
+        if (state == null)
         {
-            state = sm.getState();
+            robot.dashboard.displayPrintf(1, "State: Disabled");
+        }
+        else
+        {
+            robot.dashboard.displayPrintf(1, "State: %s", state);
 
             switch (state)
             {
@@ -91,23 +90,16 @@ class CmdPidDrive implements TrcRobot.RobotCommand
                     //
                     // Do delay if any.
                     //
+                    robot.tracer.traceInfo(state.toString(), "Delay=%.0f", delay);
                     if (delay == 0.0)
                     {
-                        sm.setState(State.DO_PID_DRIVE);
+                        sm.setState(State.DONE);
                     }
                     else
                     {
                         timer.set(delay, event);
-                        sm.waitForSingleEvent(event, State.DO_PID_DRIVE);
+                        sm.waitForSingleEvent(event, State.DONE);
                     }
-                    break;
-
-                case DO_PID_DRIVE:
-                    //
-                    // Drive the set distance and heading.
-                    //
-                    pidDrive.setTarget(xDistance, yDistance, heading, false, event);
-                    sm.waitForSingleEvent(event, State.DONE);
                     break;
 
                 case DONE:
@@ -115,35 +107,40 @@ class CmdPidDrive implements TrcRobot.RobotCommand
                     //
                     // We are done.
                     //
-                    done = true;
                     sm.stop();
                     break;
             }
-            robot.traceStateInfo(elapsedTime, state.toString(), xDistance, yDistance, heading);
+            robot.traceStateInfo(elapsedTime, state.toString(), targetX, targetY, robot.targetHeading);
         }
 
-        if (pidDrive.isActive() && (debugXPid || debugYPid || debugTurnPid))
+        if (robot.pidDrive.isActive())
         {
             robot.tracer.traceInfo("Battery", "Voltage=%5.2fV (%5.2fV)",
-                                   robot.battery.getVoltage(), robot.battery.getLowestVoltage());
+                    robot.battery.getVoltage(), robot.battery.getLowestVoltage());
+            robot.tracer.traceInfo("Raw Encoder",
+                    "lf=%.0f, rf=%.0f, lr=%.0f, rr=%.0f",
+                    robot.leftFrontWheel.getPosition(),
+                    robot.rightFrontWheel.getPosition(),
+                    robot.leftRearWheel.getPosition(),
+                    robot.rightRearWheel.getPosition());
 
             if (debugXPid)
             {
-                pidDrive.getXPidCtrl().printPidInfo(robot.tracer, elapsedTime);
+                robot.encoderXPidCtrl.printPidInfo(robot.tracer, elapsedTime);
             }
 
             if (debugYPid)
             {
-                pidDrive.getYPidCtrl().printPidInfo(robot.tracer, elapsedTime);
+                robot.encoderYPidCtrl.printPidInfo(robot.tracer, elapsedTime);
             }
 
             if (debugTurnPid)
             {
-                pidDrive.getTurnPidCtrl().printPidInfo(robot.tracer, elapsedTime);
+                robot.gyroPidCtrl.printPidInfo(robot.tracer, elapsedTime);
             }
         }
 
-        return done;
+        return !sm.isEnabled();
     }   //cmdPeriodic
 
-}   //class CmdPidDrive
+}   //class CmdAuto6541Full

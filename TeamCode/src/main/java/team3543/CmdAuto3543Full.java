@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Titan Robotics Club (http://www.titanrobotics.com)
+ * Copyright (c) 2018 Titan Robotics Club (http://www.titanrobotics.com)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -29,7 +29,7 @@ import trclib.TrcRobot;
 import trclib.TrcStateMachine;
 import trclib.TrcTimer;
 
-class CmdAutoFull implements TrcRobot.RobotCommand
+class CmdAuto3543Full implements TrcRobot.RobotCommand
 {
     private static final boolean debugXPid = true;
     private static final boolean debugYPid = true;
@@ -41,10 +41,10 @@ class CmdAutoFull implements TrcRobot.RobotCommand
         DONE
     }   //enum State
 
-    private static final String moduleName = "CmdAutoFull";
+    private static final String moduleName = "CmdAuto3543Full";
 
-    private Robot robot;
-    private FtcAuto.Alliance alliance;
+    private Robot3543 robot;
+    private FtcAuto3543.Alliance alliance;
     private double delay;
     private TrcEvent event;
     private TrcTimer timer;
@@ -53,7 +53,7 @@ class CmdAutoFull implements TrcRobot.RobotCommand
     private double targetY = 0.0;
     private RelicRecoveryVuMark vuMark;
 
-    CmdAutoFull(Robot robot, FtcAuto.Alliance alliance, double delay)
+    CmdAuto3543Full(Robot3543 robot, FtcAuto3543.Alliance alliance, double delay)
     {
         robot.tracer.traceInfo(
                 moduleName, "alliance=%s, delay=%.0f", alliance, delay);
@@ -65,7 +65,7 @@ class CmdAutoFull implements TrcRobot.RobotCommand
         timer = new TrcTimer(moduleName);
         sm = new TrcStateMachine<>(moduleName);
         sm.start(State.DO_DELAY);
-    }   //CmdAutoFull
+    }   //CmdAuto3543Full
 
     //
     // Implements the TrcRobot.RobotCommand interface.
@@ -74,16 +74,15 @@ class CmdAutoFull implements TrcRobot.RobotCommand
     @Override
     public boolean cmdPeriodic(double elapsedTime)
     {
-        boolean done = !sm.isEnabled();
-        //
-        // Print debug info.
-        //
-        State state = sm.getState();
-        robot.dashboard.displayPrintf(1, "State: %s", state != null? sm.getState().toString(): "Disabled");
+        State state = sm.checkReadyAndGetState();
 
-        if (sm.isReady())
+        if (state == null)
         {
-            state = sm.getState();
+            robot.dashboard.displayPrintf(1, "State: Disabled");
+        }
+        else
+        {
+            robot.dashboard.displayPrintf(1, "State: %s", state);
 
             switch (state)
             {
@@ -108,7 +107,6 @@ class CmdAutoFull implements TrcRobot.RobotCommand
                     //
                     // We are done.
                     //
-                    done = true;
                     sm.stop();
                     break;
             }
@@ -142,7 +140,7 @@ class CmdAutoFull implements TrcRobot.RobotCommand
             }
         }
 
-        return done;
+        return !sm.isEnabled();
     }   //cmdPeriodic
 
-}   //class CmdAutoFull
+}   //class CmdAuto3543Full

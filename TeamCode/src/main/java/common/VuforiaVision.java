@@ -20,7 +20,7 @@
  * SOFTWARE.
  */
 
-package team3543;
+package common;
 
 import org.firstinspires.ftc.robotcore.external.matrices.OpenGLMatrix;
 import org.firstinspires.ftc.robotcore.external.matrices.VectorF;
@@ -49,20 +49,26 @@ public class VuforiaVision
 
     private Robot robot;
     private FtcVuforia vuforia;
+    private VuforiaTrackable[] imageTargets = null;
     private OpenGLMatrix lastRobotLocation = null;
 
     public VuforiaVision(Robot robot, int cameraViewId)
     {
         final String VUFORIA_LICENSE_KEY =
+//                "ATu19Kj/////AAAAGcw4SDCVwEBSiKcUtdmQd2aOugrxo/OgeBJUt7XwMSi3e0KSZaylbsTnWp8EBxyA5o/00JFJVDY1OxJ" +
+//                "XLxQOpz1tbM4ex1sl1EbF25olEZ3w9xXZ1QaqMP+5T63VqTwvkgKbtM+dS+tLi8EHMvJ2viYf6WwOE776e0s3QNfl/XvONM" +
+//                "XS4ZtEWLNeiSEMTCdO9bdeaxnSb2RfErcmjadAThDWf6PC9HrMRHLmgfcFaZlj5JN+figOjgKhyQZeYYrcDEm0lICN5kAr2" +
+//                "pdfNKNOii3A80eXyTVDfPGfzTwVa4eNBY/SgmoIdBbMPb3hfZBOz7GVoVHHQWbCNbzm31p1OY+zqPPWMfzzpyiJ4mA9bLTQ";
                 "AdCwzDH/////AAAAGeDkDS3ukU9+lIXc19LMh+cKk29caNhOl8UqmZOymRGwVwT1ZN8uaPdE3Q+zceDu9AKNsqL9qLblSFV" +
                 "/x8Y3jfOZdjMFs0CQSQOEyWv3xfJsdSmevXDQDQr+4KI31HY2YSf/KB/kyxfuRMk4Pi+vWS+oLl65o7sWPiyFgzoM74ENyb" +
                 "j4FgteD/2b6B+UFuwkHWKBNpp18wrpkaiFfr/FCbRFcdWP5mrjlEZM6eOj171dybw97HPeZbGihnnxOeeUv075O7P167AVq" +
                 "aiPy2eRK7OCubR32KXOqQKoyF6AXp+qu2cOTApXS5dqOOseEm+HE4eMF0S2Pld3i5AWBIR+JlPXDuc9LwoH2Q8iDwUK1+4g";
         final VuforiaLocalizer.CameraDirection CAMERA_DIR = VuforiaLocalizer.CameraDirection.BACK;
-        final String TRACKABLES_FILE = "RoverRuckus";
+        final String TRACKABLE_IMAGES_FILE = "RoverRuckus";
+        final String TRACKABLE_OBJECTS_FILE = "Hyroplane";
 
         this.robot = robot;
-        vuforia = new FtcVuforia(VUFORIA_LICENSE_KEY, cameraViewId, CAMERA_DIR, 4, TRACKABLES_FILE);
+        vuforia = new FtcVuforia(VUFORIA_LICENSE_KEY, cameraViewId, CAMERA_DIR);
         vuforia.configVideoSource(IMAGE_WIDTH, IMAGE_HEIGHT, FRAME_QUEUE_CAPACITY);
 
         /*
@@ -124,7 +130,6 @@ public class VuforiaVision
         OpenGLMatrix blueRoverLocationOnField = OpenGLMatrix
                 .translation(0, FTC_FIELD_WIDTH_MM, TARGET_HEIGHT_MM)
                 .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XYZ, DEGREES, 90, 0, 0));
-        vuforia.setTargetInfo(0, "Blue-Rover", blueRoverLocationOnField, phoneLocationOnRobot);
 
         /*
          * To place the RedFootprint target in the middle of the red perimeter wall:
@@ -136,7 +141,6 @@ public class VuforiaVision
         OpenGLMatrix redFootprintLocationOnField = OpenGLMatrix
                 .translation(0, -FTC_FIELD_WIDTH_MM, TARGET_HEIGHT_MM)
                 .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XYZ, DEGREES, 90, 0, 180));
-        vuforia.setTargetInfo(1, "Red-Footprint", redFootprintLocationOnField, phoneLocationOnRobot);
 
         /*
          * To place the FrontCraters target in the middle of the front perimeter wall:
@@ -148,7 +152,6 @@ public class VuforiaVision
         OpenGLMatrix frontCratersLocationOnField = OpenGLMatrix
                 .translation(-FTC_FIELD_WIDTH_MM, 0, TARGET_HEIGHT_MM)
                 .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XYZ, DEGREES, 90, 0 , 90));
-        vuforia.setTargetInfo(2, "Front-Craters", frontCratersLocationOnField, phoneLocationOnRobot);
 
         /*
          * To place the BackSpace target in the middle of the back perimeter wall:
@@ -160,7 +163,28 @@ public class VuforiaVision
         OpenGLMatrix backSpaceLocationOnField = OpenGLMatrix
                 .translation(FTC_FIELD_WIDTH_MM, 0, TARGET_HEIGHT_MM)
                 .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XYZ, DEGREES, 90, 0, -90));
-        vuforia.setTargetInfo(3, "Back-Space", backSpaceLocationOnField, phoneLocationOnRobot);
+
+        FtcVuforia.TargetInfo[] imageTargetsInfo =
+        {
+                new FtcVuforia.TargetInfo(0, "Blue-Rover", false, blueRoverLocationOnField),
+                new FtcVuforia.TargetInfo(1, "Red-Footprint", false, blueRoverLocationOnField),
+                new FtcVuforia.TargetInfo(2, "Front-Craters", false, frontCratersLocationOnField),
+                new FtcVuforia.TargetInfo(3, "Back-Space", false, backSpaceLocationOnField)
+        };
+
+        vuforia.addTargetList(TRACKABLE_IMAGES_FILE, imageTargetsInfo, phoneLocationOnRobot);
+        imageTargets = new VuforiaTrackable[imageTargetsInfo.length];
+        for (int i = 0; i < imageTargets.length; i++)
+        {
+            imageTargets[i] = vuforia.getTarget(imageTargetsInfo[i].name);
+        }
+
+        FtcVuforia.TargetInfo[] objectTargetsInfo =
+        {
+                new FtcVuforia.TargetInfo(0, "Team-Marker", true, null)
+        };
+
+        vuforia.addTargetList(TRACKABLE_OBJECTS_FILE, objectTargetsInfo, null);
     }   //VuforiaVision
 
     public void setEnabled(boolean enabled)
@@ -173,15 +197,14 @@ public class VuforiaVision
         OpenGLMatrix robotLocation = null;
         boolean targetVisible = false;
 
-        for (int i = 0; i < vuforia.getNumTargets(); i++)
+        for (int i = 0; i < imageTargets.length; i++)
         {
-            VuforiaTrackable target = vuforia.getTarget(i);
-            if (vuforia.isTargetVisible(target))
+            if (vuforia.isTargetVisible(imageTargets[i]))
             {
                 targetVisible = true;
                 // getUpdatedRobotLocation() will return null if no new information is available since
                 // the last time that call was made, or if the trackable is not currently visible.
-                OpenGLMatrix location = vuforia.getRobotLocation(target);
+                OpenGLMatrix location = vuforia.getRobotLocation(imageTargets[i]);
                 if (location != null)
                 {
                     lastRobotLocation = location;

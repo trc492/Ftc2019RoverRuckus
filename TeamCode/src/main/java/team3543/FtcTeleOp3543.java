@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Titan Robotics Club (http://www.titanrobotics.com)
+ * Copyright (c) 2018 Titan Robotics Club (http://www.titanrobotics.com)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -31,7 +31,7 @@ import trclib.TrcGameController;
 import trclib.TrcRobot;
 
 @TeleOp(name="TeleOp", group="3543TeleOp")
-public class FtcTeleOp extends FtcOpMode implements TrcGameController.ButtonHandler
+public class FtcTeleOp3543 extends FtcOpMode implements TrcGameController.ButtonHandler
 {
     private enum DriveMode
     {
@@ -40,7 +40,7 @@ public class FtcTeleOp extends FtcOpMode implements TrcGameController.ButtonHand
     }   //enum DriveMode
 
     protected HalDashboard dashboard;
-    protected Robot robot;
+    protected Robot3543 robot;
 
     protected FtcGamepad driverGamepad;
     protected FtcGamepad operatorGamepad;
@@ -59,7 +59,7 @@ public class FtcTeleOp extends FtcOpMode implements TrcGameController.ButtonHand
         //
         // Initializing robot objects.
         //
-        robot = new Robot(TrcRobot.RunMode.TELEOP_MODE);
+        robot = new Robot3543(TrcRobot.RunMode.TELEOP_MODE);
         dashboard = robot.dashboard;
         //
         // Initializing Gamepads.
@@ -127,7 +127,6 @@ public class FtcTeleOp extends FtcOpMode implements TrcGameController.ButtonHand
                 robot.elevator.isLowerLimitSwitchActive(), robot.elevator.isUpperLimitSwitchActive());
     }   //runPeriodic
 
-
     //
     // Implements TrcGameController.ButtonHandler interface.
     //
@@ -142,13 +141,9 @@ public class FtcTeleOp extends FtcOpMode implements TrcGameController.ButtonHand
             switch (button)
             {
                 case FtcGamepad.GAMEPAD_A:
-                    if (pressed)
-                        driveMode = DriveMode.MECANUM_MODE;
                     break;
 
                 case FtcGamepad.GAMEPAD_B:
-                    if (pressed)
-                        driveMode = DriveMode.TANK_MODE;
                     break;
 
                 case FtcGamepad.GAMEPAD_X:
@@ -183,15 +178,31 @@ public class FtcTeleOp extends FtcOpMode implements TrcGameController.ButtonHand
                     break;
 
                 case FtcGamepad.GAMEPAD_LBUMPER:
+                    if (pressed)
+                    {
+                        robot.teamMarkerDeployer.close();
+                    }
                     break;
 
                 case FtcGamepad.GAMEPAD_RBUMPER:
+                    if (pressed)
+                    {
+                        robot.teamMarkerDeployer.open();
+                    }
                     break;
 
                 case FtcGamepad.GAMEPAD_DPAD_UP:
+                    if (pressed)
+                    {
+                        robot.mineralSweeper.close();
+                    }
                     break;
 
                 case FtcGamepad.GAMEPAD_DPAD_DOWN:
+                    if (pressed)
+                    {
+                        robot.mineralSweeper.open();
+                    }
                     break;
 
                 case FtcGamepad.GAMEPAD_DPAD_LEFT:
@@ -201,6 +212,10 @@ public class FtcTeleOp extends FtcOpMode implements TrcGameController.ButtonHand
                     break;
 
                 case FtcGamepad.GAMEPAD_BACK:
+                    if (pressed)
+                    {
+                        robot.elevator.zeroCalibrate();
+                    }
                     break;
 
                 case FtcGamepad.GAMEPAD_START:
@@ -209,4 +224,4 @@ public class FtcTeleOp extends FtcOpMode implements TrcGameController.ButtonHand
         }
     }   //buttonEvent
 
-}   //class FtcTeleOp
+}   //class FtcTeleOp3543

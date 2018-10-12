@@ -22,6 +22,30 @@
 
 package team3543;
 
-public class MineralSweeper
+import ftclib.FtcServo;
+
+public class MineralSweeper3543
 {
-}   //class MineralSweeper
+    private FtcServo sweeperServo;
+
+    public MineralSweeper3543()
+    {
+        sweeperServo = new FtcServo("sweeperServo");
+    }
+
+    public void setPosition(double pos)
+    {
+        sweeperServo.setPosition(pos);
+    }
+
+    public void open()
+    {
+        sweeperServo.setPosition(Robot3543Info.MINERAL_SWEEPER_OPEN_POSITION);
+    }
+
+    public void close()
+    {
+        sweeperServo.setPosition(Robot3543Info.MINERAL_SWEEPER_CLOSE_POSITION);
+    }
+
+}   //class MineralSweeper3543

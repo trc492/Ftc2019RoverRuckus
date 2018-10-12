@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Titan Robotics Club (http://www.titanrobotics.com)
+ * Copyright (c) 2018 Titan Robotics Club (http://www.titanrobotics.com)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -20,7 +20,7 @@
  * SOFTWARE.
  */
 
-package team3543;
+package team6541;
 
 import android.speech.tts.TextToSpeech;
 
@@ -30,6 +30,9 @@ import org.firstinspires.ftc.robotcore.external.matrices.OpenGLMatrix;
 import org.firstinspires.ftc.robotcore.external.matrices.VectorF;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 
+import common.CmdPidDrive;
+import common.CmdTimedDrive;
+import common.PixyVision;
 import ftclib.FtcChoiceMenu;
 import ftclib.FtcGamepad;
 import ftclib.FtcMenu;
@@ -41,10 +44,10 @@ import trclib.TrcStateMachine;
 import trclib.TrcTimer;
 import trclib.TrcUtil;
 
-@TeleOp(name="Test", group="3543Test")
-public class FtcTest extends FtcTeleOp implements TrcGameController.ButtonHandler
+@TeleOp(name="Test", group="6541Test")
+public class FtcTest6541 extends FtcTeleOp6541 implements TrcGameController.ButtonHandler
 {
-    private static final String moduleName = "FtcTest";
+    private static final String moduleName = "FtcTest6541";
 
     private enum Test
     {
@@ -92,7 +95,7 @@ public class FtcTest extends FtcTeleOp implements TrcGameController.ButtonHandle
     public void initRobot()
     {
         //
-        // FtcTest inherits from FtcTeleOp so it can do everything that FtcTeleOp can do and more.
+        // FtcTest6541 inherits from FtcTeleOp6541 so it can do everything that FtcTeleOp6541 can do and more.
         //
         super.initRobot();
         //
@@ -292,7 +295,7 @@ public class FtcTest extends FtcTeleOp implements TrcGameController.ButtonHandle
 
         if (robot.pixyVision != null)
         {
-            PixyVision.TargetInfo targetInfo = robot.pixyVision.getTargetInfo(RobotInfo.PIXY_GOLD_MINERAL_SIGNATURE);
+            PixyVision.TargetInfo targetInfo = robot.pixyVision.getTargetInfo(Robot6541Info.PIXY_GOLD_MINERAL_SIGNATURE);
             if (targetInfo != null)
             {
                 dashboard.displayPrintf(7, LABEL_WIDTH,
@@ -454,7 +457,7 @@ public class FtcTest extends FtcTeleOp implements TrcGameController.ButtonHandle
     }   //doMotorsTest
 
     //
-    // Overrides TrcGameController.ButtonHandler in FtcTeleOp.
+    // Overrides TrcGameController.ButtonHandler in FtcTeleOp6541.
     //
 
     @Override
@@ -462,8 +465,8 @@ public class FtcTest extends FtcTeleOp implements TrcGameController.ButtonHandle
     {
         boolean processed = false;
         //
-        // In addition to or instead of the gamepad controls handled by FtcTeleOp, we can add to or override the
-        // FtcTeleOp gamepad actions.
+        // In addition to or instead of the gamepad controls handled by FtcTeleOp6541, we can add to or override the
+        // FtcTeleOp6541 gamepad actions.
         //
         dashboard.displayPrintf(
                 7, "%s: %04x->%s", gamepad.toString(), button, pressed? "Pressed": "Released");
@@ -502,7 +505,7 @@ public class FtcTest extends FtcTeleOp implements TrcGameController.ButtonHandle
             }
         }
         //
-        // If the control was not processed by this method, pass it back to FtcTeleOp.
+        // If the control was not processed by this method, pass it back to FtcTeleOp6541.
         //
         if (!processed)
         {
@@ -510,4 +513,4 @@ public class FtcTest extends FtcTeleOp implements TrcGameController.ButtonHandle
         }
     }   //buttonEvent
 
-}   //class FtcTest
+}   //class FtcTest6541

@@ -20,8 +20,32 @@
  * SOFTWARE.
  */
 
-package team3543;
+package team6541;
 
-public class HangingHook
+import ftclib.FtcServo;
+
+public class TeamMarkerDeployer6541
 {
-}   //class HangingHook
+    private FtcServo teamMarkerDeployer;
+
+    public TeamMarkerDeployer6541()
+    {
+        teamMarkerDeployer = new FtcServo("deployerServo");
+    }
+
+    public void setPosition(double pos)
+    {
+        teamMarkerDeployer.setPosition(pos);
+    }
+
+    public void open()
+    {
+        teamMarkerDeployer.setPosition(Robot6541Info.DEPLOYER_OPEN_POSITION);
+    }
+
+    public void close()
+    {
+        teamMarkerDeployer.setPosition(Robot6541Info.DEPLOYER_CLOSE_POSITION);
+    }
+
+}   //class TeamMarkerDeployer6541

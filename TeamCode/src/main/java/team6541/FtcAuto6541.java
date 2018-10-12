@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Titan Robotics Club (http://www.titanrobotics.com)
+ * Copyright (c) 2018 Titan Robotics Club (http://www.titanrobotics.com)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -20,20 +20,22 @@
  * SOFTWARE.
  */
 
-package team3543;
+package team6541;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
 import java.util.Date;
 
+import common.CmdPidDrive;
+import common.CmdTimedDrive;
 import ftclib.FtcChoiceMenu;
 import ftclib.FtcMenu;
 import ftclib.FtcOpMode;
 import ftclib.FtcValueMenu;
 import trclib.TrcRobot;
 
-@Autonomous(name="Autonomous", group="3543Auto")
-public class FtcAuto extends FtcOpMode
+@Autonomous(name="Autonomous", group="6541Auto")
+public class FtcAuto6541 extends FtcOpMode
 {
     private static final boolean USE_TRACELOG = true;
 
@@ -59,9 +61,9 @@ public class FtcAuto extends FtcOpMode
         DO_NOTHING
     }   //enum Strategy
 
-    private static final String moduleName = "FtcAuto";
+    private static final String moduleName = "FtcAuto6541";
 
-    private Robot robot;
+    private Robot6541 robot;
     private TrcRobot.RobotCommand autoCommand = null;
     private MatchType matchType = MatchType.PRACTICE;
     private int matchNumber = 0;
@@ -82,7 +84,7 @@ public class FtcAuto extends FtcOpMode
         //
         // Initializing robot objects.
         //
-        robot = new Robot(TrcRobot.RunMode.AUTO_MODE);
+        robot = new Robot6541(TrcRobot.RunMode.AUTO_MODE);
         //
         // Choice menus.
         //
@@ -100,7 +102,7 @@ public class FtcAuto extends FtcOpMode
         switch (strategy)
         {
             case FULL_AUTO:
-                autoCommand = new CmdAutoFull(robot, alliance, delay);
+                autoCommand = new CmdAuto6541Full(robot, alliance, delay);
                 break;
 
             case DISTANCE_DRIVE:
@@ -221,4 +223,4 @@ public class FtcAuto extends FtcOpMode
                                       driveDistance, driveTime, drivePower);
     }   //doMenus
 
-}   //class FtcAuto
+}   //class FtcAuto6541

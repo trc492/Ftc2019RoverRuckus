@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Titan Robotics Club (http://www.titanrobotics.com)
+ * Copyright (c) 2018 Titan Robotics Club (http://www.titanrobotics.com)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -20,11 +20,13 @@
  * SOFTWARE.
  */
 
-package team3543;
+package team6541;
 
 import com.qualcomm.robotcore.hardware.DcMotor;
 
-class RobotInfo
+import common.PixyVision;
+
+class Robot6541Info
 {
     //
     // DriveBase subsystem.
@@ -50,7 +52,6 @@ class RobotInfo
     static final double GYRO_TOLERANCE                  = 1.0;
 
     static final double PIDDRIVE_STALL_TIMEOUT          = 0.25;     //in msec.
-
     //
     // Elevator subsystem
     //
@@ -66,9 +67,6 @@ class RobotInfo
     //
     // PixyVision subsystem.
     //
-
-    public static final int PIXYCAM_WIDTH                       = 320;
-    public static final int PIXYCAM_HEIGHT                      = 200;
     public static final int PIXY_GOLD_MINERAL_SIGNATURE         = 1;
     public static final int PIXY_SILVER_MINERAL_SIGNATURE       = 2;
     public static final int PIXY_TEAM_MARKER1_SIGNATURE         = 3;
@@ -76,4 +74,14 @@ class RobotInfo
     public static final int PIXY_BRIGHTNESS                     = 80;
     public static final double PIXY_CAM_OFFSET                  = 8.0;
     public static final PixyVision.Orientation PIXY_ORIENTATION = PixyVision.Orientation.NORMAL_LANDSCAPE;
-}   //class RobotInfo
+    //
+    // Hanging hook subsystem
+    //
+
+    public static final double HANGING_HOOK_OPEN_POSITION       = 0.8;
+    public static final double HANGING_HOOK_CLOSE_POSITION      = 0.2;
+    public static final double DEPLOYER_OPEN_POSITION           = 0.8;
+    public static final double DEPLOYER_CLOSE_POSITION          = 0.2;
+    public static final double MINERAL_SWEEPER_OPEN_POSITION    = 0.8;
+    public static final double MINERAL_SWEEPER_CLOSE_POSITION   = 0.2;
+}   //class Robot6541Info

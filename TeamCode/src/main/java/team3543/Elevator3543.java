@@ -28,7 +28,7 @@ import trclib.TrcEvent;
 import trclib.TrcPidActuator;
 import trclib.TrcPidController;
 
-public class Elevator
+public class Elevator3543
 {
     private FtcDigitalInput upperLimitSwitch;
     private FtcDigitalInput lowerLimitSwitch;
@@ -36,7 +36,7 @@ public class Elevator
     private TrcPidController pidController;
     private TrcPidActuator pidElevator;
 
-    public Elevator()
+    public Elevator3543()
     {
         upperLimitSwitch = new FtcDigitalInput("elevatorUpperLimit");
         lowerLimitSwitch = new FtcDigitalInput("elevatorLowerLimit");
@@ -48,14 +48,14 @@ public class Elevator
 
         pidController = new TrcPidController("elevatorPidController",
                 new TrcPidController.PidCoefficients(
-                    RobotInfo.ELEVATOR_KP, RobotInfo.ELEVATOR_KI, RobotInfo.ELEVATOR_KD),
-                RobotInfo.ELEVATOR_TOLERANCE, this::getPosition);
+                    Robot3543Info.ELEVATOR_KP, Robot3543Info.ELEVATOR_KI, Robot3543Info.ELEVATOR_KD),
+                Robot3543Info.ELEVATOR_TOLERANCE, this::getPosition);
         pidElevator = new TrcPidActuator("pidElevator", elevatorMotor, lowerLimitSwitch, pidController,
-                RobotInfo.ELEVATOR_CAL_POWER, RobotInfo.ELEVATOR_MIN_HEIGHT, RobotInfo.ELEVATOR_MAX_HEIGHT);
-        pidElevator.setPositionScale(RobotInfo.ELEVATOR_INCHES_PER_COUNT, RobotInfo.ELEVATOR_ZERO_OFFSET);
+                Robot3543Info.ELEVATOR_CAL_POWER, Robot3543Info.ELEVATOR_MIN_HEIGHT, Robot3543Info.ELEVATOR_MAX_HEIGHT);
+        pidElevator.setPositionScale(Robot3543Info.ELEVATOR_INCHES_PER_COUNT, Robot3543Info.ELEVATOR_ZERO_OFFSET);
     }
 
-    public void zerCalibrate()
+    public void zeroCalibrate()
     {
         pidElevator.zeroCalibrate();
     }
@@ -85,4 +85,4 @@ public class Elevator
         return lowerLimitSwitch.isActive();
     }
 
-}   //class Elevator
+}   //class Elevator3543
