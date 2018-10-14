@@ -34,7 +34,7 @@ import ftclib.FtcOpMode;
 import ftclib.FtcValueMenu;
 import trclib.TrcRobot;
 
-@Autonomous(name="Autonomous", group="6541Auto")
+@Autonomous(name="Autonomous6541", group="6541Auto")
 public class FtcAuto6541 extends FtcOpMode
 {
     private static final boolean USE_TRACELOG = true;

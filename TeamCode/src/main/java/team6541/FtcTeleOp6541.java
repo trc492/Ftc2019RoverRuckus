@@ -30,7 +30,7 @@ import hallib.HalDashboard;
 import trclib.TrcGameController;
 import trclib.TrcRobot;
 
-@TeleOp(name="TeleOp", group="6541TeleOp")
+@TeleOp(name="TeleOp6541", group="6541TeleOp")
 public class FtcTeleOp6541 extends FtcOpMode implements TrcGameController.ButtonHandler
 {
     private enum DriveMode
@@ -47,7 +47,7 @@ public class FtcTeleOp6541 extends FtcOpMode implements TrcGameController.Button
 
     private double drivePowerScale = 1.0;
     private boolean invertedDrive = false;
-    private DriveMode driveMode = DriveMode.MECANUM_MODE;
+    private DriveMode driveMode = DriveMode.TANK_MODE;
 
     //
     // Implements FtcOpMode abstract method.

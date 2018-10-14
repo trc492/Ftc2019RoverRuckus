@@ -44,7 +44,7 @@ import trclib.TrcStateMachine;
 import trclib.TrcTimer;
 import trclib.TrcUtil;
 
-@TeleOp(name="Test", group="6541Test")
+@TeleOp(name="Test6541", group="6541Test")
 public class FtcTest6541 extends FtcTeleOp6541 implements TrcGameController.ButtonHandler
 {
     private static final String moduleName = "FtcTest6541";
