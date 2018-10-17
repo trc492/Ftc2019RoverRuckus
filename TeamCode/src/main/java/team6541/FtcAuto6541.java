@@ -55,7 +55,8 @@ public class FtcAuto6541 extends FtcOpMode
 
     private enum Strategy
     {
-        FULL_AUTO,
+        CRATER_AUTO,
+        DEPOT_AUTO,
         DISTANCE_DRIVE,
         TIMED_DRIVE,
         DO_NOTHING
@@ -69,7 +70,7 @@ public class FtcAuto6541 extends FtcOpMode
     private int matchNumber = 0;
     private Alliance alliance = Alliance.RED_ALLIANCE;
     private double delay = 0.0;
-    private Strategy strategy = Strategy.DO_NOTHING;
+    private Strategy strategy = Strategy.CRATER_AUTO;
     private double driveDistance = 0.0;
     private double driveTime = 0.0;
     private double drivePower = 0.0;
@@ -101,8 +102,12 @@ public class FtcAuto6541 extends FtcOpMode
         //
         switch (strategy)
         {
-            case FULL_AUTO:
-                autoCommand = new CmdAuto6541Full(robot, alliance, delay);
+            case CRATER_AUTO:
+                autoCommand = new CmdAuto6541Crater(robot, alliance, delay);
+                break;
+
+            case DEPOT_AUTO:
+                autoCommand = new CmdAuto6541Depot(robot, alliance, delay);
                 break;
 
             case DISTANCE_DRIVE:
@@ -174,9 +179,11 @@ public class FtcAuto6541 extends FtcOpMode
                 "Distance:", strategyMenu, robot,
                 -12.0, 12.0, 0.5, 4.0, " %.0f ft");
         FtcValueMenu driveTimeMenu = new FtcValueMenu(
-                "Drive time:", strategyMenu, robot, 0.0, 30.0, 1.0, 5.0, " %.0f sec");
+                "Drive time:", strategyMenu, robot,
+                0.0, 30.0, 1.0, 5.0, " %.0f sec");
         FtcValueMenu drivePowerMenu = new FtcValueMenu(
-                "Drive power:", strategyMenu, robot, -1.0, 1.0, 0.1, 0.5, " %.1f");
+                "Drive power:", strategyMenu, robot,
+                -1.0, 1.0, 0.1, 0.5, " %.1f");
 
         matchNumberMenu.setChildMenu(allianceMenu);
         driveTimeMenu.setChildMenu(drivePowerMenu);
@@ -192,11 +199,11 @@ public class FtcAuto6541 extends FtcOpMode
         allianceMenu.addChoice("Red", Alliance.RED_ALLIANCE, true, delayMenu);
         allianceMenu.addChoice("Blue", Alliance.BLUE_ALLIANCE, false, delayMenu);
 
-        strategyMenu.addChoice("Full Auto", Strategy.FULL_AUTO, true);
+        strategyMenu.addChoice("Crater Auto", Strategy.CRATER_AUTO, true);
+        strategyMenu.addChoice("Depot Auto", Strategy.DEPOT_AUTO, false);
         strategyMenu.addChoice("Distance Drive", Strategy.DISTANCE_DRIVE, false, driveDistanceMenu);
         strategyMenu.addChoice("Timed Drive", Strategy.TIMED_DRIVE, false, driveTimeMenu);
         strategyMenu.addChoice("Do nothing", Strategy.DO_NOTHING, false);
-
         //
         // Traverse menus.
         //

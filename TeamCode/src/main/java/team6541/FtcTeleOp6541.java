@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Titan Robotics Club (http://www.titanrobotics.com)
+ * Copyright (c) 2018 Titan Robotics Club (http://www.titanrobotics.com)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -126,7 +126,6 @@ public class FtcTeleOp6541 extends FtcOpMode implements TrcGameController.Button
                 elevatorPower, robot.elevator.getPosition(),
                 robot.elevator.isLowerLimitSwitchActive(), robot.elevator.isUpperLimitSwitchActive());
     }   //runPeriodic
-
 
     //
     // Implements TrcGameController.ButtonHandler interface.

@@ -55,23 +55,18 @@ public class FtcAuto3543 extends FtcOpMode
 
     private enum Strategy
     {
-        FULL_AUTO,
+        CRATER_AUTO,
+        DEPOT_AUTO,
         DISTANCE_DRIVE,
         TIMED_DRIVE,
         DO_NOTHING
     }   //enum Strategy
 
-    enum StartupPosition
+    enum Park
     {
-        FACE_CRATER,
-        FACE_DEPOT
-    }
-
-    enum ParkInCrater
-    {
-        PARK_IN_OUR_CRATER,
-        PARK_IN_THEIR_CRATER,
-        DONT_PARK
+        NO_PARK,
+        OUR_CRATER,
+        THEIR_CRATER,
     }
 
     private static final String moduleName = "FtcAuto3543";
@@ -82,7 +77,7 @@ public class FtcAuto3543 extends FtcOpMode
     private int matchNumber = 0;
     private Alliance alliance = Alliance.RED_ALLIANCE;
     private double delay = 0.0;
-    private Strategy strategy = Strategy.DO_NOTHING;
+    private Strategy strategy = Strategy.CRATER_AUTO;
     private double driveDistance = 0.0;
     private double driveTime = 0.0;
     private double drivePower = 0.0;
@@ -91,9 +86,7 @@ public class FtcAuto3543 extends FtcOpMode
     private boolean doMineral = false;
     private boolean doTeamMarker = false;
     private boolean doOtherTeamMineral = false;
-
-    private StartupPosition startupPosition = StartupPosition.FACE_CRATER;
-    private ParkInCrater parkInCrater = ParkInCrater.DONT_PARK;
+    private Park park = Park.NO_PARK;
 
     //
     // Implements FtcOpMode abstract method.
@@ -122,9 +115,13 @@ public class FtcAuto3543 extends FtcOpMode
         //
         switch (strategy)
         {
-            case FULL_AUTO:
-                autoCommand = new CmdAuto3543Full(robot, alliance, delay, startupPosition, isHanging, doMineral,
-                doTeamMarker, doOtherTeamMineral, parkInCrater);
+            case CRATER_AUTO:
+                autoCommand = new CmdAuto3543Crater(robot, alliance, delay, isHanging, doMineral, doTeamMarker,
+                        doOtherTeamMineral, park);
+                break;
+
+            case DEPOT_AUTO:
+                autoCommand = new CmdAuto3543Depot(robot, alliance, delay, isHanging, doMineral, doTeamMarker, park);
                 break;
 
             case DISTANCE_DRIVE:
@@ -216,11 +213,11 @@ public class FtcAuto3543 extends FtcOpMode
         allianceMenu.addChoice("Red", Alliance.RED_ALLIANCE, true, delayMenu);
         allianceMenu.addChoice("Blue", Alliance.BLUE_ALLIANCE, false, delayMenu);
 
-        strategyMenu.addChoice("Full Auto", Strategy.FULL_AUTO, true);
+        strategyMenu.addChoice("Crater Auto", Strategy.CRATER_AUTO, true);
+        strategyMenu.addChoice("Depot Auto", Strategy.DEPOT_AUTO, false);
         strategyMenu.addChoice("Distance Drive", Strategy.DISTANCE_DRIVE, false, driveDistanceMenu);
         strategyMenu.addChoice("Timed Drive", Strategy.TIMED_DRIVE, false, driveTimeMenu);
         strategyMenu.addChoice("Do nothing", Strategy.DO_NOTHING, false);
-
         //
         // Traverse menus.
         //
@@ -245,6 +242,8 @@ public class FtcAuto3543 extends FtcOpMode
         robot.dashboard.displayPrintf(3, "Alliance=%s,Delay=%.0f sec", alliance.toString(), delay);
         robot.dashboard.displayPrintf(4, "Drive: distance=%.0f ft,Time=%.0f,Power=%.1f",
                                       driveDistance, driveTime, drivePower);
+        robot.dashboard.displayPrintf(5, "Hanging=%s,Mineral=%s,TeamMarker=%s,OtherMineral=%s,Park=%s",
+                isHanging, doMineral, doTeamMarker, doOtherTeamMineral, park);
     }   //doMenus
 
 }   //class FtcAuto3543

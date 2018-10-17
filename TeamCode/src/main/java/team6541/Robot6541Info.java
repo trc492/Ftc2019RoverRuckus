@@ -31,39 +31,39 @@ class Robot6541Info
     //
     // DriveBase subsystem.
     //
-    static final DcMotor.RunMode DRIVE_MOTOR_MODE       = DcMotor.RunMode.RUN_WITHOUT_ENCODER;
-    static final double TURN_POWER_LIMIT                = 0.5;
+    static final DcMotor.RunMode DRIVE_MOTOR_MODE               = DcMotor.RunMode.RUN_WITHOUT_ENCODER;
+    static final double TURN_POWER_LIMIT                        = 0.5;
 
-    static final double ENCODER_X_KP                    = 0.15;
-    static final double ENCODER_X_KI                    = 0.0;
-    static final double ENCODER_X_KD                    = 0.015;
-    static final double ENCODER_X_TOLERANCE             = 2.0;
-    static final double ENCODER_X_INCHES_PER_COUNT      = 63.0/4403.2;
+    static final double ENCODER_X_KP                            = 0.15;
+    static final double ENCODER_X_KI                            = 0.0;
+    static final double ENCODER_X_KD                            = 0.015;
+    static final double ENCODER_X_TOLERANCE                     = 2.0;
+    static final double ENCODER_X_INCHES_PER_COUNT              = 63.0/4403.2;
 
-    static final double ENCODER_Y_KP                    = 0.02;
-    static final double ENCODER_Y_KI                    = 0.0;
-    static final double ENCODER_Y_KD                    = 0.0022;
-    static final double ENCODER_Y_TOLERANCE             = 1.0;
-    static final double ENCODER_Y_INCHES_PER_COUNT      = 68.0/4100.5;
+    static final double ENCODER_Y_KP                            = 0.02;
+    static final double ENCODER_Y_KI                            = 0.0;
+    static final double ENCODER_Y_KD                            = 0.0022;
+    static final double ENCODER_Y_TOLERANCE                     = 1.0;
+    static final double ENCODER_Y_INCHES_PER_COUNT              = 68.0/4100.5;
 
-    static final double GYRO_KP                         = 0.018;
-    static final double GYRO_KI                         = 0.0;
-    static final double GYRO_KD                         = 0.002;
-    static final double GYRO_TOLERANCE                  = 1.0;
+    static final double GYRO_KP                                 = 0.018;
+    static final double GYRO_KI                                 = 0.0;
+    static final double GYRO_KD                                 = 0.002;
+    static final double GYRO_TOLERANCE                          = 1.0;
 
-    static final double PIDDRIVE_STALL_TIMEOUT          = 0.25;     //in msec.
+    static final double PIDDRIVE_STALL_TIMEOUT                  = 0.25;     //in msec.
     //
     // Elevator subsystem
     //
-    public static final double ELEVATOR_INCHES_PER_COUNT = 5.625/8498;
-    public static final double ELEVATOR_ZERO_OFFSET = 15.8;
-    public static final double ELEVATOR_KP = 3.0;
-    public static final double ELEVATOR_KI = 0.0;
-    public static final double ELEVATOR_KD = 0.0;
-    public static final double ELEVATOR_TOLERANCE = 0.2;
-    public static final double ELEVATOR_MIN_HEIGHT = ELEVATOR_ZERO_OFFSET - 0.1;
-    public static final double ELEVATOR_MAX_HEIGHT = 24.0;
-    public static final double ELEVATOR_CAL_POWER = 0.3;
+    public static final double ELEVATOR_INCHES_PER_COUNT        = 5.625/8498;
+    public static final double ELEVATOR_ZERO_OFFSET             = 15.8;
+    public static final double ELEVATOR_KP                      = 3.0;
+    public static final double ELEVATOR_KI                      = 0.0;
+    public static final double ELEVATOR_KD                      = 0.0;
+    public static final double ELEVATOR_TOLERANCE               = 0.2;
+    public static final double ELEVATOR_MIN_HEIGHT              = ELEVATOR_ZERO_OFFSET - 0.1;
+    public static final double ELEVATOR_MAX_HEIGHT              = 24.0;
+    public static final double ELEVATOR_CAL_POWER               = 0.3;
     //
     // PixyVision subsystem.
     //
@@ -77,7 +77,6 @@ class Robot6541Info
     //
     // Hanging hook subsystem
     //
-
     public static final double HANGING_HOOK_OPEN_POSITION       = 0.8;
     public static final double HANGING_HOOK_CLOSE_POSITION      = 0.2;
     public static final double DEPLOYER_OPEN_POSITION           = 0.8;

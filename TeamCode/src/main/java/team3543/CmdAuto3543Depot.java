@@ -20,52 +20,64 @@
  * SOFTWARE.
  */
 
-package team6541;
-
-import org.firstinspires.ftc.robotcore.external.navigation.RelicRecoveryVuMark;
+package team3543;
 
 import trclib.TrcEvent;
 import trclib.TrcRobot;
 import trclib.TrcStateMachine;
 import trclib.TrcTimer;
 
-class CmdAuto6541Full implements TrcRobot.RobotCommand
+class CmdAuto3543Depot implements TrcRobot.RobotCommand
 {
     private static final boolean debugXPid = true;
     private static final boolean debugYPid = true;
     private static final boolean debugTurnPid = true;
 
-    private enum State
-    {
-        DO_DELAY,
-        DONE
-    }   //enum State
+    private static final String moduleName = "CmdAuto3543Depot";
 
-    private static final String moduleName = "CmdAuto6541Full";
-
-    private Robot6541 robot;
-    private FtcAuto6541.Alliance alliance;
+    private Robot3543 robot;
+    private FtcAuto3543.Alliance alliance;
     private double delay;
+    private boolean isHanging;
+    private boolean doMineral;
+    private boolean doTeamMarker;
+    private FtcAuto3543.Park park;
+
     private TrcEvent event;
     private TrcTimer timer;
     private TrcStateMachine<State> sm;
     private double targetX = 0.0;
     private double targetY = 0.0;
-    private RelicRecoveryVuMark vuMark;
 
-    CmdAuto6541Full(Robot6541 robot, FtcAuto6541.Alliance alliance, double delay)
+    CmdAuto3543Depot(Robot3543 robot, FtcAuto3543.Alliance alliance, double delay,
+                     boolean isHanging, boolean doMineral, boolean doTeamMarker, FtcAuto3543.Park park)
     {
-        robot.tracer.traceInfo(
-                moduleName, "alliance=%s, delay=%.0f", alliance, delay);
+        robot.tracer.traceInfo(moduleName,
+                "Alliance=%s,Delay=%.0f,Hanging=%s,Mineral=%s,TeamMarker=%s,Park=%s",
+                alliance, delay, isHanging, doMineral, doTeamMarker, park);
+
         this.robot = robot;
         this.alliance = alliance;
         this.delay = delay;
+        this.isHanging = isHanging;
+        this.doMineral = doMineral;
+        this.doTeamMarker = doTeamMarker;
+        this.park = park;
 
         event = new TrcEvent(moduleName);
         timer = new TrcTimer(moduleName);
         sm = new TrcStateMachine<>(moduleName);
         sm.start(State.DO_DELAY);
-    }   //CmdAuto6541Full
+    }   //CmdAuto3543Depot
+
+    private enum State
+    {
+        LOWER_ROBOT,
+        ALIGN_ROBOT_WITH_VUFORIA,
+        DO_DELAY,
+
+        DONE
+    }   //enum State
 
     //
     // Implements the TrcRobot.RobotCommand interface.
@@ -84,8 +96,19 @@ class CmdAuto6541Full implements TrcRobot.RobotCommand
         {
             robot.dashboard.displayPrintf(1, "State: %s", state);
 
+            /*
+            Strategy:
+            - Lower robot
+            - Align robot with Vuforia
+             */
             switch (state)
             {
+                case LOWER_ROBOT:
+                    break;
+
+                case ALIGN_ROBOT_WITH_VUFORIA:
+                    break;
+
                 case DO_DELAY:
                     //
                     // Do delay if any.
@@ -143,4 +166,4 @@ class CmdAuto6541Full implements TrcRobot.RobotCommand
         return !sm.isEnabled();
     }   //cmdPeriodic
 
-}   //class CmdAuto6541Full
+}   //class CmdAuto3543Depot
