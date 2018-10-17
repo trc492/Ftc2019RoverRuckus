@@ -87,15 +87,15 @@ class CmdAuto3543Crater implements TrcRobot.RobotCommand
         RETRACT_MINERAL_SWEEPER,
         DRIVE_FORWARD_TO_MIDPOINT,
         TURN_PARALLEL_TO_WALL,
-        DRIVE_BACKWARDS_INTO_CRATER,
+        DRIVE_BACKWARDS_INTO_CRATER_FROM_X,
         DRIVE_FORWARD_TO_DEPOT,
         DROP_TEAM_MARKER,
         BACK_UP_FOR_TEAMMATE_MINERAL,
         ROTATE_TO_TEAMMATE_MINERALS,
         DRIVE_FORWARD_SOME_DISTANCE_FOR_TEAMMATE_MINERAL,
         TURN_TO_CRATER_AFTER_TEAMMATE_MINERAL,
-        DRIVE_FORWARD_TO_CRATER,
-        DRIVE_BACKWARD_TO_CRATER,
+        DRIVE_FORWARD_TO_CRATER_FROM_DEPOT,
+        DRIVE_BACKWARD_TO_CRATER_AFTER_TEAMMATE_MINERAL,
         DONE
     }   //enum State
 
@@ -209,7 +209,7 @@ class CmdAuto3543Crater implements TrcRobot.RobotCommand
                 case TURN_PARALLEL_TO_WALL:
                     break;
 
-                case DRIVE_BACKWARDS_INTO_CRATER:
+                case DRIVE_BACKWARDS_INTO_CRATER_FROM_X:
                     break;
 
                 case DRIVE_FORWARD_TO_DEPOT:
@@ -230,10 +230,10 @@ class CmdAuto3543Crater implements TrcRobot.RobotCommand
                 case TURN_TO_CRATER_AFTER_TEAMMATE_MINERAL:
                     break;
 
-                case DRIVE_FORWARD_TO_CRATER:
+                case DRIVE_FORWARD_TO_CRATER_FROM_DEPOT:
                     break;
 
-                case DRIVE_BACKWARD_TO_CRATER:
+                case DRIVE_BACKWARD_TO_CRATER_AFTER_TEAMMATE_MINERAL:
                     break;
 
                 case DONE:
