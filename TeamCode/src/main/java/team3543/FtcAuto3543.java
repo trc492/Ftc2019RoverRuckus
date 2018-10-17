@@ -61,6 +61,19 @@ public class FtcAuto3543 extends FtcOpMode
         DO_NOTHING
     }   //enum Strategy
 
+    enum StartupPosition
+    {
+        FACE_CRATER,
+        FACE_DEPOT
+    }
+
+    enum ParkInCrater
+    {
+        PARK_IN_OUR_CRATER,
+        PARK_IN_THEIR_CRATER,
+        DONT_PARK
+    }
+
     private static final String moduleName = "FtcAuto3543";
 
     private Robot3543 robot;
@@ -73,6 +86,14 @@ public class FtcAuto3543 extends FtcOpMode
     private double driveDistance = 0.0;
     private double driveTime = 0.0;
     private double drivePower = 0.0;
+
+    private boolean isHanging = false;
+    private boolean doMineral = false;
+    private boolean doTeamMarker = false;
+    private boolean doOtherTeamMineral = false;
+
+    private StartupPosition startupPosition = StartupPosition.FACE_CRATER;
+    private ParkInCrater parkInCrater = ParkInCrater.DONT_PARK;
 
     //
     // Implements FtcOpMode abstract method.
@@ -102,7 +123,8 @@ public class FtcAuto3543 extends FtcOpMode
         switch (strategy)
         {
             case FULL_AUTO:
-                autoCommand = new CmdAuto3543Full(robot, alliance, delay);
+                autoCommand = new CmdAuto3543Full(robot, alliance, delay, startupPosition, isHanging, doMineral,
+                doTeamMarker, doOtherTeamMineral, parkInCrater);
                 break;
 
             case DISTANCE_DRIVE:
