@@ -24,11 +24,7 @@ package team3543;
 
 import android.speech.tts.TextToSpeech;
 
-import org.firstinspires.ftc.robotcore.external.navigation.RelicRecoveryVuMark;
-
-import common.PixyVision;
 import common.Robot;
-import common.VuforiaVision;
 import ftclib.FtcDcMotor;
 import trclib.TrcMecanumDriveBase;
 import trclib.TrcPidController;
@@ -38,26 +34,6 @@ import trclib.TrcRobot;
 public class Robot3543 extends Robot
 {
     static final String ROBOT_NAME = "Robot3543";
-    static final boolean USE_VUFORIA = false;
-    static final boolean USE_PIXY = true;
-    //
-    // Vision subsystems.
-    //
-    VuforiaVision vuforiaVision = null;
-    RelicRecoveryVuMark prevVuMark = null;
-    PixyVision pixyVision = null;
-    //
-    // DriveBase subsystem.
-    //
-    FtcDcMotor leftFrontWheel = null;
-    FtcDcMotor rightFrontWheel = null;
-    FtcDcMotor leftRearWheel = null;
-    FtcDcMotor rightRearWheel = null;
-
-    TrcPidController encoderXPidCtrl = null;
-    TrcPidController encoderYPidCtrl = null;
-    TrcPidController gyroPidCtrl = null;
-    TrcPidDrive pidDrive = null;
     //
     // Other subsystems.
     //
@@ -72,21 +48,6 @@ public class Robot3543 extends Robot
         // Initialize global objects.
         //
         moduleName = ROBOT_NAME;
-        //
-        // Initialize vision subsystems.
-        //
-        if (USE_VUFORIA)
-        {
-            int cameraViewId = opMode.hardwareMap.appContext.getResources().getIdentifier(
-                    "cameraMonitorViewId", "id", opMode.hardwareMap.appContext.getPackageName());
-            vuforiaVision = new VuforiaVision(this, -1);//cameraViewId);
-        }
-
-        if (USE_PIXY)
-        {
-            pixyVision = new PixyVision("pixy", this,
-                    Robot3543Info.PIXY_ORIENTATION, Robot3543Info.PIXY_BRIGHTNESS);
-        }
         //
         // Initialize DriveBase.
         //
@@ -129,7 +90,7 @@ public class Robot3543 extends Robot
                 "gyroPidCtrl",
                 new TrcPidController.PidCoefficients(
                         Robot3543Info.GYRO_KP, Robot3543Info.GYRO_KI, Robot3543Info.GYRO_KD),
-                Robot3543Info.GYRO_TOLERANCE, driveBase::getHeading);
+                Robot3543Info.GYRO_TOLERANCE, this::getHeading);
         gyroPidCtrl.setAbsoluteSetPoint(true);
         gyroPidCtrl.setOutputRange(-Robot3543Info.TURN_POWER_LIMIT, Robot3543Info.TURN_POWER_LIMIT);
 

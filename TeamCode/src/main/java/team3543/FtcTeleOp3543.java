@@ -194,14 +194,14 @@ public class FtcTeleOp3543 extends FtcOpMode implements TrcGameController.Button
                 case FtcGamepad.GAMEPAD_DPAD_UP:
                     if (pressed)
                     {
-                        robot.mineralSweeper.close();
+                        robot.mineralSweeper.retract();
                     }
                     break;
 
                 case FtcGamepad.GAMEPAD_DPAD_DOWN:
                     if (pressed)
                     {
-                        robot.mineralSweeper.open();
+                        robot.mineralSweeper.extend();
                     }
                     break;
 

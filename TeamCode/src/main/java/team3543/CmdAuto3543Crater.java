@@ -22,6 +22,8 @@
 
 package team3543;
 
+import common.PixyVision;
+import common.Robot;
 import trclib.TrcEvent;
 import trclib.TrcRobot;
 import trclib.TrcStateMachine;
@@ -38,7 +40,6 @@ class CmdAuto3543Crater implements TrcRobot.RobotCommand
     private Robot3543 robot;
     private FtcAuto3543.Alliance alliance;
     private double delay;
-    private boolean isHanging;
     private boolean doMineral;
     private boolean doTeamMarker;
     private boolean doOtherTeamMineral;
@@ -49,6 +50,7 @@ class CmdAuto3543Crater implements TrcRobot.RobotCommand
     private TrcStateMachine<State> sm;
     private double targetX = 0.0;
     private double targetY = 0.0;
+    private double mineralDistance = 0.0;
 
     CmdAuto3543Crater(Robot3543 robot, FtcAuto3543.Alliance alliance, double delay,
                       boolean isHanging, boolean doMineral, boolean doTeamMarker, boolean doOtherTeamMineral,
@@ -61,7 +63,6 @@ class CmdAuto3543Crater implements TrcRobot.RobotCommand
         this.robot = robot;
         this.alliance = alliance;
         this.delay = delay;
-        this.isHanging = isHanging;
         this.doMineral = doMineral;
         this.doTeamMarker = doTeamMarker;
         this.doOtherTeamMineral = doOtherTeamMineral;
@@ -70,25 +71,23 @@ class CmdAuto3543Crater implements TrcRobot.RobotCommand
         event = new TrcEvent(moduleName);
         timer = new TrcTimer(moduleName);
         sm = new TrcStateMachine<>(moduleName);
-        sm.start(State.DO_DELAY);
+        sm.start(isHanging? State.LOWER_ROBOT: State.ALIGN_ROBOT_WITH_VUFORIA);
     }   //CmdAuto3543Crater
 
     private enum State
     {
         LOWER_ROBOT,
         ALIGN_ROBOT_WITH_VUFORIA,
-        DO_DELAY,
-        GO_FORWARD_A_BIT,
-        ROTATE_ROBOT_90_DEGREES_TO_LEFT,
-        GET_MINERAL_POSITION_WITH_PIXY,
-        ALIGN_WITH_MINERAL,
-        DEPLOY_MINERAL_SWEEPER,
+        GO_TOWARDS_MINERAL,
+        ALIGN_MINERAL_SWEEPER,
+        GO_TO_GOLD_MINERAL,
+        EXTEND_MINERAL_SWEEPER,
         DISPLACE_MINERAL,
         RETRACT_MINERAL_SWEEPER,
-        DRIVE_FORWARD_TO_MIDPOINT,
+        DRIVE_TO_ALLIANCE_WALL,
         TURN_PARALLEL_TO_WALL,
         DRIVE_BACKWARDS_INTO_CRATER,
-        DRIVE_FORWARD_TO_DEPOT,
+        DRIVE_TO_DEPOT,
         DROP_TEAM_MARKER,
         BACK_UP_FOR_TEAMMATE_MINERAL,
         ROTATE_TO_TEAMMATE_MINERALS,
@@ -107,6 +106,7 @@ class CmdAuto3543Crater implements TrcRobot.RobotCommand
     public boolean cmdPeriodic(double elapsedTime)
     {
         State state = sm.checkReadyAndGetState();
+        State nextState;
 
         if (state == null)
         {
@@ -116,10 +116,6 @@ class CmdAuto3543Crater implements TrcRobot.RobotCommand
         {
             robot.dashboard.displayPrintf(1, "State: %s", state);
             /*
-             Lower the robot.
-             Align robot using Vuforia Image to face the center.
-
-             Go forward a bit (NEED MEASURING LATER)
              Rotate the robot 90 degrees to the left, using the Vuforia Image as reference for heading.
              Get mineral position with Pixy cam.
              Drive forward or backward to align with the mineral.
@@ -156,63 +152,141 @@ class CmdAuto3543Crater implements TrcRobot.RobotCommand
              if No:
              Drive backwards into crater.
              THE END (for AUTONOMOUS)
-
              */
             switch (state)
             {
                 case LOWER_ROBOT:
+                    //
+                    // The robot started hanging on the lander, lower it to the ground.
+                    //
+                    robot.elevator.setPosition(Robot3543Info.ELEVATOR_MAX_HEIGHT,event, 0.0);
+                    sm.waitForSingleEvent(event, State.ALIGN_ROBOT_WITH_VUFORIA);
                     break;
 
                 case ALIGN_ROBOT_WITH_VUFORIA:
-                    break;
-
-                case DO_DELAY:
+                    //
+                    // Align the robot heading with robot orientation reported by Vuforia.
+                    //
+                    robot.alignHeadingWithVuforia(alliance == FtcAuto3543.Alliance.RED_ALLIANCE? -45.0: 135.0);
                     //
                     // Do delay if any.
                     //
-                    robot.tracer.traceInfo(state.toString(), "Delay=%.0f", delay);
                     if (delay == 0.0)
                     {
-                        sm.setState(State.DONE);
+                        sm.setState(State.GO_TOWARDS_MINERAL);
                     }
                     else
                     {
+                        robot.tracer.traceInfo(state.toString(), "Delay=%.0f", delay);
                         timer.set(delay, event);
-                        sm.waitForSingleEvent(event, State.DONE);
+                        sm.waitForSingleEvent(event, State.GO_TOWARDS_MINERAL);
                     }
                     break;
 
-                case GO_FORWARD_A_BIT:
+                case GO_TOWARDS_MINERAL:
+                    //
+                    // Move closer to the mineral so the sweeper can reach them.
+                    //
+                    targetX = 0.0;
+                    targetY = 12.0;
+                    robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
+                    sm.waitForSingleEvent(event, State.ALIGN_MINERAL_SWEEPER);
                     break;
 
-                case ROTATE_ROBOT_90_DEGREES_TO_LEFT:
+                case ALIGN_MINERAL_SWEEPER:
+                    //
+                    // Turn robot sideway so the sweeper is facing mineral.
+                    //
+                    targetX = 0.0;
+                    targetY = 0.0;
+                    robot.targetHeading += 90.0;
+                    robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
+                    mineralDistance = 0.0;
+                    nextState = doMineral && robot.pixyVision != null?
+                            State.GO_TO_GOLD_MINERAL: State.DRIVE_TO_ALLIANCE_WALL;
+                    sm.waitForSingleEvent(event, nextState);
                     break;
 
-                case GET_MINERAL_POSITION_WITH_PIXY:
+                case GO_TO_GOLD_MINERAL:
+                    PixyVision.TargetInfo targetInfo =
+                            robot.pixyVision.getTargetInfo(Robot.PIXY_GOLD_MINERAL_SIGNATURE);
+                    if (targetInfo != null)
+                    {
+                        //
+                        // Get the sweeper right behind the gold mineral. The pixy camera is 4 inches behind the arm.
+                        // We will give another 4 inches margin so a total of 8 inches.
+                        //
+                        targetX = 0.0;
+                        targetY = targetInfo.xDistance - 8.0;
+                        mineralDistance = targetY;
+                        robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
+                        sm.waitForSingleEvent(event, State.EXTEND_MINERAL_SWEEPER);
+                    }
+                    else
+                    {
+                        //
+                        // Pixy can't find the gold mineral, deploy the sweeper anyway so we will displace any
+                        // mineral in hope it's the right one.
+                        //
+                        sm.setState(State.EXTEND_MINERAL_SWEEPER);
+                    }
                     break;
 
-                case ALIGN_WITH_MINERAL:
-                    break;
-
-                case DEPLOY_MINERAL_SWEEPER:
+                case EXTEND_MINERAL_SWEEPER:
+                    //
+                    // Deploy the sweeper.
+                    //
+                    robot.mineralSweeper.extend();
+                    timer.set(0.3, event);
+                    sm.waitForSingleEvent(event, State.DISPLACE_MINERAL);
                     break;
 
                 case DISPLACE_MINERAL:
+                    //
+                    // We are supposed to be 4 inches in front of the mineral. So go forward 8 inches will displace
+                    // it about 4 inches.
+                    //
+                    targetX = 0.0;
+                    targetY = 8.0;
+                    robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
+                    sm.waitForSingleEvent(event, State.RETRACT_MINERAL_SWEEPER);
                     break;
 
                 case RETRACT_MINERAL_SWEEPER:
+                    //
+                    // Done with sweeping, retract sweeper.
+                    //
+                    robot.mineralSweeper.retract();
+                    timer.set(0.3, event);
+                    sm.waitForSingleEvent(event, State.DRIVE_TO_ALLIANCE_WALL);
                     break;
 
-                case DRIVE_FORWARD_TO_MIDPOINT:
+                case DRIVE_TO_ALLIANCE_WALL:
+                    //
+                    // Drive towards alliance wall.
+                    //
+                    targetX = 0.0;
+                    targetY = -(mineralDistance + 36.0);
+                    robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
+                    sm.waitForSingleEvent(event, State.TURN_PARALLEL_TO_WALL);
                     break;
 
                 case TURN_PARALLEL_TO_WALL:
+                    //
+                    // Align the robot parallel to the wall.
+                    //
+                    targetX = 0.0;
+                    targetY = 0.0;
+                    robot.targetHeading -= 45.0;
+                    robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
+                    nextState = doTeamMarker? State.DRIVE_TO_DEPOT : State.DONE;//TODO: if not doing team marker then what???
+                    sm.waitForSingleEvent(event, nextState);
                     break;
 
                 case DRIVE_BACKWARDS_INTO_CRATER:
                     break;
 
-                case DRIVE_FORWARD_TO_DEPOT:
+                case DRIVE_TO_DEPOT:
                     break;
 
                 case DROP_TEAM_MARKER:

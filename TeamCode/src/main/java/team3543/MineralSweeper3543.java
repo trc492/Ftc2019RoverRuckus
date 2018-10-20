@@ -38,14 +38,14 @@ public class MineralSweeper3543
         sweeperServo.setPosition(pos);
     }
 
-    public void open()
+    public void extend()
     {
-        sweeperServo.setPosition(Robot3543Info.MINERAL_SWEEPER_OPEN_POSITION);
+        sweeperServo.setPosition(Robot3543Info.MINERAL_SWEEPER_EXTEND_POSITION);
     }
 
-    public void close()
+    public void retract()
     {
-        sweeperServo.setPosition(Robot3543Info.MINERAL_SWEEPER_CLOSE_POSITION);
+        sweeperServo.setPosition(Robot3543Info.MINERAL_SWEEPER_RETRACT_POSITION);
     }
 
 }   //class MineralSweeper3543

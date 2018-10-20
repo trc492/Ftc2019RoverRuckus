@@ -67,7 +67,7 @@ class CmdAuto3543Depot implements TrcRobot.RobotCommand
         event = new TrcEvent(moduleName);
         timer = new TrcTimer(moduleName);
         sm = new TrcStateMachine<>(moduleName);
-        sm.start(State.DO_DELAY);
+        sm.start(isHanging? State.LOWER_ROBOT: State.ALIGN_ROBOT_WITH_VUFORIA);
     }   //CmdAuto3543Depot
 
     private enum State

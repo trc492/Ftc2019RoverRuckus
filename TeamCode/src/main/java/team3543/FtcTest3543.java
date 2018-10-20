@@ -33,6 +33,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import common.CmdPidDrive;
 import common.CmdTimedDrive;
 import common.PixyVision;
+import common.Robot;
 import ftclib.FtcChoiceMenu;
 import ftclib.FtcGamepad;
 import ftclib.FtcMenu;
@@ -295,7 +296,7 @@ public class FtcTest3543 extends FtcTeleOp3543 implements TrcGameController.Butt
 
         if (robot.pixyVision != null)
         {
-            PixyVision.TargetInfo targetInfo = robot.pixyVision.getTargetInfo(Robot3543Info.PIXY_GOLD_MINERAL_SIGNATURE);
+            PixyVision.TargetInfo targetInfo = robot.pixyVision.getTargetInfo(Robot.PIXY_GOLD_MINERAL_SIGNATURE);
             if (targetInfo != null)
             {
                 dashboard.displayPrintf(7, LABEL_WIDTH,
@@ -508,19 +509,9 @@ public class FtcTest3543 extends FtcTeleOp3543 implements TrcGameController.Butt
                     break;
 
                 case FtcGamepad.GAMEPAD_DPAD_UP:
-                    if (pressed)
-                    {
-                        robot.mineralSweeper.close();
-                        processed = true;
-                    }
                     break;
 
                 case FtcGamepad.GAMEPAD_DPAD_DOWN:
-                    if (pressed)
-                    {
-                        robot.mineralSweeper.open();
-                        processed = true;
-                    }
                     break;
 
                 case FtcGamepad.GAMEPAD_DPAD_LEFT:
