@@ -20,8 +20,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 -->
-<Robot type="FirstInspires-FTC" name="Robot3543_2019">
-    <LynxUsbDevice name="Expansion Hub Portal 1" serialNumber="DQ2EJQK7" parentModuleAddress="1">
+<Robot type="FirstInspires-FTC" name="Robot6541_2019">
+    <LynxUsbDevice name="Expansion Hub Portal 1" serialNumber="DQ2GEVMX" parentModuleAddress="1">
         <LynxModule name="Expansion Hub 2" port="2">
             <NeveRest40Gearmotor name="rfWheel" port="0" />
             <NeveRest40Gearmotor name="rrWheel" port="1" />
