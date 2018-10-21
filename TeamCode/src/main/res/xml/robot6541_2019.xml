@@ -27,7 +27,9 @@ SOFTWARE.
             <NeveRest40Gearmotor name="rrWheel" port="1" />
             <NeveRest40Gearmotor name="lfWheel" port="2" />
             <NeveRest40Gearmotor name="lrWheel" port="3" />
-            <Servo name="mineralSweeper" port="0" />
+            <Servo name="sweeperServo" port="0" />
+            <Servo name="deployerServo" port="1" />
+            <Servo name="hookServo" port="2" />
             <DigitalDevice name="elevatorLowerLimit" port="0" />
             <DigitalDevice name="elevatorUpperLimit" port="2" />
             <LynxEmbeddedIMU name="imu" port="0" bus="0" />
