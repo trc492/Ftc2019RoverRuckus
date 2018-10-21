@@ -37,9 +37,9 @@ public class Robot3543 extends Robot
     //
     // Other subsystems.
     //
-    Elevator3543 elevator;
-    TeamMarkerDeployer3543 teamMarkerDeployer;
-    MineralSweeper3543 mineralSweeper;
+    public Elevator3543 elevator;
+    public TeamMarkerDeployer3543 teamMarkerDeployer;
+    public MineralSweeper3543 mineralSweeper;
 
     public Robot3543(TrcRobot.RunMode runMode)
     {
