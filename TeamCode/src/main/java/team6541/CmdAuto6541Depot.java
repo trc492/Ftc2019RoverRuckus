@@ -38,6 +38,10 @@ class CmdAuto6541Depot implements TrcRobot.RobotCommand
     private Robot6541 robot;
     private FtcAuto6541.Alliance alliance;
     private double delay;
+    private boolean isHanging;
+    private boolean doMineral;
+    private boolean doTeamMarker;
+    private FtcAuto6541.Park park;
 
     private TrcEvent event;
     private TrcTimer timer;
@@ -45,24 +49,31 @@ class CmdAuto6541Depot implements TrcRobot.RobotCommand
     private double targetX = 0.0;
     private double targetY = 0.0;
 
-    CmdAuto6541Depot(Robot6541 robot, FtcAuto6541.Alliance alliance, double delay)
+    CmdAuto6541Depot(Robot6541 robot, FtcAuto6541.Alliance alliance, double delay,
+                     boolean isHanging, boolean doMineral, boolean doTeamMarker, FtcAuto6541.Park park)
     {
         robot.tracer.traceInfo(moduleName,
-                "Alliance=%s,Delay=%.0f",
-                alliance, delay);
+                "Alliance=%s,Delay=%.0f,Hanging=%s,Mineral=%s,TeamMarker=%s,Park=%s",
+                alliance, delay, isHanging, doMineral, doTeamMarker, park);
 
         this.robot = robot;
         this.alliance = alliance;
         this.delay = delay;
+        this.isHanging = isHanging;
+        this.doMineral = doMineral;
+        this.doTeamMarker = doTeamMarker;
+        this.park = park;
 
         event = new TrcEvent(moduleName);
         timer = new TrcTimer(moduleName);
         sm = new TrcStateMachine<>(moduleName);
-        sm.start(State.DO_DELAY);
+        sm.start(isHanging? State.LOWER_ROBOT: State.ALIGN_ROBOT_WITH_VUFORIA);
     }   //CmdAuto6541Depot
 
     private enum State
     {
+        LOWER_ROBOT,
+        ALIGN_ROBOT_WITH_VUFORIA,
         DO_DELAY,
 
         DONE
@@ -87,11 +98,17 @@ class CmdAuto6541Depot implements TrcRobot.RobotCommand
 
             /*
             Strategy:
-            - Delay
-            - Done
+            - Lower robot
+            - Align robot with Vuforia
              */
             switch (state)
             {
+                case LOWER_ROBOT:
+                    break;
+
+                case ALIGN_ROBOT_WITH_VUFORIA:
+                    break;
+
                 case DO_DELAY:
                     //
                     // Do delay if any.
