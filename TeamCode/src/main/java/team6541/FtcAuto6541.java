@@ -62,6 +62,13 @@ public class FtcAuto6541 extends FtcOpMode
         DO_NOTHING
     }   //enum Strategy
 
+    enum Park
+    {
+        NO_PARK,
+        OUR_CRATER,
+        THEIR_CRATER,
+    }
+
     private static final String moduleName = "FtcAuto6541";
 
     private Robot6541 robot;
@@ -74,6 +81,12 @@ public class FtcAuto6541 extends FtcOpMode
     private double driveDistance = 0.0;
     private double driveTime = 0.0;
     private double drivePower = 0.0;
+
+    private boolean isHanging = false;
+    private boolean doMineral = false;
+    private boolean doTeamMarker = false;
+    private boolean doOtherTeamMineral = false;
+    private Park park = Park.NO_PARK;
 
     //
     // Implements FtcOpMode abstract method.
@@ -103,11 +116,12 @@ public class FtcAuto6541 extends FtcOpMode
         switch (strategy)
         {
             case CRATER_AUTO:
-                autoCommand = new CmdAuto6541Crater(robot, alliance, delay);
+                autoCommand = new CmdAuto6541Crater(robot, alliance, delay, isHanging, doMineral, doTeamMarker,
+                        doOtherTeamMineral, park);
                 break;
 
             case DEPOT_AUTO:
-                autoCommand = new CmdAuto6541Depot(robot, alliance, delay);
+                autoCommand = new CmdAuto6541Depot(robot, alliance, delay, isHanging, doMineral, doTeamMarker, park);
                 break;
 
             case DISTANCE_DRIVE:
@@ -223,11 +237,13 @@ public class FtcAuto6541 extends FtcOpMode
         // Show choices.
         //
         robot.dashboard.displayPrintf(1, "== Match: %s ==",
-                                      matchType.toString() + "_" + matchNumber);
+                matchType.toString() + "_" + matchNumber);
         robot.dashboard.displayPrintf(2, "Auto Strategy: %s", strategyMenu.getCurrentChoiceText());
         robot.dashboard.displayPrintf(3, "Alliance=%s,Delay=%.0f sec", alliance.toString(), delay);
         robot.dashboard.displayPrintf(4, "Drive: distance=%.0f ft,Time=%.0f,Power=%.1f",
-                                      driveDistance, driveTime, drivePower);
+                driveDistance, driveTime, drivePower);
+        robot.dashboard.displayPrintf(5, "Hanging=%s,Mineral=%s,TeamMarker=%s,OtherMineral=%s,Park=%s",
+                isHanging, doMineral, doTeamMarker, doOtherTeamMineral, park);
     }   //doMenus
 
 }   //class FtcAuto6541
