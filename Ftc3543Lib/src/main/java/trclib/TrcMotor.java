@@ -47,7 +47,7 @@ public abstract class TrcMotor implements TrcMotorController
     private final TrcTaskMgr.TaskObject motorTaskObj;
     private TrcDigitalTrigger digitalTrigger = null;
     private boolean speedTaskEnabled = false;
-    private double speed = 0.0;
+    private double speedSensorUnitsPerSecond = 0.0;
     private double prevTime = 0.0;
     private double prevPos = 0.0;
 
@@ -156,7 +156,7 @@ public abstract class TrcMotor implements TrcMotorController
         {
             double currTime = TrcUtil.getCurrentTime();
             double currPos = getPosition();
-            speed = (currPos - prevPos)/(currTime - prevTime);
+            speedSensorUnitsPerSecond = (currPos - prevPos)/(currTime - prevTime);
             prevTime = currTime;
             prevPos = currPos;
         }
@@ -179,6 +179,8 @@ public abstract class TrcMotor implements TrcMotorController
      * This method returns the speed of the motor rotation. It keeps track of the rotation speed by using a periodic
      * task to monitor the position sensor value. If the motor controller has hardware monitoring speed, it should
      * override this method and access the hardware instead.
+     *
+     * @return Motor speed in sensor units per second.
      */
     @Override
     public double getSpeed()
@@ -188,12 +190,12 @@ public abstract class TrcMotor implements TrcMotorController
         if (debugEnabled)
         {
             dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%.3f", speed);
+            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%.3f", speedSensorUnitsPerSecond);
         }
 
         if (speedTaskEnabled)
         {
-            return speed;
+            return speedSensorUnitsPerSecond;
         }
         else
         {
