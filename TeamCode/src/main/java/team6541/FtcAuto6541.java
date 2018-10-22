@@ -62,13 +62,6 @@ public class FtcAuto6541 extends FtcOpMode
         DO_NOTHING
     }   //enum Strategy
 
-    enum Park
-    {
-        NO_PARK,
-        OUR_CRATER,
-        THEIR_CRATER,
-    }
-
     private static final String moduleName = "FtcAuto6541";
 
     private Robot6541 robot;
@@ -86,7 +79,6 @@ public class FtcAuto6541 extends FtcOpMode
     private boolean doMineral = false;
     private boolean doTeamMarker = false;
     private boolean doOtherTeamMineral = false;
-    private Park park = Park.NO_PARK;
 
     //
     // Implements FtcOpMode abstract method.
@@ -117,11 +109,11 @@ public class FtcAuto6541 extends FtcOpMode
         {
             case CRATER_AUTO:
                 autoCommand = new CmdAuto6541Crater(robot, alliance, delay, isHanging, doMineral, doTeamMarker,
-                        doOtherTeamMineral, park);
+                        doOtherTeamMineral);
                 break;
 
             case DEPOT_AUTO:
-                autoCommand = new CmdAuto6541Depot(robot, alliance, delay, isHanging, doMineral, doTeamMarker, park);
+                autoCommand = new CmdAuto6541Depot(robot, alliance, delay, isHanging, doMineral, doTeamMarker);
                 break;
 
             case DISTANCE_DRIVE:
@@ -242,8 +234,8 @@ public class FtcAuto6541 extends FtcOpMode
         robot.dashboard.displayPrintf(3, "Alliance=%s,Delay=%.0f sec", alliance.toString(), delay);
         robot.dashboard.displayPrintf(4, "Drive: distance=%.0f ft,Time=%.0f,Power=%.1f",
                 driveDistance, driveTime, drivePower);
-        robot.dashboard.displayPrintf(5, "Hanging=%s,Mineral=%s,TeamMarker=%s,OtherMineral=%s,Park=%s",
-                isHanging, doMineral, doTeamMarker, doOtherTeamMineral, park);
+        robot.dashboard.displayPrintf(5, "Hanging=%s,Mineral=%s,TeamMarker=%s,OtherMineral=%s",
+                isHanging, doMineral, doTeamMarker, doOtherTeamMineral);
     }   //doMenus
 
 }   //class FtcAuto6541

@@ -24,6 +24,7 @@ package team6541;
 
 import ftclib.FtcDcMotor;
 import ftclib.FtcDigitalInput;
+import ftclib.FtcServo;
 import trclib.TrcEvent;
 import trclib.TrcPidActuator;
 import trclib.TrcPidController;
@@ -35,6 +36,7 @@ public class Elevator6541
     private FtcDcMotor elevatorMotor;
     private TrcPidController pidController;
     private TrcPidActuator pidElevator;
+    private FtcServo hookServo;
 
     public Elevator6541()
     {
@@ -53,6 +55,8 @@ public class Elevator6541
         pidElevator = new TrcPidActuator("pidElevator", elevatorMotor, lowerLimitSwitch, pidController,
                 Robot6541Info.ELEVATOR_CAL_POWER, Robot6541Info.ELEVATOR_MIN_HEIGHT, Robot6541Info.ELEVATOR_MAX_HEIGHT);
         pidElevator.setPositionScale(Robot6541Info.ELEVATOR_INCHES_PER_COUNT, Robot6541Info.ELEVATOR_ZERO_OFFSET);
+
+        hookServo = new FtcServo("hookServo");
     }
 
     public void zeroCalibrate()
@@ -83,6 +87,21 @@ public class Elevator6541
     public boolean isLowerLimitSwitchActive()
     {
         return lowerLimitSwitch.isActive();
+    }
+
+    public void setHookPosition(double pos)
+    {
+        hookServo.setPosition(pos);
+    }
+
+    public void openHook()
+    {
+        hookServo.setPosition(Robot6541Info.HANGING_HOOK_OPEN_POSITION);
+    }
+
+    public void closeHook()
+    {
+        hookServo.setPosition(Robot6541Info.HANGING_HOOK_CLOSE_POSITION);
     }
 
 }   //class Elevator6541

@@ -41,7 +41,6 @@ class CmdAuto3543Depot implements TrcRobot.RobotCommand
     private boolean isHanging;
     private boolean doMineral;
     private boolean doTeamMarker;
-    private FtcAuto3543.Park park;
 
     private TrcEvent event;
     private TrcTimer timer;
@@ -50,11 +49,11 @@ class CmdAuto3543Depot implements TrcRobot.RobotCommand
     private double targetY = 0.0;
 
     CmdAuto3543Depot(Robot3543 robot, FtcAuto3543.Alliance alliance, double delay,
-                     boolean isHanging, boolean doMineral, boolean doTeamMarker, FtcAuto3543.Park park)
+                     boolean isHanging, boolean doMineral, boolean doTeamMarker)
     {
         robot.tracer.traceInfo(moduleName,
-                "Alliance=%s,Delay=%.0f,Hanging=%s,Mineral=%s,TeamMarker=%s,Park=%s",
-                alliance, delay, isHanging, doMineral, doTeamMarker, park);
+                "Alliance=%s,Delay=%.0f,Hanging=%s,Mineral=%s,TeamMarker=%s",
+                alliance, delay, isHanging, doMineral, doTeamMarker);
 
         this.robot = robot;
         this.alliance = alliance;
@@ -62,7 +61,6 @@ class CmdAuto3543Depot implements TrcRobot.RobotCommand
         this.isHanging = isHanging;
         this.doMineral = doMineral;
         this.doTeamMarker = doTeamMarker;
-        this.park = park;
 
         event = new TrcEvent(moduleName);
         timer = new TrcTimer(moduleName);

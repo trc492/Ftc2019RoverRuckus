@@ -37,9 +37,9 @@ public class Robot6541 extends Robot
     //
     // Other subsystems.
     //
-    Elevator6541 elevator;
-    TeamMarkerDeployer6541 teamMarkerDeployer;
-    MineralSweeper6541 mineralSweeper;
+    public Elevator6541 elevator;
+    public TeamMarkerDeployer6541 teamMarkerDeployer;
+    public MineralSweeper6541 mineralSweeper;
 
     public Robot6541(TrcRobot.RunMode runMode)
     {

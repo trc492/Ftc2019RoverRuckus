@@ -43,7 +43,6 @@ class CmdAuto6541Crater implements TrcRobot.RobotCommand
     private boolean doMineral;
     private boolean doTeamMarker;
     private boolean doOtherTeamMineral;
-    private FtcAuto6541.Park park;
 
     private TrcEvent event;
     private TrcTimer timer;
@@ -53,12 +52,11 @@ class CmdAuto6541Crater implements TrcRobot.RobotCommand
     private double mineralDistance = 0.0;
 
     CmdAuto6541Crater(Robot6541 robot, FtcAuto6541.Alliance alliance, double delay,
-                      boolean isHanging, boolean doMineral, boolean doTeamMarker, boolean doOtherTeamMineral,
-                      FtcAuto6541.Park park)
+                      boolean isHanging, boolean doMineral, boolean doTeamMarker, boolean doOtherTeamMineral)
     {
         robot.tracer.traceInfo(moduleName,
-                "Alliance=%s,Delay=%.0f,Hanging=%s,Mineral=%s,TeamMarker=%s,2ndTeamMineral=%s,Park=%s",
-                alliance, delay, isHanging, doMineral, doTeamMarker, doOtherTeamMineral, park);
+                "Alliance=%s,Delay=%.0f,Hanging=%s,Mineral=%s,TeamMarker=%s,2ndTeamMineral=%s",
+                alliance, delay, isHanging, doMineral, doTeamMarker, doOtherTeamMineral);
 
         this.robot = robot;
         this.alliance = alliance;
@@ -66,7 +64,6 @@ class CmdAuto6541Crater implements TrcRobot.RobotCommand
         this.doMineral = doMineral;
         this.doTeamMarker = doTeamMarker;
         this.doOtherTeamMineral = doOtherTeamMineral;
-        this.park = park;
 
         event = new TrcEvent(moduleName);
         timer = new TrcTimer(moduleName);

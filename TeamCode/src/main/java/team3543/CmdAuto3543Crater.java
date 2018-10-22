@@ -23,8 +23,6 @@
 package team3543;
 
 import common.CmdSweepMineral;
-import common.PixyVision;
-import common.Robot;
 import trclib.TrcEvent;
 import trclib.TrcRobot;
 import trclib.TrcStateMachine;
@@ -44,7 +42,6 @@ class CmdAuto3543Crater implements TrcRobot.RobotCommand
     private boolean doMineral;
     private boolean doTeamMarker;
     private boolean doOtherTeamMineral;
-    private FtcAuto3543.Park park;
 
     private CmdSweepMineral cmdSweepMineral = null;
 
@@ -55,12 +52,11 @@ class CmdAuto3543Crater implements TrcRobot.RobotCommand
     private double targetY = 0.0;
 
     CmdAuto3543Crater(Robot3543 robot, FtcAuto3543.Alliance alliance, double delay,
-                      boolean isHanging, boolean doMineral, boolean doTeamMarker, boolean doOtherTeamMineral,
-                      FtcAuto3543.Park park)
+                      boolean isHanging, boolean doMineral, boolean doTeamMarker, boolean doOtherTeamMineral)
     {
         robot.tracer.traceInfo(moduleName,
-                "Alliance=%s,Delay=%.0f,Hanging=%s,Mineral=%s,TeamMarker=%s,2ndTeamMineral=%s,Park=%s",
-                alliance, delay, isHanging, doMineral, doTeamMarker, doOtherTeamMineral, park);
+                "Alliance=%s,Delay=%.0f,Hanging=%s,Mineral=%s,TeamMarker=%s,2ndTeamMineral=%s",
+                alliance, delay, isHanging, doMineral, doTeamMarker, doOtherTeamMineral);
 
         this.robot = robot;
         this.alliance = alliance;
@@ -68,7 +64,6 @@ class CmdAuto3543Crater implements TrcRobot.RobotCommand
         this.doMineral = doMineral;
         this.doTeamMarker = doTeamMarker;
         this.doOtherTeamMineral = doOtherTeamMineral;
-        this.park = park;
 
         event = new TrcEvent(moduleName);
         timer = new TrcTimer(moduleName);
@@ -82,11 +77,9 @@ class CmdAuto3543Crater implements TrcRobot.RobotCommand
         ALIGN_ROBOT_WITH_VUFORIA,
         GO_TOWARDS_MINERAL,
         ALIGN_MINERAL_SWEEPER,
-        GO_TO_GOLD_MINERAL,
         SWEEP_MINERAL,
         DRIVE_TO_ALLIANCE_WALL,
         TURN_PARALLEL_TO_WALL,
-        DRIVE_BACKWARDS_INTO_CRATER_FROM_X,
         DRIVE_TO_DEPOT,
         DROP_TEAM_MARKER,
         BACK_UP_FOR_TEAMMATE_MINERAL,
@@ -95,7 +88,6 @@ class CmdAuto3543Crater implements TrcRobot.RobotCommand
         DRIVE_FORWARD_SOME_DISTANCE_FOR_TEAMMATE_MINERAL,
         TURN_TO_CRATER_AFTER_TEAMMATE_MINERAL,
         DRIVE_BACK_TO_WALL_AFTER_TEAMMATE_MINERAL,
-        DRIVE_FORWARD_TO_CRATER_FROM_DEPOT,
         DRIVE_BACK_TO_CRATER_AFTER_TEAMMATE_MINERAL,
         DRIVE_FROM_DEPOT_TO_CRATER,
         DONE

@@ -47,7 +47,7 @@ public class FtcTeleOp6541 extends FtcOpMode implements TrcGameController.Button
 
     private double drivePowerScale = 1.0;
     private boolean invertedDrive = false;
-    private DriveMode driveMode = DriveMode.MECANUM_MODE;
+    private DriveMode driveMode = DriveMode.TANK_MODE;
 
     //
     // Implements FtcOpMode abstract method.

@@ -509,19 +509,9 @@ public class FtcTest6541 extends FtcTeleOp6541 implements TrcGameController.Butt
                     break;
 
                 case FtcGamepad.GAMEPAD_DPAD_UP:
-                    if (pressed)
-                    {
-                        robot.mineralSweeper.retract();
-                        processed = true;
-                    }
                     break;
 
                 case FtcGamepad.GAMEPAD_DPAD_DOWN:
-                    if (pressed)
-                    {
-                        robot.mineralSweeper.extend();
-                        processed = true;
-                    }
                     break;
 
                 case FtcGamepad.GAMEPAD_DPAD_LEFT:
