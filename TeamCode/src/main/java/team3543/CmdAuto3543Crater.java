@@ -326,7 +326,7 @@ class CmdAuto3543Crater implements TrcRobot.RobotCommand
 
                 case DRIVE_TO_CRATER_AFTER_TEAMMATE_MINERAL:
                     //
-                    // Go to crate and park there.
+                    // Go to crater and park there.
                     //
                     targetX = 0.0;
                     targetY = -24.0;
