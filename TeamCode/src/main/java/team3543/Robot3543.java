@@ -106,10 +106,7 @@ public class Robot3543 extends Robot
         //
         // Tell the driver initialization is complete.
         //
-        if (textToSpeech != null)
-        {
-            textToSpeech.speak("Init complete!", TextToSpeech.QUEUE_ADD, null);
-        }
+        speak("Init complete!");
     }   //Robot
 
     @Override

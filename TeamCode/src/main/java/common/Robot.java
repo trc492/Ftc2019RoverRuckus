@@ -111,7 +111,7 @@ public class Robot implements FtcMenu.MenuButtons
         if (USE_SPEECH)
         {
             textToSpeech = FtcOpMode.getInstance().getTextToSpeech();
-            textToSpeech.speak("Init starting", TextToSpeech.QUEUE_FLUSH, null);
+            speak("Init starting");
         }
         //
         // Initialize vision subsystems.
@@ -139,8 +139,13 @@ public class Robot implements FtcMenu.MenuButtons
         final String funcName = "alignHeadingWithVuforia";
 
         OpenGLMatrix robotLocation = vuforiaVision == null? null: vuforiaVision.getRobotLocation();
-        double robotOrientation = robotLocation != null?
-                vuforiaVision.getRobotTranslation(robotLocation).get(3): defOrientation;
+        double robotOrientation = defOrientation;
+
+        if (robotLocation != null)
+        {
+            robotOrientation = vuforiaVision.getRobotTranslation(robotLocation).get(3);
+            speak(String.format("Robot angle is %.1f degrees", robotOrientation));
+        }
 
         tracer.traceInfo(funcName, "orientation=%.3f", robotOrientation);
         targetHeading = robotOrientation;
@@ -151,6 +156,14 @@ public class Robot implements FtcMenu.MenuButtons
     {
         return driveBase.getHeading() + headingOffset;
     }   //getHeading
+
+    public void speak(String sentence)
+    {
+        if (textToSpeech != null)
+        {
+            textToSpeech.speak(sentence, TextToSpeech.QUEUE_FLUSH, null);
+        }
+    }   //speak
 
     public void startMode(TrcRobot.RunMode runMode)
     {

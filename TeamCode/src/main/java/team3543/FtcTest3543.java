@@ -429,26 +429,22 @@ public class FtcTest3543 extends FtcTeleOp3543 implements TrcGameController.Butt
 
                         if ((avgEnc - lfEnc) / avgEnc > 0.5)
                         {
-                            robot.textToSpeech.speak(
-                                    "left front wheel is stuck.", TextToSpeech.QUEUE_ADD, null);
+                            robot.speak("left front wheel is stuck.");
                         }
 
                         if ((avgEnc - rfEnc) / avgEnc > 0.5)
                         {
-                            robot.textToSpeech.speak(
-                                    "right front wheel is stuck.", TextToSpeech.QUEUE_ADD, null);
+                            robot.speak("right front wheel is stuck.");
                         }
 
                         if ((avgEnc - lrEnc) / avgEnc > 0.5)
                         {
-                            robot.textToSpeech.speak(
-                                    "left rear wheel is stuck.", TextToSpeech.QUEUE_ADD, null);
+                            robot.speak("left rear wheel is stuck.");
                         }
 
                         if ((avgEnc - rrEnc) / avgEnc > 0.5)
                         {
-                            robot.textToSpeech.speak(
-                                    "right rear wheel is stuck.", TextToSpeech.QUEUE_ADD, null);
+                            robot.speak("right rear wheel is stuck.");
                         }
                     }
                     sm.stop();

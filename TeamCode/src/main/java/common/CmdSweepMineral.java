@@ -30,6 +30,10 @@ import trclib.TrcTimer;
 
 public class CmdSweepMineral implements TrcRobot.RobotCommand
 {
+    private static final boolean debugXPid = true;
+    private static final boolean debugYPid = true;
+    private static final boolean debugTurnPid = true;
+
     enum State
     {
         START,
@@ -40,47 +44,37 @@ public class CmdSweepMineral implements TrcRobot.RobotCommand
         DONE
     }
 
-    private static final boolean debugXPid = true;
-    private static final boolean debugYPid = true;
-    private static final boolean debugTurnPid = true;
-
     private static final String moduleName = "CmdSweepMineral";
 
     private Robot3543 robot;
     private double startingY;
-
     private TrcEvent event;
     private TrcTimer timer;
     private TrcStateMachine<State> sm;
-
     private double targetX = 0.0;
     private double targetY = 0.0;
-
     private int retries = 0;
+    private double distanceYTravelled = 0.0;
 
-    private double distanceTravelled = 0.0;
-
-    // distance: 14.5 inches between minerals
-
-    //
-    // Starting position 0 inch : 25 inch backuo
-
-
+    /**
+     * Constructor: Create an instance of the object.
+     *
+     * @param robot specifies the robot object.
+     * @param startingY specifies the starting Y distance from the middle mineral.
+     */
     public CmdSweepMineral(Robot3543 robot, double startingY)
     {
         this.robot = robot;
         this.startingY = startingY;
-
         event = new TrcEvent(moduleName);
         timer = new TrcTimer(moduleName);
         sm = new TrcStateMachine<>(moduleName);
         sm.start(State.START);
-    }
+    }   //CmdSweepMineral
 
     @Override
     public boolean cmdPeriodic(double elapsedTime)
     {
-
         State state = sm.checkReadyAndGetState();
         State nextState;
 
@@ -91,18 +85,23 @@ public class CmdSweepMineral implements TrcRobot.RobotCommand
         else
         {
             robot.dashboard.displayPrintf(1, "State: %s", state);
+
             switch (state)
             {
                 case START:
-                    targetX = 0.0;
-                    // move robot 25 inches off the center. (assume we are in the middle)
-                    setTargetY(-startingY - 25.0);
+                    //
+                    // Get to the Y position of the very first mineral which is about 25 inches back from the
+                    // middle mineral. So we need to calculate the distance to go from the starting Y position.
+                    // If for some reason pixy camera is not enabled, just sweep the first mineral hoping it's
+                    // the right one. There is nothing to lose.
+                    //
+                    setTarget(0.0, -25.0 - startingY);
                     robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
-                    sm.waitForSingleEvent(event, State.DONE);
+                    nextState = robot.pixyVision != null? State.SCAN_MINERALS: State.EXTEND_MINERAL_SWEEPER;
+                    sm.waitForSingleEvent(event, nextState);
                     break;
 
                 case SCAN_MINERALS:
-                    targetX = 0.0;
                     PixyVision.TargetInfo targetInfo =
                             robot.pixyVision.getTargetInfo(Robot.PIXY_GOLD_MINERAL_SIGNATURE);
                     if (targetInfo != null)
@@ -111,16 +110,22 @@ public class CmdSweepMineral implements TrcRobot.RobotCommand
                         // Get the sweeper right behind the gold mineral. The pixy camera is 4 inches behind the arm.
                         // We will give another 4 inches margin so a total of 8 inches.
                         //
-                        setTargetY(targetInfo.xDistance - 8.0);
+                        setTarget(0.0, targetInfo.xDistance - 8.0);
                         nextState = State.EXTEND_MINERAL_SWEEPER;
                     }
                     else
                     {
-                        // this is the distance between two minerals
-                        setTargetY(14.5);
+                        //
+                        // This is the distance between two minerals.
+                        //
+                        setTarget(0.0, 14.5);
                         retries++;
                         if (retries == 3)
                         {
+                            //
+                            // This is the third mineral and the pixy still failed to detect it, sweep it anyway
+                            // in hope that's the right one. There's nothing to lose.
+                            //
                             nextState = State.EXTEND_MINERAL_SWEEPER;
                         }
                         else
@@ -143,7 +148,7 @@ public class CmdSweepMineral implements TrcRobot.RobotCommand
 
                 case DISPLACE_MINERAL:
                     //
-                    // We are supposed to be 4 inches in front of the mineral. So go forward 8 inches will displace
+                    // We are supposed to be 4 inches behind the mineral. So go forward 8 inches will displace
                     // it about 4 inches.
                     //
                     targetX = 0.0;
@@ -166,8 +171,8 @@ public class CmdSweepMineral implements TrcRobot.RobotCommand
                     break;
             }
             robot.traceStateInfo(elapsedTime, state.toString(), targetX, targetY, robot.targetHeading);
-
         }
+
         if (robot.pidDrive.isActive())
         {
             robot.tracer.traceInfo("Battery", "Voltage=%5.2fV (%5.2fV)",
@@ -196,16 +201,18 @@ public class CmdSweepMineral implements TrcRobot.RobotCommand
         }
 
         return !sm.isEnabled();
-    }
+    }   //cmdPeriodic
 
-    private void setTargetY(double dist)
+    private void setTarget(double distX, double distY)
     {
-        targetY = dist;
-        distanceTravelled += dist;
-    }
+        targetX = distX;
+        targetY = distY;
+        distanceYTravelled += distY;
+    }   //setTarget
 
-    public double getDistanceTravelled()
+    public double getDistanceYTravelled()
     {
-        return distanceTravelled;
-    }
-}
+        return distanceYTravelled;
+    }   //getDistanceYTravelled
+
+}   //class CmdSweepMineral

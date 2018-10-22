@@ -78,7 +78,7 @@ public class FtcAuto3543 extends FtcOpMode
     private boolean isHanging = false;
     private boolean doMineral = false;
     private boolean doTeamMarker = false;
-    private boolean doOtherTeamMineral = false;
+    private boolean doTeammateMineral = false;
 
     //
     // Implements FtcOpMode abstract method.
@@ -109,7 +109,7 @@ public class FtcAuto3543 extends FtcOpMode
         {
             case CRATER_AUTO:
                 autoCommand = new CmdAuto3543Crater(robot, alliance, delay, isHanging, doMineral, doTeamMarker,
-                        doOtherTeamMineral);
+                        doTeammateMineral);
                 break;
 
             case DEPOT_AUTO:
@@ -234,8 +234,8 @@ public class FtcAuto3543 extends FtcOpMode
         robot.dashboard.displayPrintf(3, "Alliance=%s,Delay=%.0f sec", alliance.toString(), delay);
         robot.dashboard.displayPrintf(4, "Drive: distance=%.0f ft,Time=%.0f,Power=%.1f",
                 driveDistance, driveTime, drivePower);
-        robot.dashboard.displayPrintf(5, "Hanging=%s,Mineral=%s,TeamMarker=%s,OtherMineral=%s",
-                isHanging, doMineral, doTeamMarker, doOtherTeamMineral);
+        robot.dashboard.displayPrintf(5, "Hanging=%s,Mineral=%s,TeamMarker=%s,TeammateMineral=%s",
+                isHanging, doMineral, doTeamMarker, doTeammateMineral);
     }   //doMenus
 
 }   //class FtcAuto3543
