@@ -24,61 +24,21 @@ package team3543;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
-import java.util.Date;
-
+import common.AutoCommon;
 import common.CmdPidDrive;
 import common.CmdTimedDrive;
-import ftclib.FtcChoiceMenu;
-import ftclib.FtcMenu;
-import ftclib.FtcOpMode;
-import ftclib.FtcValueMenu;
 import trclib.TrcRobot;
 
 @Autonomous(name="Autonomous3543", group="3543Auto")
-public class FtcAuto3543 extends FtcOpMode
+public class FtcAuto3543 extends AutoCommon
 {
-    private static final boolean USE_TRACELOG = true;
-
-    enum MatchType
-    {
-        PRACTICE,
-        QUALIFICATION,
-        SEMI_FINAL,
-        FINAL
-    }   //enum MatchType
-
-    enum Alliance
-    {
-        RED_ALLIANCE,
-        BLUE_ALLIANCE
-    }   //enum Alliance
-
-    private enum Strategy
-    {
-        CRATER_AUTO,
-        DEPOT_AUTO,
-        DISTANCE_DRIVE,
-        TIMED_DRIVE,
-        DO_NOTHING
-    }   //enum Strategy
-
     private static final String moduleName = "FtcAuto3543";
-
     private Robot3543 robot;
-    private TrcRobot.RobotCommand autoCommand = null;
-    private MatchType matchType = MatchType.PRACTICE;
-    private int matchNumber = 0;
-    private Alliance alliance = Alliance.RED_ALLIANCE;
-    private double delay = 0.0;
-    private Strategy strategy = Strategy.CRATER_AUTO;
-    private double driveDistance = 0.0;
-    private double driveTime = 0.0;
-    private double drivePower = 0.0;
 
-    private boolean isHanging = false;
-    private boolean doMineral = false;
-    private boolean doTeamMarker = false;
-    private boolean doTeammateMineral = false;
+    public FtcAuto3543()
+    {
+        super(moduleName);
+    }   //FtcAuto3543
 
     //
     // Implements FtcOpMode abstract method.
@@ -91,6 +51,7 @@ public class FtcAuto3543 extends FtcOpMode
         // Initializing robot objects.
         //
         robot = new Robot3543(TrcRobot.RunMode.AUTO_MODE);
+        super.setRobot(robot);
         //
         // Choice menus.
         //
@@ -131,111 +92,5 @@ public class FtcAuto3543 extends FtcOpMode
                 break;
         }
     }   //initRobot
-
-    //
-    // Overrides TrcRobot.RobotMode methods.
-    //
-
-    @Override
-    public void startMode(TrcRobot.RunMode runMode)
-    {
-        robot.tracer.traceInfo(moduleName, "%s: ***** Starting autonomous *****", new Date());
-        robot.startMode(TrcRobot.RunMode.AUTO_MODE);
-        robot.battery.setTaskEnabled(true);
-        robot.dashboard.clearDisplay();
-    }   //startMode
-
-    @Override
-    public void stopMode(TrcRobot.RunMode runMode)
-    {
-        robot.stopMode(TrcRobot.RunMode.AUTO_MODE);
-        robot.battery.setTaskEnabled(false);
-        printPerformanceMetrics(robot.tracer);
-
-        if (USE_TRACELOG)
-        {
-            robot.tracer.closeTraceLog();
-        }
-    }   //stopMode
-
-    @Override
-    public void runContinuous(double elapsedTime)
-    {
-        if (autoCommand != null)
-        {
-            autoCommand.cmdPeriodic(elapsedTime);
-        }
-    }   //runContinuous
-
-    private void doMenus()
-    {
-        //
-        // Create menus.
-        //
-        FtcChoiceMenu<MatchType> matchTypeMenu = new FtcChoiceMenu<>("Match type:", null, robot);
-        FtcValueMenu matchNumberMenu = new FtcValueMenu(
-                "Match number:", matchTypeMenu, robot,
-                1.0, 50.0, 1.0, 1.0, "%.0f");
-        FtcChoiceMenu<Alliance> allianceMenu = new FtcChoiceMenu<>("Alliance:", matchNumberMenu, robot);
-        FtcValueMenu delayMenu = new FtcValueMenu(
-                "Delay time:", allianceMenu, robot,
-                0.0, 30.0, 1.0, 0.0, " %.0f sec");
-        FtcChoiceMenu<Strategy> strategyMenu = new FtcChoiceMenu<>("Strategies:", delayMenu, robot);
-        FtcValueMenu driveDistanceMenu = new FtcValueMenu(
-                "Distance:", strategyMenu, robot,
-                -12.0, 12.0, 0.5, 4.0, " %.0f ft");
-        FtcValueMenu driveTimeMenu = new FtcValueMenu(
-                "Drive time:", strategyMenu, robot,
-                0.0, 30.0, 1.0, 5.0, " %.0f sec");
-        FtcValueMenu drivePowerMenu = new FtcValueMenu(
-                "Drive power:", strategyMenu, robot,
-                -1.0, 1.0, 0.1, 0.5, " %.1f");
-
-        matchNumberMenu.setChildMenu(allianceMenu);
-        driveTimeMenu.setChildMenu(drivePowerMenu);
-
-        //
-        // Populate choice menus.
-        //
-        matchTypeMenu.addChoice("Practice", MatchType.PRACTICE, true, matchNumberMenu);
-        matchTypeMenu.addChoice("Qualification", MatchType.QUALIFICATION, false, matchNumberMenu);
-        matchTypeMenu.addChoice("Semi-final", MatchType.SEMI_FINAL, false, matchNumberMenu);
-        matchTypeMenu.addChoice("Final", MatchType.FINAL, false, matchNumberMenu);
-
-        allianceMenu.addChoice("Red", Alliance.RED_ALLIANCE, true, delayMenu);
-        allianceMenu.addChoice("Blue", Alliance.BLUE_ALLIANCE, false, delayMenu);
-
-        strategyMenu.addChoice("Crater Auto", Strategy.CRATER_AUTO, true);
-        strategyMenu.addChoice("Depot Auto", Strategy.DEPOT_AUTO, false);
-        strategyMenu.addChoice("Distance Drive", Strategy.DISTANCE_DRIVE, false, driveDistanceMenu);
-        strategyMenu.addChoice("Timed Drive", Strategy.TIMED_DRIVE, false, driveTimeMenu);
-        strategyMenu.addChoice("Do nothing", Strategy.DO_NOTHING, false);
-        //
-        // Traverse menus.
-        //
-        FtcMenu.walkMenuTree(matchTypeMenu, this);
-        //
-        // Fetch choices.
-        //
-        matchType = matchTypeMenu.getCurrentChoiceObject();
-        matchNumber = (int)matchNumberMenu.getCurrentValue();
-        alliance = allianceMenu.getCurrentChoiceObject();
-        delay = delayMenu.getCurrentValue();
-        strategy = strategyMenu.getCurrentChoiceObject();
-        driveDistance = driveDistanceMenu.getCurrentValue();
-        driveTime = driveTimeMenu.getCurrentValue();
-        drivePower = drivePowerMenu.getCurrentValue();
-        //
-        // Show choices.
-        //
-        robot.dashboard.displayPrintf(1, "== Match: %s ==",
-                matchType.toString() + "_" + matchNumber);
-        robot.dashboard.displayPrintf(2, "Auto Strategy: %s", strategyMenu.getCurrentChoiceText());
-        robot.dashboard.displayPrintf(3, "Alliance=%s,Delay=%.0f sec", alliance.toString(), delay);
-        robot.dashboard.displayPrintf(4, "Drive: distance=%.0f ft,Time=%.0f,Power=%.1f",
-                driveDistance, driveTime, drivePower);
-        robot.dashboard.displayPrintf(5, "Hanging=%s,Mineral=%s,TeamMarker=%s,TeammateMineral=%s",
-                isHanging, doMineral, doTeamMarker, doTeammateMineral);
-    }   //doMenus
 
 }   //class FtcAuto3543
