@@ -69,7 +69,7 @@ public abstract class AutoCommon extends FtcOpMode
     protected double driveTime = 0.0;
     protected double drivePower = 0.0;
 
-    protected boolean isHanging = false;
+    protected boolean startHung = false;
     protected boolean doMineral = false;
     protected boolean doTeamMarker = false;
     protected boolean doTeammateMineral = false;
@@ -143,7 +143,17 @@ public abstract class AutoCommon extends FtcOpMode
                 "Drive power:", strategyMenu, robot,
                 -1.0, 1.0, 0.1, 0.5, " %.1f");
 
+        FtcChoiceMenu<Boolean> doTeammateMineralMenu = new FtcChoiceMenu<>(
+                "Do Teammate Mineral:", strategyMenu, robot);
+        FtcChoiceMenu<Boolean> startHungMenu = new FtcChoiceMenu<>(
+                "Start Hung:", strategyMenu, robot);
+        FtcChoiceMenu<Boolean> doMineralMenu = new FtcChoiceMenu<>(
+                "Do Mineral:", startHungMenu, robot);
+        FtcChoiceMenu<Boolean> doTeamMarkerMenu = new FtcChoiceMenu<>(
+                "Do Team Marker:", doMineralMenu, robot);
+
         matchNumberMenu.setChildMenu(allianceMenu);
+        delayMenu.setChildMenu(strategyMenu);
         driveTimeMenu.setChildMenu(drivePowerMenu);
 
         //
@@ -157,11 +167,23 @@ public abstract class AutoCommon extends FtcOpMode
         allianceMenu.addChoice("Red", Alliance.RED_ALLIANCE, true, delayMenu);
         allianceMenu.addChoice("Blue", Alliance.BLUE_ALLIANCE, false, delayMenu);
 
-        strategyMenu.addChoice("Crater Auto", Strategy.CRATER_AUTO, true);
-        strategyMenu.addChoice("Depot Auto", Strategy.DEPOT_AUTO, false);
+        strategyMenu.addChoice("Crater Auto", Strategy.CRATER_AUTO, true, doTeammateMineralMenu);
+        strategyMenu.addChoice("Depot Auto", Strategy.DEPOT_AUTO, false, startHungMenu);
         strategyMenu.addChoice("Distance Drive", Strategy.DISTANCE_DRIVE, false, driveDistanceMenu);
         strategyMenu.addChoice("Timed Drive", Strategy.TIMED_DRIVE, false, driveTimeMenu);
         strategyMenu.addChoice("Do nothing", Strategy.DO_NOTHING, false);
+
+        doTeammateMineralMenu.addChoice("Yes", true, false, startHungMenu);
+        doTeammateMineralMenu.addChoice("No", false, true, startHungMenu);
+
+        startHungMenu.addChoice("Yes", true, true, doMineralMenu);
+        startHungMenu.addChoice("No", false, false, doMineralMenu);
+
+        doMineralMenu.addChoice("Yes", true, true, doTeamMarkerMenu);
+        doMineralMenu.addChoice("No", false, false, doTeamMarkerMenu);
+
+        doTeamMarkerMenu.addChoice("Yes", true, true);
+        doTeamMarkerMenu.addChoice("No", false, false);
         //
         // Traverse menus.
         //
@@ -177,6 +199,11 @@ public abstract class AutoCommon extends FtcOpMode
         driveDistance = driveDistanceMenu.getCurrentValue();
         driveTime = driveTimeMenu.getCurrentValue();
         drivePower = drivePowerMenu.getCurrentValue();
+
+        startHung = startHungMenu.getCurrentChoiceObject();
+        doMineral = doMineralMenu.getCurrentChoiceObject();
+        doTeamMarker = doTeamMarkerMenu.getCurrentChoiceObject();
+        doTeammateMineral = doTeammateMineralMenu.getCurrentChoiceObject();
         //
         // Show choices.
         //
@@ -186,8 +213,8 @@ public abstract class AutoCommon extends FtcOpMode
         robot.dashboard.displayPrintf(3, "Alliance=%s,Delay=%.0f sec", alliance.toString(), delay);
         robot.dashboard.displayPrintf(4, "Drive: distance=%.0f ft,Time=%.0f,Power=%.1f",
                 driveDistance, driveTime, drivePower);
-        robot.dashboard.displayPrintf(5, "Hanging=%s,Mineral=%s,TeamMarker=%s,TeammateMineral=%s",
-                isHanging, doMineral, doTeamMarker, doTeammateMineral);
+        robot.dashboard.displayPrintf(5, "startHung=%s,Mineral=%s,TeamMarker=%s,TeammateMineral=%s",
+                startHung, doMineral, doTeamMarker, doTeammateMineral);
     }   //doMenus
 
 }   //class AutoCommon

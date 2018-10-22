@@ -69,12 +69,12 @@ public class FtcAuto3543 extends AutoCommon
         switch (strategy)
         {
             case CRATER_AUTO:
-                autoCommand = new CmdAuto3543Crater(robot, alliance, delay, isHanging, doMineral, doTeamMarker,
+                autoCommand = new CmdAuto3543Crater(robot, alliance, delay, startHung, doMineral, doTeamMarker,
                         doTeammateMineral);
                 break;
 
             case DEPOT_AUTO:
-                autoCommand = new CmdAuto3543Depot(robot, alliance, delay, isHanging, doMineral, doTeamMarker);
+                autoCommand = new CmdAuto3543Depot(robot, alliance, delay, startHung, doMineral, doTeamMarker);
                 break;
 
             case DISTANCE_DRIVE:

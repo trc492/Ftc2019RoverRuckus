@@ -52,11 +52,11 @@ class CmdAuto6541Crater implements TrcRobot.RobotCommand
     private double mineralDistance = 0.0;
 
     CmdAuto6541Crater(Robot6541 robot, FtcAuto6541.Alliance alliance, double delay,
-                      boolean isHanging, boolean doMineral, boolean doTeamMarker, boolean doOtherTeamMineral)
+                      boolean startHung, boolean doMineral, boolean doTeamMarker, boolean doOtherTeamMineral)
     {
         robot.tracer.traceInfo(moduleName,
-                "Alliance=%s,Delay=%.0f,Hanging=%s,Mineral=%s,TeamMarker=%s,2ndTeamMineral=%s",
-                alliance, delay, isHanging, doMineral, doTeamMarker, doOtherTeamMineral);
+                "Alliance=%s,Delay=%.0f,startHung=%s,Mineral=%s,TeamMarker=%s,2ndTeamMineral=%s",
+                alliance, delay, startHung, doMineral, doTeamMarker, doOtherTeamMineral);
 
         this.robot = robot;
         this.alliance = alliance;
@@ -68,7 +68,7 @@ class CmdAuto6541Crater implements TrcRobot.RobotCommand
         event = new TrcEvent(moduleName);
         timer = new TrcTimer(moduleName);
         sm = new TrcStateMachine<>(moduleName);
-        sm.start(isHanging? State.LOWER_ROBOT: State.ALIGN_ROBOT_WITH_VUFORIA);
+        sm.start(startHung? State.LOWER_ROBOT: State.ALIGN_ROBOT_WITH_VUFORIA);
     }   //CmdAuto6541Crater
 
     private enum State

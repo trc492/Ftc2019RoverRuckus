@@ -52,11 +52,11 @@ class CmdAuto3543Crater implements TrcRobot.RobotCommand
     private CmdSweepMineral cmdSweepMineral = null;
 
     CmdAuto3543Crater(Robot3543 robot, FtcAuto3543.Alliance alliance, double delay,
-                      boolean isHanging, boolean doMineral, boolean doTeamMarker, boolean doTeammateMineral)
+                      boolean startHung, boolean doMineral, boolean doTeamMarker, boolean doTeammateMineral)
     {
         robot.tracer.traceInfo(moduleName,
-                "Alliance=%s,Delay=%.0f,Hanging=%s,Mineral=%s,TeamMarker=%s,TeammateMineral=%s",
-                alliance, delay, isHanging, doMineral, doTeamMarker, doTeammateMineral);
+                "Alliance=%s,Delay=%.0f,startHung=%s,Mineral=%s,TeamMarker=%s,TeammateMineral=%s",
+                alliance, delay, startHung, doMineral, doTeamMarker, doTeammateMineral);
 
         this.robot = robot;
         this.alliance = alliance;
@@ -68,7 +68,7 @@ class CmdAuto3543Crater implements TrcRobot.RobotCommand
         event = new TrcEvent(moduleName);
         timer = new TrcTimer(moduleName);
         sm = new TrcStateMachine<>(moduleName);
-        sm.start(isHanging? State.LOWER_ROBOT: State.GO_TOWARDS_MINERAL);
+        sm.start(startHung? State.LOWER_ROBOT: State.GO_TOWARDS_MINERAL);
     }   //CmdAuto3543Crater
 
     private enum State
