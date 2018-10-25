@@ -49,16 +49,6 @@ public class Robot implements FtcMenu.MenuButtons
     public static final boolean USE_VUFORIA = false;
     public static final boolean USE_PIXY = true;
     //
-    // PixyVision subsystem.
-    //
-    public static final int PIXY_GOLD_MINERAL_SIGNATURE         = 1;
-    public static final int PIXY_SILVER_MINERAL_SIGNATURE       = 2;
-    public static final int PIXY_TEAM_MARKER1_SIGNATURE         = 3;
-    public static final int PIXY_TEAM_MARKER2_SIGNATURE         = 4;
-    public static final int PIXY_BRIGHTNESS                     = 80;
-    public static final double PIXY_CAM_OFFSET                  = 8.0;
-    public static final PixyVision.Orientation PIXY_ORIENTATION = PixyVision.Orientation.NORMAL_LANDSCAPE;
-    //
     // Global objects.
     //
     public String moduleName;
@@ -93,6 +83,11 @@ public class Robot implements FtcMenu.MenuButtons
     public TrcPidController gyroPidCtrl = null;
     public TrcSimpleDriveBase driveBase = null;
     public TrcPidDrive pidDrive = null;
+    //
+    // Other common subsystems.
+    //
+    public MineralSweeper mineralSweeper = null;
+    public TeamMarkerDeployer teamMarkerDeployer = null;
 
     public Robot(TrcRobot.RunMode runMode)
     {
@@ -125,7 +120,8 @@ public class Robot implements FtcMenu.MenuButtons
 
         if (USE_PIXY)
         {
-            pixyVision = new PixyVision("pixy", this, PIXY_ORIENTATION, PIXY_BRIGHTNESS);
+            pixyVision = new PixyVision("pixy", this,
+                    RobotInfo.PIXY_ORIENTATION, RobotInfo.PIXY_BRIGHTNESS);
         }
         //
         // Initialize sensors.
@@ -173,6 +169,20 @@ public class Robot implements FtcMenu.MenuButtons
         gyro.resetZIntegrator();
         gyro.setEnabled(true);
         targetHeading = 0.0;
+
+        if (vuforiaVision != null)
+        {
+            vuforiaVision.setEnabled(true);
+        }
+
+        if (pixyVision != null)
+        {
+            pixyVision.setEnabled(true);
+        }
+        //
+        // Reset all X, Y and heading values.
+        //
+        driveBase.resetOdometry();
     }   //startMode
 
     public void stopMode(TrcRobot.RunMode runMode)
@@ -186,6 +196,16 @@ public class Robot implements FtcMenu.MenuButtons
         {
             textToSpeech.stop();
             textToSpeech.shutdown();
+        }
+
+        if (vuforiaVision != null)
+        {
+            vuforiaVision.setEnabled(false);
+        }
+
+        if (pixyVision != null)
+        {
+            pixyVision.setEnabled(false);
         }
     }   //stopMode
 
@@ -218,7 +238,7 @@ public class Robot implements FtcMenu.MenuButtons
     @Override
     public boolean isMenuEnterButton()
     {
-        return opMode.gamepad1.a;
+        return opMode.gamepad1.dpad_right;
     }   //isMenuEnterButton
 
     @Override

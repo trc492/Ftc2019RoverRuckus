@@ -22,6 +22,8 @@
 
 package team3543;
 
+import common.AutoCommon;
+import common.CmdSweepMineral;
 import trclib.TrcEvent;
 import trclib.TrcRobot;
 import trclib.TrcStateMachine;
@@ -36,9 +38,9 @@ class CmdAuto3543Depot implements TrcRobot.RobotCommand
     private static final String moduleName = "CmdAuto3543Depot";
 
     private Robot3543 robot;
-    private FtcAuto3543.Alliance alliance;
+    private AutoCommon.Alliance alliance;
     private double delay;
-    private boolean isHanging;
+    private boolean startHung;
     private boolean doMineral;
     private boolean doTeamMarker;
 
@@ -47,33 +49,44 @@ class CmdAuto3543Depot implements TrcRobot.RobotCommand
     private TrcStateMachine<State> sm;
     private double targetX = 0.0;
     private double targetY = 0.0;
+    private double unhookedTurnAngle = 0.0;
+    private CmdSweepMineral cmdSweepMineral = null;
 
-    CmdAuto3543Depot(Robot3543 robot, FtcAuto3543.Alliance alliance, double delay,
-                     boolean isHanging, boolean doMineral, boolean doTeamMarker)
+    CmdAuto3543Depot(Robot3543 robot, AutoCommon.Alliance alliance, double delay,
+                     boolean startHung, boolean doMineral, boolean doTeamMarker)
     {
         robot.tracer.traceInfo(moduleName,
                 "Alliance=%s,Delay=%.0f,Hanging=%s,Mineral=%s,TeamMarker=%s",
-                alliance, delay, isHanging, doMineral, doTeamMarker);
+                alliance, delay, startHung, doMineral, doTeamMarker);
 
         this.robot = robot;
         this.alliance = alliance;
         this.delay = delay;
-        this.isHanging = isHanging;
+        this.startHung = startHung;
         this.doMineral = doMineral;
         this.doTeamMarker = doTeamMarker;
 
         event = new TrcEvent(moduleName);
         timer = new TrcTimer(moduleName);
         sm = new TrcStateMachine<>(moduleName);
-        sm.start(isHanging? State.LOWER_ROBOT: State.ALIGN_ROBOT_WITH_VUFORIA);
+        sm.start(startHung? State.LOWER_ROBOT: State.DO_DELAY);
     }   //CmdAuto3543Depot
 
     private enum State
     {
         LOWER_ROBOT,
-        ALIGN_ROBOT_WITH_VUFORIA,
+        UNHOOK_ROBOT,
         DO_DELAY,
-
+        GO_TOWARDS_MINERAL,
+        ALIGN_MINERAL_SWEEPER,
+        ALIGN_ROBOT_WITH_VUFORIA,
+        SWEEP_MINERAL,
+        DRIVE_TO_MID_WALL,
+        TURN_PARALLEL_TO_WALL,
+        DRIVE_FROM_MID_WALL_TO_CRATER,
+        DRIVE_FROM_MID_WALL_TO_DEPOT,
+        DROP_TEAM_MARKER,
+        DRIVE_FROM_DEPOT_TO_CRATER,
         DONE
     }   //enum State
 
@@ -85,6 +98,8 @@ class CmdAuto3543Depot implements TrcRobot.RobotCommand
     public boolean cmdPeriodic(double elapsedTime)
     {
         State state = sm.checkReadyAndGetState();
+        State nextState;
+        boolean traceState = true;
 
         if (state == null)
         {
@@ -94,33 +109,159 @@ class CmdAuto3543Depot implements TrcRobot.RobotCommand
         {
             robot.dashboard.displayPrintf(1, "State: %s", state);
 
-            /*
-            Strategy:
-            - Lower robot
-            - Align robot with Vuforia
-             */
             switch (state)
             {
                 case LOWER_ROBOT:
+                    //
+                    // The robot started hanging on the lander, lower it to the ground.
+                    //
+                    robot.elevator.setPosition(Robot3543Info.ELEVATOR_MAX_HEIGHT, event, 0.0);
+                    sm.waitForSingleEvent(event, State.UNHOOK_ROBOT);
                     break;
 
-                case ALIGN_ROBOT_WITH_VUFORIA:
+                case UNHOOK_ROBOT:
+                    //
+                    // The robot is still hooked, need to unhook first.
+                    // TODO: should we strafe instead???
+                    //
+                    unhookedTurnAngle = -10.0;
+                    targetX = 0.0;
+                    targetY = 0.0;
+                    robot.targetHeading += unhookedTurnAngle;
+                    robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
+                    sm.waitForSingleEvent(event, State.GO_TOWARDS_MINERAL);
                     break;
 
                 case DO_DELAY:
                     //
                     // Do delay if any.
                     //
-                    robot.tracer.traceInfo(state.toString(), "Delay=%.0f", delay);
-                    if (delay == 0.0)
+                    timer.set(delay, event);
+                    sm.waitForSingleEvent(event, State.GO_TOWARDS_MINERAL);
+                    break;
+
+                case GO_TOWARDS_MINERAL:
+                    //
+                    // Move closer to the mineral so the sweeper can reach them.
+                    //
+                    targetX = 0.0;
+                    targetY = 12.0;
+                    robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
+                    sm.waitForSingleEvent(event, State.ALIGN_MINERAL_SWEEPER);
+                    break;
+
+                case ALIGN_MINERAL_SWEEPER:
+                    //
+                    // Turn robot sideway so the sweeper is facing mineral.
+                    //
+                    targetX = 0.0;
+                    targetY = 0.0;
+                    robot.targetHeading += 90.0 - unhookedTurnAngle;
+                    robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
+                    sm.waitForSingleEvent(event, State.ALIGN_ROBOT_WITH_VUFORIA);
+                    break;
+
+                case ALIGN_ROBOT_WITH_VUFORIA:
+                    //
+                    // Align the robot heading with robot orientation reported by Vuforia.
+                    // In case Vuforia failed to see images, set the default orientation accordingly.
+                    //
+                    robot.alignHeadingWithVuforia(alliance == AutoCommon.Alliance.RED_ALLIANCE? -45.0: 135.0);
+                    if (doMineral)
                     {
-                        sm.setState(State.DONE);
+                        nextState = State.SWEEP_MINERAL;
+                        cmdSweepMineral = new CmdSweepMineral(robot, 0.0);  //TODO: may need to adjust startingY
                     }
                     else
                     {
-                        timer.set(delay, event);
-                        sm.waitForSingleEvent(event, State.DONE);
+                        nextState = State.DRIVE_TO_MID_WALL;
+                        cmdSweepMineral = null;
                     }
+                    sm.setState(nextState);
+                    //
+                    // Intentionally fall through to the next state to save one cycle time.
+                    //
+                case SWEEP_MINERAL:
+                    //
+                    // Remain in this state until sweeping is done.
+                    //
+                    if (cmdSweepMineral.cmdPeriodic(elapsedTime))
+                    {
+                        sm.setState(State.DRIVE_TO_MID_WALL);
+                    }
+                    traceState = false;
+                    break;
+
+                case DRIVE_TO_MID_WALL:
+                    //
+                    // Drive towards mid wall.
+                    //
+                    targetX = 0.0;
+                    targetY = -36.0;
+                    //
+                    // cmdSweepMineral may be null if doMineral is false.
+                    //
+                    if (cmdSweepMineral != null)
+                    {
+                        //
+                        // Adjust the distance by how far we went for sweeping mineral.
+                        //
+                        targetY -= cmdSweepMineral.getDistanceYTravelled();
+                        cmdSweepMineral = null;
+                    }
+                    robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
+                    sm.waitForSingleEvent(event, State.TURN_PARALLEL_TO_WALL);
+                    break;
+
+                case TURN_PARALLEL_TO_WALL:
+                    //
+                    // Align the robot parallel to the wall.
+                    //
+                    targetX = 0.0;
+                    targetY = 0.0;
+                    robot.targetHeading -= 45.0;
+                    robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
+                    nextState = !doTeamMarker? State.DRIVE_FROM_MID_WALL_TO_CRATER : State.DRIVE_FROM_MID_WALL_TO_DEPOT;
+                    sm.waitForSingleEvent(event, nextState);
+                    break;
+
+                case DRIVE_FROM_MID_WALL_TO_CRATER:
+                    //
+                    // Go direct to crater and park there.
+                    //
+                    targetX = 0.0;
+                    targetY = -24.0;
+                    robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
+                    sm.waitForSingleEvent(event, State.DONE);
+                    break;
+
+                case DRIVE_FROM_MID_WALL_TO_DEPOT:
+                    //
+                    // Drive to depot to drop off team marker.
+                    //
+                    targetX = 0.0;
+                    targetY = 30.0;
+                    robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
+                    sm.waitForSingleEvent(event, State.DROP_TEAM_MARKER);
+                    break;
+
+                case DROP_TEAM_MARKER:
+                    //
+                    // Release team marker by opening the deployer.
+                    //
+                    robot.teamMarkerDeployer.open();
+                    timer.set(0.3, event);
+                    sm.waitForSingleEvent(event, State.DRIVE_FROM_DEPOT_TO_CRATER);
+                    break;
+
+                case DRIVE_FROM_DEPOT_TO_CRATER:
+                    //
+                    // Drive back to the crater and park there.
+                    //
+                    targetX = 0.0;
+                    targetY = -72.0;
+                    robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
+                    sm.waitForSingleEvent(event, State.DONE);
                     break;
 
                 case DONE:
@@ -131,7 +272,11 @@ class CmdAuto3543Depot implements TrcRobot.RobotCommand
                     sm.stop();
                     break;
             }
-            robot.traceStateInfo(elapsedTime, state.toString(), targetX, targetY, robot.targetHeading);
+
+            if (traceState)
+            {
+                robot.traceStateInfo(elapsedTime, state.toString(), targetX, targetY, robot.targetHeading);
+            }
         }
 
         if (robot.pidDrive.isActive())

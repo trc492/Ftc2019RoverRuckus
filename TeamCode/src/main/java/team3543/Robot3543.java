@@ -22,9 +22,9 @@
 
 package team3543;
 
-import android.speech.tts.TextToSpeech;
-
+import common.MineralSweeper;
 import common.Robot;
+import common.TeamMarkerDeployer;
 import ftclib.FtcDcMotor;
 import trclib.TrcMecanumDriveBase;
 import trclib.TrcPidController;
@@ -38,8 +38,6 @@ public class Robot3543 extends Robot
     // Other subsystems.
     //
     public Elevator3543 elevator;
-    public TeamMarkerDeployer3543 teamMarkerDeployer;
-    public MineralSweeper3543 mineralSweeper;
 
     public Robot3543(TrcRobot.RunMode runMode)
     {
@@ -101,8 +99,10 @@ public class Robot3543 extends Robot
         // Initialize other subsystems.
         //
         elevator = new Elevator3543();
-        teamMarkerDeployer = new TeamMarkerDeployer3543();
-        mineralSweeper = new MineralSweeper3543();
+        mineralSweeper = new MineralSweeper(
+                Robot3543Info.MINERAL_SWEEPER_EXTEND_POSITION, Robot3543Info.MINERAL_SWEEPER_RETRACT_POSITION);
+        teamMarkerDeployer = new TeamMarkerDeployer(
+                Robot3543Info.DEPLOYER_OPEN_POSITION, Robot3543Info.DEPLOYER_CLOSE_POSITION);
         //
         // Tell the driver initialization is complete.
         //
@@ -113,34 +113,12 @@ public class Robot3543 extends Robot
     public void startMode(TrcRobot.RunMode runMode)
     {
         super.startMode(runMode);
-
-        if (vuforiaVision != null)
-        {
-            vuforiaVision.setEnabled(true);
-        }
-
-        if (pixyVision != null)
-        {
-            pixyVision.setEnabled(true);
-        }
-        //
-        // Reset all X, Y and heading values.
-        //
-        driveBase.resetOdometry();
     }   //startMode
 
     @Override
     public void stopMode(TrcRobot.RunMode runMode)
     {
-        if (vuforiaVision != null)
-        {
-            vuforiaVision.setEnabled(false);
-        }
-
-        if (pixyVision != null)
-        {
-            pixyVision.setEnabled(false);
-        }
+        super.stopMode(runMode);
     }   //stopMode
 
 }   //class Robot3543

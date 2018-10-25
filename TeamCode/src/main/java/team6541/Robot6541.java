@@ -22,9 +22,9 @@
 
 package team6541;
 
-import android.speech.tts.TextToSpeech;
-
+import common.MineralSweeper;
 import common.Robot;
+import common.TeamMarkerDeployer;
 import ftclib.FtcDcMotor;
 import trclib.TrcPidController;
 import trclib.TrcPidDrive;
@@ -38,8 +38,6 @@ public class Robot6541 extends Robot
     // Other subsystems.
     //
     public Elevator6541 elevator;
-    public TeamMarkerDeployer6541 teamMarkerDeployer;
-    public MineralSweeper6541 mineralSweeper;
 
     public Robot6541(TrcRobot.RunMode runMode)
     {
@@ -101,8 +99,10 @@ public class Robot6541 extends Robot
         // Initialize other subsystems.
         //
         elevator = new Elevator6541();
-        teamMarkerDeployer = new TeamMarkerDeployer6541();
-        mineralSweeper = new MineralSweeper6541();
+        mineralSweeper = new MineralSweeper(
+                Robot6541Info.MINERAL_SWEEPER_EXTEND_POSITION, Robot6541Info.MINERAL_SWEEPER_RETRACT_POSITION);
+        teamMarkerDeployer = new TeamMarkerDeployer(
+                Robot6541Info.DEPLOYER_OPEN_POSITION, Robot6541Info.DEPLOYER_CLOSE_POSITION);
         //
         // Tell the driver initialization is complete.
         //
@@ -113,34 +113,12 @@ public class Robot6541 extends Robot
     public void startMode(TrcRobot.RunMode runMode)
     {
         super.startMode(runMode);
-
-        if (vuforiaVision != null)
-        {
-            vuforiaVision.setEnabled(true);
-        }
-
-        if (pixyVision != null)
-        {
-            pixyVision.setEnabled(true);
-        }
-        //
-        // Reset all X, Y and heading values.
-        //
-        driveBase.resetOdometry();
     }   //startMode
 
     @Override
     public void stopMode(TrcRobot.RunMode runMode)
     {
-        if (vuforiaVision != null)
-        {
-            vuforiaVision.setEnabled(false);
-        }
-
-        if (pixyVision != null)
-        {
-            pixyVision.setEnabled(false);
-        }
+        super.stopMode(runMode);
     }   //stopMode
 
 }   //class Robot6541

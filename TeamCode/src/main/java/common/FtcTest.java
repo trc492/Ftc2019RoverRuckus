@@ -20,9 +20,7 @@
  * SOFTWARE.
  */
 
-package team3543;
-
-import android.speech.tts.TextToSpeech;
+package common;
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
@@ -30,25 +28,20 @@ import org.firstinspires.ftc.robotcore.external.matrices.OpenGLMatrix;
 import org.firstinspires.ftc.robotcore.external.matrices.VectorF;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 
-import common.CmdPidDrive;
-import common.CmdTimedDrive;
-import common.PixyVision;
-import common.Robot;
 import ftclib.FtcChoiceMenu;
 import ftclib.FtcGamepad;
 import ftclib.FtcMenu;
 import ftclib.FtcValueMenu;
 import trclib.TrcEvent;
 import trclib.TrcGameController;
-import trclib.TrcRobot;
 import trclib.TrcStateMachine;
 import trclib.TrcTimer;
 import trclib.TrcUtil;
 
-@TeleOp(name="Test3543", group="3543Test")
-public class FtcTest3543 extends FtcTeleOp3543 implements TrcGameController.ButtonHandler
+@TeleOp(name="Test", group="Test")
+public abstract class FtcTest extends TeleOpCommon
 {
-    private static final String moduleName = "FtcTest3543";
+    private static final String moduleName = "FtcTest";
 
     private enum Test
     {
@@ -58,8 +51,7 @@ public class FtcTest3543 extends FtcTeleOp3543 implements TrcGameController.Butt
         Y_TIMED_DRIVE,
         X_DISTANCE_DRIVE,
         Y_DISTANCE_DRIVE,
-        GYRO_TURN,
-        PIXY_DRIVE
+        GYRO_TURN
     }   //enum Test
 
     private enum State
@@ -88,6 +80,11 @@ public class FtcTest3543 extends FtcTeleOp3543 implements TrcGameController.Butt
 
     private int motorIndex = 0;
 
+    public FtcTest(String moduleName)
+    {
+        super(moduleName);
+    }   //FtcTest
+
     //
     // Implements FtcOpMode interface.
     //
@@ -96,7 +93,7 @@ public class FtcTest3543 extends FtcTeleOp3543 implements TrcGameController.Butt
     public void initRobot()
     {
         //
-        // FtcTest3543 inherits from FtcTeleOp3543 so it can do everything that FtcTeleOp3543 can do and more.
+        // FtcTest inherits from FtcTeleOp3543 so it can do everything that FtcTeleOp can do and more.
         //
         super.initRobot();
         //
@@ -119,7 +116,7 @@ public class FtcTest3543 extends FtcTeleOp3543 implements TrcGameController.Butt
 
             case Y_TIMED_DRIVE:
                 timedDriveCommand = new CmdTimedDrive(
-                        robot, 0.0, driveTime, 0.0, 0.2, 0.0);
+                        robot, 0.0, driveTime, 0.0, 0.5, 0.0);
                 break;
 
             case X_DISTANCE_DRIVE:
@@ -136,9 +133,6 @@ public class FtcTest3543 extends FtcTeleOp3543 implements TrcGameController.Butt
                 pidDriveCommand = new CmdPidDrive(
                         robot, robot.pidDrive, 0.0, 0.0, 0.0, turnDegrees);
                 break;
-
-            case PIXY_DRIVE:
-                break;
         }
 
         sm.start(State.START);
@@ -147,20 +141,6 @@ public class FtcTest3543 extends FtcTeleOp3543 implements TrcGameController.Butt
     //
     // Overrides TrcRobot.RobotMode methods.
     //
-
-    @Override
-    public void startMode(TrcRobot.RunMode runMode)
-    {
-        super.startMode(runMode);
-    }   //startMode
-
-    @Override
-    public void stopMode(TrcRobot.RunMode runMode)
-    {
-        super.stopMode(runMode);
-
-        printPerformanceMetrics(robot.tracer);
-    }   //stopMode
 
     @Override
     public void runPeriodic(double elapsedTime)
@@ -222,9 +202,6 @@ public class FtcTest3543 extends FtcTeleOp3543 implements TrcGameController.Butt
                 robot.gyroPidCtrl.displayPidInfo(14);
 
                 pidDriveCommand.cmdPeriodic(elapsedTime);
-                break;
-
-            case PIXY_DRIVE:
                 break;
         }
     }   //runContinuous
@@ -296,11 +273,19 @@ public class FtcTest3543 extends FtcTeleOp3543 implements TrcGameController.Butt
 
         if (robot.pixyVision != null)
         {
-            PixyVision.TargetInfo targetInfo = robot.pixyVision.getTargetInfo(Robot.PIXY_GOLD_MINERAL_SIGNATURE);
+            PixyVision.TargetInfo targetInfo = robot.pixyVision.getTargetInfo(RobotInfo.PIXY_GOLD_MINERAL_SIGNATURE);
             if (targetInfo != null)
             {
-                dashboard.displayPrintf(7, LABEL_WIDTH,
-                        "Pixy: ", "x=%.1f,y=%.1f,angle=%.1f %s",
+                dashboard.displayPrintf(5, LABEL_WIDTH,
+                        "Pixy-Gold: ", "x=%.1f,y=%.1f,angle=%.1f %s",
+                        targetInfo.xDistance, targetInfo.yDistance, targetInfo.angle, targetInfo.rect);
+            }
+
+            targetInfo = robot.pixyVision.getTargetInfo(RobotInfo.PIXY_SILVER_MINERAL_SIGNATURE);
+            if (targetInfo != null)
+            {
+                dashboard.displayPrintf(6, LABEL_WIDTH,
+                        "Pixy-Silver: ", "x=%.1f,y=%.1f,angle=%.1f %s",
                         targetInfo.xDistance, targetInfo.yDistance, targetInfo.angle, targetInfo.rect);
             }
         }
@@ -453,77 +438,4 @@ public class FtcTest3543 extends FtcTeleOp3543 implements TrcGameController.Butt
         }
     }   //doMotorsTest
 
-    //
-    // Overrides TrcGameController.ButtonHandler in FtcTeleOp3543.
-    //
-
-    @Override
-    public void buttonEvent(TrcGameController gamepad, int button, boolean pressed)
-    {
-        boolean processed = false;
-        //
-        // In addition to or instead of the gamepad controls handled by FtcTeleOp3543, we can add to or override the
-        // FtcTeleOp3543 gamepad actions.
-        //
-        dashboard.displayPrintf(
-                7, "%s: %04x->%s", gamepad.toString(), button, pressed? "Pressed": "Released");
-        if (gamepad == driverGamepad)
-        {
-            switch (button)
-            {
-                case FtcGamepad.GAMEPAD_DPAD_UP:
-                    break;
-
-                case FtcGamepad.GAMEPAD_DPAD_DOWN:
-                    break;
-
-                case FtcGamepad.GAMEPAD_DPAD_LEFT:
-                    break;
-
-                case FtcGamepad.GAMEPAD_DPAD_RIGHT:
-                    break;
-            }
-        }
-        else if (gamepad == operatorGamepad)
-        {
-            switch (button)
-            {
-                case FtcGamepad.GAMEPAD_LBUMPER:
-                    if (pressed)
-                    {
-                        robot.teamMarkerDeployer.close();
-                        processed = true;
-                    }
-                    break;
-
-                case FtcGamepad.GAMEPAD_RBUMPER:
-                    if (pressed)
-                    {
-                        robot.teamMarkerDeployer.open();
-                        processed = true;
-                    }
-                    break;
-
-                case FtcGamepad.GAMEPAD_DPAD_UP:
-                    break;
-
-                case FtcGamepad.GAMEPAD_DPAD_DOWN:
-                    break;
-
-                case FtcGamepad.GAMEPAD_DPAD_LEFT:
-                    break;
-
-                case FtcGamepad.GAMEPAD_DPAD_RIGHT:
-                    break;
-            }
-        }
-        //
-        // If the control was not processed by this method, pass it back to FtcTeleOp3543.
-        //
-        if (!processed)
-        {
-            super.buttonEvent(gamepad, button, pressed);
-        }
-    }   //buttonEvent
-
-}   //class FtcTest3543
+}   //class FtcTest

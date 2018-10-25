@@ -24,30 +24,21 @@ package team6541;
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
+import common.TeleOpCommon;
 import ftclib.FtcGamepad;
-import ftclib.FtcOpMode;
-import hallib.HalDashboard;
 import trclib.TrcGameController;
 import trclib.TrcRobot;
 
-@TeleOp(name="TeleOp6541", group="6541TeleOp")
-public class FtcTeleOp6541 extends FtcOpMode implements TrcGameController.ButtonHandler
+@TeleOp(name="TeleOp6541", group="TeleOp")
+public class FtcTeleOp6541 extends TeleOpCommon implements TrcGameController.ButtonHandler
 {
-    private enum DriveMode
+    private static final String moduleName = "FtcTeleOp6541";
+    private Robot6541 robot;
+
+    public FtcTeleOp6541()
     {
-        TANK_MODE,
-        MECANUM_MODE,
-    }   //enum DriveMode
-
-    protected HalDashboard dashboard;
-    protected Robot6541 robot;
-
-    protected FtcGamepad driverGamepad;
-    protected FtcGamepad operatorGamepad;
-
-    private double drivePowerScale = 1.0;
-    private boolean invertedDrive = false;
-    private DriveMode driveMode = DriveMode.TANK_MODE;
+        super(moduleName);
+    }   //FtcTeleOp6541
 
     //
     // Implements FtcOpMode abstract method.
@@ -56,64 +47,18 @@ public class FtcTeleOp6541 extends FtcOpMode implements TrcGameController.Button
     @Override
     public void initRobot()
     {
+        super.initRobot();
         //
         // Initializing robot objects.
         //
         robot = new Robot6541(TrcRobot.RunMode.TELEOP_MODE);
-        dashboard = robot.dashboard;
-        //
-        // Initializing Gamepads.
-        //
-        driverGamepad = new FtcGamepad("DriverGamepad", gamepad1, this);
-        operatorGamepad = new FtcGamepad("OperatorGamepad", gamepad2, this);
-        driverGamepad.setYInverted(true);
-        operatorGamepad.setYInverted(true);
+        super.setRobot(robot);
     }   //initRobot
-
-    //
-    // Overrides TrcRobot.RobotMode methods.
-    //
-
-    @Override
-    public void startMode(TrcRobot.RunMode runMode)
-    {
-        dashboard.clearDisplay();
-        robot.startMode(runMode);
-    }   //startMode
-
-    @Override
-    public void stopMode(TrcRobot.RunMode runMode)
-    {
-        robot.stopMode(runMode);
-        printPerformanceMetrics(robot.tracer);
-    }   //stopMode
 
     @Override
     public void runPeriodic(double elapsedTime)
     {
-        //
-        // DriveBase subsystem.
-        //
-        switch(driveMode)
-        {
-            case TANK_MODE:
-                double leftPower = driverGamepad.getLeftStickY(true)*drivePowerScale;
-                double rightPower = driverGamepad.getRightStickY(true)*drivePowerScale;
-                robot.driveBase.tankDrive(leftPower, rightPower, invertedDrive);
-                dashboard.displayPrintf(1, "Tank:left=%.1f,right=%.1f,inv=%s",
-                        leftPower, rightPower, Boolean.toString(invertedDrive));
-                break;
-
-            case MECANUM_MODE:
-                double x = driverGamepad.getLeftStickX(true)*drivePowerScale;
-                double y = driverGamepad.getRightStickY(true)*drivePowerScale;
-                double rot = (driverGamepad.getRightTrigger(true) -
-                        driverGamepad.getLeftTrigger(true))*drivePowerScale;
-                robot.driveBase.holonomicDrive(x, y, rot, invertedDrive);
-                dashboard.displayPrintf(1, "Mecan:x=%.1f,y=%.1f,rot=%.1f,inv=%s",
-                        x, y, rot, Boolean.toString(invertedDrive));
-                break;
-        }
+        super.runPeriodic(elapsedTime);
 
         double elevatorPower = operatorGamepad.getRightStickY(true);
         robot.elevator.setPower(elevatorPower);

@@ -24,9 +24,9 @@ package team3543;
 
 import com.qualcomm.robotcore.hardware.DcMotor;
 
-import common.PixyVision;
+import common.RobotInfo;
 
-class Robot3543Info
+class Robot3543Info extends RobotInfo
 {
     //
     // DriveBase subsystem.
@@ -53,7 +53,7 @@ class Robot3543Info
 
     static final double PIDDRIVE_STALL_TIMEOUT                  = 0.25;     //in msec.
     //
-    // Elevator subsystem
+    // Elevator subsystem.
     //
     public static final double ELEVATOR_INCHES_PER_COUNT        = 5.625/8498;
     public static final double ELEVATOR_ZERO_OFFSET             = 15.8;
@@ -65,10 +65,11 @@ class Robot3543Info
     public static final double ELEVATOR_MAX_HEIGHT              = 24.0;
     public static final double ELEVATOR_CAL_POWER               = 0.3;
     //
-    // Hanging hook subsystem
+    // Other subsystems.
     //
     public static final double DEPLOYER_OPEN_POSITION           = 0.8;
     public static final double DEPLOYER_CLOSE_POSITION          = 0.2;
     public static final double MINERAL_SWEEPER_EXTEND_POSITION  = 0.8;
     public static final double MINERAL_SWEEPER_RETRACT_POSITION = 0.2;
+
 }   //class Robot3543Info

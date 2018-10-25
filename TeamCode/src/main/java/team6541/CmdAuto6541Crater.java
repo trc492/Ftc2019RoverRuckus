@@ -22,8 +22,8 @@
 
 package team6541;
 
-import common.PixyVision;
-import common.Robot;
+import common.AutoCommon;
+import common.CmdSweepMineral;
 import trclib.TrcEvent;
 import trclib.TrcRobot;
 import trclib.TrcStateMachine;
@@ -38,60 +38,60 @@ class CmdAuto6541Crater implements TrcRobot.RobotCommand
     private static final String moduleName = "CmdAuto6541Crater";
 
     private Robot6541 robot;
-    private FtcAuto6541.Alliance alliance;
+    private AutoCommon.Alliance alliance;
     private double delay;
     private boolean doMineral;
     private boolean doTeamMarker;
-    private boolean doOtherTeamMineral;
+    private boolean doTeammateMineral;
 
     private TrcEvent event;
     private TrcTimer timer;
     private TrcStateMachine<State> sm;
     private double targetX = 0.0;
     private double targetY = 0.0;
-    private double mineralDistance = 0.0;
+    private CmdSweepMineral cmdSweepMineral = null;
 
-    CmdAuto6541Crater(Robot6541 robot, FtcAuto6541.Alliance alliance, double delay,
-                      boolean startHung, boolean doMineral, boolean doTeamMarker, boolean doOtherTeamMineral)
+    CmdAuto6541Crater(Robot6541 robot, AutoCommon.Alliance alliance, double delay,
+                      boolean startHung, boolean doMineral, boolean doTeamMarker, boolean doTeammateMineral)
     {
         robot.tracer.traceInfo(moduleName,
-                "Alliance=%s,Delay=%.0f,startHung=%s,Mineral=%s,TeamMarker=%s,2ndTeamMineral=%s",
-                alliance, delay, startHung, doMineral, doTeamMarker, doOtherTeamMineral);
+                "Alliance=%s,Delay=%.0f,startHung=%s,Mineral=%s,TeamMarker=%s,TeammateMineral=%s",
+                alliance, delay, startHung, doMineral, doTeamMarker, doTeammateMineral);
 
         this.robot = robot;
         this.alliance = alliance;
         this.delay = delay;
         this.doMineral = doMineral;
         this.doTeamMarker = doTeamMarker;
-        this.doOtherTeamMineral = doOtherTeamMineral;
+        this.doTeammateMineral = doTeammateMineral;
 
         event = new TrcEvent(moduleName);
         timer = new TrcTimer(moduleName);
         sm = new TrcStateMachine<>(moduleName);
-        sm.start(startHung? State.LOWER_ROBOT: State.ALIGN_ROBOT_WITH_VUFORIA);
+        sm.start(startHung? State.LOWER_ROBOT: State.GO_TOWARDS_MINERAL);
     }   //CmdAuto6541Crater
 
     private enum State
     {
         LOWER_ROBOT,
-        ALIGN_ROBOT_WITH_VUFORIA,
+        UNHOOK_ROBOT,
         GO_TOWARDS_MINERAL,
         ALIGN_MINERAL_SWEEPER,
-        GO_TO_GOLD_MINERAL,
-        EXTEND_MINERAL_SWEEPER,
-        DISPLACE_MINERAL,
-        RETRACT_MINERAL_SWEEPER,
-        DRIVE_TO_ALLIANCE_WALL,
+        ALIGN_ROBOT_WITH_VUFORIA,
+        SWEEP_MINERAL,
+        DRIVE_TO_MID_WALL,
         TURN_PARALLEL_TO_WALL,
-        DRIVE_BACKWARDS_INTO_CRATER_FROM_X,
-        DRIVE_TO_DEPOT,
+        DRIVE_FROM_MID_WALL_TO_CRATER,
+        DO_DELAY,
+        DRIVE_FROM_MID_WALL_TO_DEPOT,
         DROP_TEAM_MARKER,
-        BACK_UP_FOR_TEAMMATE_MINERAL,
+        DRIVE_FROM_DEPOT_TO_CRATER,
+        BACK_OFF_FROM_DEPOT,
         ROTATE_TO_TEAMMATE_MINERALS,
-        DRIVE_FORWARD_SOME_DISTANCE_FOR_TEAMMATE_MINERAL,
+        SWEEP_TEAMMATE_MINERAL,
+        DRIVE_BACK_TO_MID_WALL_AFTER_TEAMMATE_MINERAL,
         TURN_TO_CRATER_AFTER_TEAMMATE_MINERAL,
-        DRIVE_FORWARD_TO_CRATER_FROM_DEPOT,
-        DRIVE_BACKWARD_TO_CRATER_AFTER_TEAMMATE_MINERAL,
+        DRIVE_TO_CRATER_AFTER_TEAMMATE_MINERAL,
         DONE
     }   //enum State
 
@@ -104,6 +104,7 @@ class CmdAuto6541Crater implements TrcRobot.RobotCommand
     {
         State state = sm.checkReadyAndGetState();
         State nextState;
+        boolean traceState = true;
 
         if (state == null)
         {
@@ -112,72 +113,24 @@ class CmdAuto6541Crater implements TrcRobot.RobotCommand
         else
         {
             robot.dashboard.displayPrintf(1, "State: %s", state);
-            /*
-             Rotate the robot 90 degrees to the left, using the Vuforia Image as reference for heading.
-             Get mineral position with Pixy cam.
-             Drive forward or backward to align with the mineral.
-             Deploy the mineral sweeper.
-             Drive forwards to displace mineral.
-             Retract the mineral sweeper.
-             Drive forward to marked X.
-             Turn 45 degrees to the left.
 
-             Displace mineral ONLY?
-
-             if Yes:
-             Drive backwards into crater.
-             THE END (for AUTONOMOUS)
-
-             if No:
-             Drive foward to the depot.
-             Drop the team marker.
-
-             Do teammate's mineral?
-
-             if Yes:
-             Back up some distance. (NEED MEASURING LATER)
-             Rotate 135 degrees to the right.
-             Get mineral position with Pixy cam.
-             Drive forward or backward to align with the mineral.
-             Drive forwards to displace mineral.
-             Retract the mineral sweeper.
-             Drive forward for some distance. (NEED MEASURING LATER)
-             Turn 45 degrees to the right.
-             Drive forward to crater.
-             THE END (for AUTONOMOUS)
-
-             if No:
-             Drive backwards into crater.
-             THE END (for AUTONOMOUS)
-             */
             switch (state)
             {
                 case LOWER_ROBOT:
                     //
                     // The robot started hanging on the lander, lower it to the ground.
                     //
-                    robot.elevator.setPosition(Robot6541Info.ELEVATOR_MAX_HEIGHT,event, 0.0);
-                    sm.waitForSingleEvent(event, State.ALIGN_ROBOT_WITH_VUFORIA);
+                    robot.elevator.setPosition(Robot6541Info.ELEVATOR_MAX_HEIGHT, event, 0.0);
+                    sm.waitForSingleEvent(event, State.UNHOOK_ROBOT);
                     break;
 
-                case ALIGN_ROBOT_WITH_VUFORIA:
+                case UNHOOK_ROBOT:
                     //
-                    // Align the robot heading with robot orientation reported by Vuforia.
+                    // The robot is still hooked, need to unhook first.
                     //
-                    robot.alignHeadingWithVuforia(alliance == FtcAuto6541.Alliance.RED_ALLIANCE? -45.0: 135.0);
-                    //
-                    // Do delay if any.
-                    //
-                    if (delay == 0.0)
-                    {
-                        sm.setState(State.GO_TOWARDS_MINERAL);
-                    }
-                    else
-                    {
-                        robot.tracer.traceInfo(state.toString(), "Delay=%.0f", delay);
-                        timer.set(delay, event);
-                        sm.waitForSingleEvent(event, State.GO_TOWARDS_MINERAL);
-                    }
+                    robot.elevator.openHook();
+                    timer.set(0.3, event);
+                    sm.waitForSingleEvent(event, State.GO_TOWARDS_MINERAL);
                     break;
 
                 case GO_TOWARDS_MINERAL:
@@ -198,72 +151,57 @@ class CmdAuto6541Crater implements TrcRobot.RobotCommand
                     targetY = 0.0;
                     robot.targetHeading += 90.0;
                     robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
-                    mineralDistance = 0.0;
-                    nextState = doMineral && robot.pixyVision != null?
-                            State.GO_TO_GOLD_MINERAL: State.DRIVE_TO_ALLIANCE_WALL;
-                    sm.waitForSingleEvent(event, nextState);
+                    sm.waitForSingleEvent(event, State.ALIGN_ROBOT_WITH_VUFORIA);
                     break;
 
-                case GO_TO_GOLD_MINERAL:
-                    PixyVision.TargetInfo targetInfo =
-                            robot.pixyVision.getTargetInfo(Robot.PIXY_GOLD_MINERAL_SIGNATURE);
-                    if (targetInfo != null)
+                case ALIGN_ROBOT_WITH_VUFORIA:
+                    //
+                    // Align the robot heading with robot orientation reported by Vuforia.
+                    // In case Vuforia failed to see images, set the default orientation accordingly.
+                    //
+                    robot.alignHeadingWithVuforia(alliance == AutoCommon.Alliance.RED_ALLIANCE? -45.0: 135.0);
+                    if (doMineral)
                     {
-                        //
-                        // Get the sweeper right behind the gold mineral. The pixy camera is 4 inches behind the arm.
-                        // We will give another 4 inches margin so a total of 8 inches.
-                        //
-                        targetX = 0.0;
-                        targetY = targetInfo.xDistance - 8.0;
-                        mineralDistance = targetY;
-                        robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
-                        sm.waitForSingleEvent(event, State.EXTEND_MINERAL_SWEEPER);
+                        nextState = State.SWEEP_MINERAL;
+                        cmdSweepMineral = new CmdSweepMineral(robot, 0.0);  //TODO: may need to adjust startingY
                     }
                     else
                     {
-                        //
-                        // Pixy can't find the gold mineral, deploy the sweeper anyway so we will displace any
-                        // mineral in hope it's the right one.
-                        //
-                        sm.setState(State.EXTEND_MINERAL_SWEEPER);
+                        nextState = State.DRIVE_TO_MID_WALL;
+                        cmdSweepMineral = null;
                     }
+                    sm.setState(nextState);
+                    //
+                    // Intentionally fall through to the next state to save one cycle time.
+                    //
+                case SWEEP_MINERAL:
+                    //
+                    // Remain in this state until sweeping is done.
+                    //
+                    if (cmdSweepMineral.cmdPeriodic(elapsedTime))
+                    {
+                        sm.setState(State.DRIVE_TO_MID_WALL);
+                    }
+                    traceState = false;
                     break;
 
-                case EXTEND_MINERAL_SWEEPER:
+                case DRIVE_TO_MID_WALL:
                     //
-                    // Deploy the sweeper.
-                    //
-                    robot.mineralSweeper.extend();
-                    timer.set(0.3, event);
-                    sm.waitForSingleEvent(event, State.DISPLACE_MINERAL);
-                    break;
-
-                case DISPLACE_MINERAL:
-                    //
-                    // We are supposed to be 4 inches in front of the mineral. So go forward 8 inches will displace
-                    // it about 4 inches.
+                    // Drive towards mid wall.
                     //
                     targetX = 0.0;
-                    targetY = 8.0;
-                    robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
-                    sm.waitForSingleEvent(event, State.RETRACT_MINERAL_SWEEPER);
-                    break;
-
-                case RETRACT_MINERAL_SWEEPER:
+                    targetY = -36.0;
                     //
-                    // Done with sweeping, retract sweeper.
+                    // cmdSweepMineral may be null if doMineral is false.
                     //
-                    robot.mineralSweeper.retract();
-                    timer.set(0.3, event);
-                    sm.waitForSingleEvent(event, State.DRIVE_TO_ALLIANCE_WALL);
-                    break;
-
-                case DRIVE_TO_ALLIANCE_WALL:
-                    //
-                    // Drive towards alliance wall.
-                    //
-                    targetX = 0.0;
-                    targetY = -(mineralDistance + 36.0);
+                    if (cmdSweepMineral != null)
+                    {
+                        //
+                        // Adjust the distance by how far we went for sweeping mineral.
+                        //
+                        targetY -= cmdSweepMineral.getDistanceYTravelled();
+                        cmdSweepMineral = null;
+                    }
                     robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
                     sm.waitForSingleEvent(event, State.TURN_PARALLEL_TO_WALL);
                     break;
@@ -276,35 +214,121 @@ class CmdAuto6541Crater implements TrcRobot.RobotCommand
                     targetY = 0.0;
                     robot.targetHeading -= 45.0;
                     robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
-                    nextState = doTeamMarker? State.DRIVE_TO_DEPOT : State.DONE;//TODO: if not doing team marker then what???
+                    nextState = !doTeamMarker? State.DRIVE_FROM_MID_WALL_TO_CRATER :
+                                delay != 0.0? State.DO_DELAY: State.DRIVE_FROM_MID_WALL_TO_DEPOT;
                     sm.waitForSingleEvent(event, nextState);
                     break;
 
-                case DRIVE_BACKWARDS_INTO_CRATER_FROM_X:
+                case DRIVE_FROM_MID_WALL_TO_CRATER:
+                    //
+                    // Go direct to crater and park there.
+                    //
+                    targetX = 0.0;
+                    targetY = 24.0;
+                    robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
+                    sm.waitForSingleEvent(event, State.DONE);
                     break;
 
-                case DRIVE_TO_DEPOT:
+                case DO_DELAY:
+                    //
+                    // Wait for alliance partner to clear the path.
+                    //
+                    timer.set(delay, event);
+                    sm.waitForSingleEvent(event, State.DRIVE_FROM_MID_WALL_TO_DEPOT);
+                    break;
+
+                case DRIVE_FROM_MID_WALL_TO_DEPOT:
+                    //
+                    // Drive to depot to drop off team marker.
+                    //
+                    targetX = 0.0;
+                    targetY = -30.0;
+                    robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
+                    sm.waitForSingleEvent(event, State.DROP_TEAM_MARKER);
                     break;
 
                 case DROP_TEAM_MARKER:
+                    //
+                    // Release team marker by opening the deployer.
+                    //
+                    robot.teamMarkerDeployer.open();
+                    timer.set(0.3, event);
+                    nextState = !doTeammateMineral ? State.DRIVE_FROM_DEPOT_TO_CRATER: State.BACK_OFF_FROM_DEPOT;
+                    sm.waitForSingleEvent(event, nextState);
                     break;
 
-                case BACK_UP_FOR_TEAMMATE_MINERAL:
+                case DRIVE_FROM_DEPOT_TO_CRATER:
+                    //
+                    // Drive back to the crater and park there.
+                    //
+                    targetX = 0.0;
+                    targetY = -72.0;
+                    robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
+                    sm.waitForSingleEvent(event, State.DONE);
+                    break;
+
+                case BACK_OFF_FROM_DEPOT:
+                    //
+                    // Back off from the depot a little so we don't trample on our team marker and better aligned
+                    // with our teammate's mineral.
+                    //
+                    targetX = 0.0;
+                    targetY = 10.0;
+                    robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
+                    sm.waitForSingleEvent(event, State.ROTATE_TO_TEAMMATE_MINERALS);
                     break;
 
                 case ROTATE_TO_TEAMMATE_MINERALS:
+                    //
+                    // Align sweeper with teammates minerals.
+                    //
+                    targetX = 0.0;
+                    targetY = 0.0;
+                    robot.targetHeading += 135.0;
+                    cmdSweepMineral = new CmdSweepMineral(robot, -22.0);
+                    robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
+                    sm.waitForSingleEvent(event, State.SWEEP_TEAMMATE_MINERAL);
                     break;
 
-                case DRIVE_FORWARD_SOME_DISTANCE_FOR_TEAMMATE_MINERAL:
+                case SWEEP_TEAMMATE_MINERAL:
+                    //
+                    // Remain in this state until sweeping is done.
+                    //
+                    if (cmdSweepMineral.cmdPeriodic(elapsedTime))
+                    {
+                        sm.setState(State.DRIVE_BACK_TO_MID_WALL_AFTER_TEAMMATE_MINERAL);
+                    }
+                    break;
+
+                case DRIVE_BACK_TO_MID_WALL_AFTER_TEAMMATE_MINERAL:
+                    //
+                    // Go back to mid wall.
+                    //
+                    targetX = 0.0;
+                    targetY = -cmdSweepMineral.getDistanceYTravelled();
+                    robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
+                    sm.waitForSingleEvent(event, State.TURN_TO_CRATER_AFTER_TEAMMATE_MINERAL);
                     break;
 
                 case TURN_TO_CRATER_AFTER_TEAMMATE_MINERAL:
+                    //
+                    // Align the robot parallel to wall.
+                    //
+                    targetX = 0.0;
+                    targetY = 0.0;
+                    robot.targetHeading += 45.0;
+                    robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
+                    sm.waitForSingleEvent(event, State.DRIVE_TO_CRATER_AFTER_TEAMMATE_MINERAL);
                     break;
 
-                case DRIVE_FORWARD_TO_CRATER_FROM_DEPOT:
-                    break;
-
-                case DRIVE_BACKWARD_TO_CRATER_AFTER_TEAMMATE_MINERAL:
+                case DRIVE_TO_CRATER_AFTER_TEAMMATE_MINERAL:
+                    //
+                    // Go to crater and park there.
+                    //
+                    targetX = 0.0;
+                    targetY = -24.0;
+                    robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
+                    sm.waitForSingleEvent(event, State.DONE);
                     break;
 
                 case DONE:
@@ -315,7 +339,11 @@ class CmdAuto6541Crater implements TrcRobot.RobotCommand
                     sm.stop();
                     break;
             }
-            robot.traceStateInfo(elapsedTime, state.toString(), targetX, targetY, robot.targetHeading);
+
+            if (traceState)
+            {
+                robot.traceStateInfo(elapsedTime, state.toString(), targetX, targetY, robot.targetHeading);
+            }
         }
 
         if (robot.pidDrive.isActive())

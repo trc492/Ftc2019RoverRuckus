@@ -20,32 +20,36 @@
  * SOFTWARE.
  */
 
-package team6541;
+package common;
 
 import ftclib.FtcServo;
 
-public class TeamMarkerDeployer6541
+public class MineralSweeper
 {
-    private FtcServo teamMarkerDeployer;
+    private final double extendPos;
+    private final double retractPos;
+    private FtcServo sweeperServo;
 
-    public TeamMarkerDeployer6541()
+    public MineralSweeper(double extendPos, double retractPos)
     {
-        teamMarkerDeployer = new FtcServo("deployerServo");
+        this.extendPos = extendPos;
+        this.retractPos = retractPos;
+        sweeperServo = new FtcServo("sweeperServo");
     }
 
     public void setPosition(double pos)
     {
-        teamMarkerDeployer.setPosition(pos);
+        sweeperServo.setPosition(pos);
     }
 
-    public void open()
+    public void extend()
     {
-        teamMarkerDeployer.setPosition(Robot6541Info.DEPLOYER_OPEN_POSITION);
+        sweeperServo.setPosition(extendPos);
     }
 
-    public void close()
+    public void retract()
     {
-        teamMarkerDeployer.setPosition(Robot6541Info.DEPLOYER_CLOSE_POSITION);
+        sweeperServo.setPosition(retractPos);
     }
 
-}   //class TeamMarkerDeployer6541
+}   //class MineralSweeper

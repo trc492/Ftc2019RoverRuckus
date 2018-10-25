@@ -20,16 +20,20 @@
  * SOFTWARE.
  */
 
-package team3543;
+package common;
 
 import ftclib.FtcServo;
 
-public class TeamMarkerDeployer3543
+public class TeamMarkerDeployer
 {
+    private final double openPos;
+    private final double closePos;
     private FtcServo teamMarkerDeployer;
 
-    public TeamMarkerDeployer3543()
+    public TeamMarkerDeployer(double openPos, double closePos)
     {
+        this.openPos = openPos;
+        this.closePos = closePos;
         teamMarkerDeployer = new FtcServo("deployerServo");
     }
 
@@ -40,12 +44,12 @@ public class TeamMarkerDeployer3543
 
     public void open()
     {
-        teamMarkerDeployer.setPosition(Robot3543Info.DEPLOYER_OPEN_POSITION);
+        teamMarkerDeployer.setPosition(openPos);
     }
 
     public void close()
     {
-        teamMarkerDeployer.setPosition(Robot3543Info.DEPLOYER_CLOSE_POSITION);
+        teamMarkerDeployer.setPosition(closePos);
     }
 
-}   //class TeamMarkerDeployer3543
+}   //class TeamMarkerDeployer

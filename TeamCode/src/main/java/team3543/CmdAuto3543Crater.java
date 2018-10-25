@@ -22,6 +22,7 @@
 
 package team3543;
 
+import common.AutoCommon;
 import common.CmdSweepMineral;
 import trclib.TrcEvent;
 import trclib.TrcRobot;
@@ -37,7 +38,7 @@ class CmdAuto3543Crater implements TrcRobot.RobotCommand
     private static final String moduleName = "CmdAuto3543Crater";
 
     private Robot3543 robot;
-    private FtcAuto3543.Alliance alliance;
+    private AutoCommon.Alliance alliance;
     private double delay;
     private boolean doMineral;
     private boolean doTeamMarker;
@@ -51,7 +52,7 @@ class CmdAuto3543Crater implements TrcRobot.RobotCommand
     private double unhookedTurnAngle = 0.0;
     private CmdSweepMineral cmdSweepMineral = null;
 
-    CmdAuto3543Crater(Robot3543 robot, FtcAuto3543.Alliance alliance, double delay,
+    CmdAuto3543Crater(Robot3543 robot, AutoCommon.Alliance alliance, double delay,
                       boolean startHung, boolean doMineral, boolean doTeamMarker, boolean doTeammateMineral)
     {
         robot.tracer.traceInfo(moduleName,
@@ -120,13 +121,14 @@ class CmdAuto3543Crater implements TrcRobot.RobotCommand
                     //
                     // The robot started hanging on the lander, lower it to the ground.
                     //
-                    robot.elevator.setPosition(Robot3543Info.ELEVATOR_MAX_HEIGHT,event, 0.0);
+                    robot.elevator.setPosition(Robot3543Info.ELEVATOR_MAX_HEIGHT, event, 0.0);
                     sm.waitForSingleEvent(event, State.UNHOOK_ROBOT);
                     break;
 
                 case UNHOOK_ROBOT:
                     //
                     // The robot is still hooked, need to unhook first.
+                    // TODO: should we strafe instead???
                     //
                     unhookedTurnAngle = -10.0;
                     targetX = 0.0;
@@ -162,7 +164,7 @@ class CmdAuto3543Crater implements TrcRobot.RobotCommand
                     // Align the robot heading with robot orientation reported by Vuforia.
                     // In case Vuforia failed to see images, set the default orientation accordingly.
                     //
-                    robot.alignHeadingWithVuforia(alliance == FtcAuto3543.Alliance.RED_ALLIANCE? -45.0: 135.0);
+                    robot.alignHeadingWithVuforia(alliance == AutoCommon.Alliance.RED_ALLIANCE? -45.0: 135.0);
                     if (doMineral)
                     {
                         nextState = State.SWEEP_MINERAL;

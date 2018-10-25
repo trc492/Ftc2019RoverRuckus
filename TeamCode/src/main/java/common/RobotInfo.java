@@ -20,32 +20,19 @@
  * SOFTWARE.
  */
 
-package team6541;
+package common;
 
-import ftclib.FtcServo;
-
-public class MineralSweeper6541
+public class RobotInfo
 {
-    private FtcServo sweeperServo;
+    //
+    // PixyVision subsystem.
+    //
+    public static final int PIXY_GOLD_MINERAL_SIGNATURE         = 1;
+    public static final int PIXY_SILVER_MINERAL_SIGNATURE       = 2;
+    public static final int PIXY_TEAM_MARKER1_SIGNATURE         = 3;
+    public static final int PIXY_TEAM_MARKER2_SIGNATURE         = 4;
+    public static final int PIXY_BRIGHTNESS                     = 80;
+    public static final double PIXY_CAM_OFFSET                  = 8.0;
+    public static final PixyVision.Orientation PIXY_ORIENTATION = PixyVision.Orientation.NORMAL_LANDSCAPE;
 
-    public MineralSweeper6541()
-    {
-        sweeperServo = new FtcServo("sweeperServo");
-    }
-
-    public void setPosition(double pos)
-    {
-        sweeperServo.setPosition(pos);
-    }
-
-    public void extend()
-    {
-        sweeperServo.setPosition(Robot6541Info.MINERAL_SWEEPER_EXTEND_POSITION);
-    }
-
-    public void retract()
-    {
-        sweeperServo.setPosition(Robot6541Info.MINERAL_SWEEPER_RETRACT_POSITION);
-    }
-
-}   //class MineralSweeper3543
+}   //class RobotInfo

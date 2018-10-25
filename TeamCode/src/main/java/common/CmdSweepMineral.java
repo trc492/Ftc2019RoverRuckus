@@ -22,7 +22,6 @@
 
 package common;
 
-import team3543.Robot3543;
 import trclib.TrcEvent;
 import trclib.TrcRobot;
 import trclib.TrcStateMachine;
@@ -46,7 +45,7 @@ public class CmdSweepMineral implements TrcRobot.RobotCommand
 
     private static final String moduleName = "CmdSweepMineral";
 
-    private Robot3543 robot;
+    private Robot robot;
     private double startingY;
     private TrcEvent event;
     private TrcTimer timer;
@@ -62,7 +61,7 @@ public class CmdSweepMineral implements TrcRobot.RobotCommand
      * @param robot specifies the robot object.
      * @param startingY specifies the starting Y distance from the middle mineral.
      */
-    public CmdSweepMineral(Robot3543 robot, double startingY)
+    public CmdSweepMineral(Robot robot, double startingY)
     {
         this.robot = robot;
         this.startingY = startingY;
@@ -103,7 +102,7 @@ public class CmdSweepMineral implements TrcRobot.RobotCommand
 
                 case SCAN_MINERALS:
                     PixyVision.TargetInfo targetInfo =
-                            robot.pixyVision.getTargetInfo(Robot.PIXY_GOLD_MINERAL_SIGNATURE);
+                            robot.pixyVision.getTargetInfo(RobotInfo.PIXY_GOLD_MINERAL_SIGNATURE);
                     if (targetInfo != null)
                     {
                         //
