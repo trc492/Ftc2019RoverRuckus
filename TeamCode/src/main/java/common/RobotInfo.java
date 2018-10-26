@@ -25,6 +25,13 @@ package common;
 public class RobotInfo
 {
     //
+    // Velocity controlled constants.
+    //
+    public static final double MOTOR_MAX_VELOCITY               = 3080.0;   //encoder counts per second
+    public static final double MOTOR_KP                         = 0.75;
+    public static final double MOTOR_KI                         = 0.0;
+    public static final double MOTOR_KD                         = 0.0;
+    //
     // PixyVision subsystem.
     //
     public static final int PIXY_GOLD_MINERAL_SIGNATURE         = 1;

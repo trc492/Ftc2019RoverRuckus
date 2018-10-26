@@ -44,10 +44,11 @@ public abstract class TrcMotor implements TrcMotorController
     protected TrcDbgTrace dbgTrace = null;
 
     private final String instanceName;
-    private final TrcTaskMgr.TaskObject motorTaskObj;
+    private final TrcTaskMgr.TaskObject motorSpeedTaskObj;
+    private final TrcTaskMgr.TaskObject motorStopTaskObj;
     private TrcDigitalTrigger digitalTrigger = null;
     private boolean speedTaskEnabled = false;
-    private double speedSensorUnitsPerSecond = 0.0;
+    private double speedSensorUnitsPerSec = 0.0;
     private double prevTime = 0.0;
     private double prevPos = 0.0;
 
@@ -67,7 +68,8 @@ public abstract class TrcMotor implements TrcMotorController
 
         this.instanceName = instanceName;
         TrcTaskMgr taskMgr = TrcTaskMgr.getInstance();
-        motorTaskObj = taskMgr.createTask(instanceName + ".motorTask", this::motorTask);
+        motorSpeedTaskObj = taskMgr.createTask(instanceName + ".motorSpeedTask", this::motorSpeedTask);
+        motorStopTaskObj = taskMgr.createTask(instanceName + ".motorSpeedTask", this::motorStopTask);
     }   //TrcMotor
 
     /**
@@ -107,9 +109,9 @@ public abstract class TrcMotor implements TrcMotorController
      *
      * @param enabled specifies true to enable speed monitor task, disable otherwise.
      */
-    public void setSpeedTaskEnabled(boolean enabled)
+    public synchronized void setTaskEnabled(boolean enabled)
     {
-        final String funcName = "setSpeedTaskEnabled";
+        final String funcName = "setTaskEnabled";
 
         if (debugEnabled)
         {
@@ -121,55 +123,70 @@ public abstract class TrcMotor implements TrcMotorController
         {
             prevTime = TrcUtil.getCurrentTime();
             prevPos = getPosition();
-            motorTaskObj.registerTask(TrcTaskMgr.TaskType.STOP_TASK);
-            motorTaskObj.registerTask(TrcTaskMgr.TaskType.PRECONTINUOUS_TASK);
+            motorStopTaskObj.registerTask(TrcTaskMgr.TaskType.STOP_TASK);
+            motorSpeedTaskObj.registerTask(TrcTaskMgr.TaskType.PRECONTINUOUS_TASK);
         }
         else
         {
-            motorTaskObj.unregisterTask(TrcTaskMgr.TaskType.STOP_TASK);
-            motorTaskObj.unregisterTask(TrcTaskMgr.TaskType.PRECONTINUOUS_TASK);
+            motorStopTaskObj.unregisterTask(TrcTaskMgr.TaskType.STOP_TASK);
+            motorSpeedTaskObj.unregisterTask(TrcTaskMgr.TaskType.PRECONTINUOUS_TASK);
         }
 
         if (debugEnabled)
         {
             dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
         }
-    }   //setSpeedTaskEnabled
+    }   //setTaskEnabled
 
     /**
-     * This method is called periodically to calculate he speed of the motor or when the competition mode is about
-     * to end to stop the task.
+     * This method is called periodically to calculate he speed of the motor.
      *
      * @param taskType specifies the type of task being run.
      * @param runMode specifies the competition mode that is running.
      */
-    public void motorTask(TrcTaskMgr.TaskType taskType, TrcRobot.RunMode runMode)
+    public synchronized void motorSpeedTask(TrcTaskMgr.TaskType taskType, TrcRobot.RunMode runMode)
     {
-        final String funcName = "motorTask";
+        final String funcName = "motorSpeedTask";
 
         if (debugEnabled)
         {
             dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.TASK, "taskType=%s,runMode=%s", taskType, runMode);
         }
 
-        if (taskType == TaskType.PRECONTINUOUS_TASK)
-        {
-            double currTime = TrcUtil.getCurrentTime();
-            double currPos = getPosition();
-            speedSensorUnitsPerSecond = (currPos - prevPos)/(currTime - prevTime);
-            prevTime = currTime;
-            prevPos = currPos;
-        }
-        else if (taskType == TaskType.STOP_TASK)
-        {
-            setSpeedTaskEnabled(false);
-        }
+        double currTime = TrcUtil.getCurrentTime();
+        double currPos = getPosition();
+        speedSensorUnitsPerSec = (currPos - prevPos)/(currTime - prevTime);
+        prevTime = currTime;
+        prevPos = currPos;
 
         if (debugEnabled)
         {
             dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.TASK);
         }
-    }   //motorTask
+    }   //motorSpeedTask
+
+    /**
+     * This method is called before competition mode is about to end so we can stop the task.
+     *
+     * @param taskType specifies the type of task being run.
+     * @param runMode specifies the competition mode that is running.
+     */
+    public void motorStopTask(TrcTaskMgr.TaskType taskType, TrcRobot.RunMode runMode)
+    {
+        final String funcName = "motorStopTask";
+
+        if (debugEnabled)
+        {
+            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.TASK, "taskType=%s,runMode=%s", taskType, runMode);
+        }
+
+        setTaskEnabled(false);
+
+        if (debugEnabled)
+        {
+            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.TASK);
+        }
+    }   //motorStopTask
 
     //
     // Implements the TrcMotorController interface.
@@ -180,22 +197,22 @@ public abstract class TrcMotor implements TrcMotorController
      * task to monitor the position sensor value. If the motor controller has hardware monitoring speed, it should
      * override this method and access the hardware instead.
      *
-     * @return Motor speed in sensor units per second.
+     * @return motor speed in sensor units per second.
      */
     @Override
-    public double getSpeed()
+    public synchronized double getSpeed()
     {
         final String funcName = "getSpeed";
 
         if (debugEnabled)
         {
             dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%.3f", speedSensorUnitsPerSecond);
+            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%.3f", speedSensorUnitsPerSec);
         }
 
         if (speedTaskEnabled)
         {
-            return speedSensorUnitsPerSecond;
+            return speedSensorUnitsPerSec;
         }
         else
         {

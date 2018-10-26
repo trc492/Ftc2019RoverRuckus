@@ -24,6 +24,7 @@ package team3543;
 
 import common.MineralSweeper;
 import common.Robot;
+import common.RobotInfo;
 import common.TeamMarkerDeployer;
 import ftclib.FtcDcMotor;
 import trclib.TrcMecanumDriveBase;
@@ -58,6 +59,16 @@ public class Robot3543 extends Robot
         rightFrontWheel.motor.setMode(Robot3543Info.DRIVE_MOTOR_MODE);
         leftRearWheel.motor.setMode(Robot3543Info.DRIVE_MOTOR_MODE);
         rightRearWheel.motor.setMode(Robot3543Info.DRIVE_MOTOR_MODE);
+
+        if (USE_VELOCITY_CONTROL)
+        {
+            TrcPidController.PidCoefficients motorPidCoef = new TrcPidController.PidCoefficients(
+                    RobotInfo.MOTOR_KP, RobotInfo.MOTOR_KI, RobotInfo.MOTOR_KD);
+            leftFrontWheel.enableVelocityMode(RobotInfo.MOTOR_MAX_VELOCITY, motorPidCoef);
+            rightFrontWheel.enableVelocityMode(RobotInfo.MOTOR_MAX_VELOCITY, motorPidCoef);
+            leftRearWheel.enableVelocityMode(RobotInfo.MOTOR_MAX_VELOCITY, motorPidCoef);
+            rightRearWheel.enableVelocityMode(RobotInfo.MOTOR_MAX_VELOCITY, motorPidCoef);
+        }
 
         leftFrontWheel.setInverted(false);
         leftRearWheel.setInverted(false);

@@ -48,6 +48,7 @@ public class Robot implements FtcMenu.MenuButtons
     public static final boolean USE_SPEECH = true;
     public static final boolean USE_VUFORIA = false;
     public static final boolean USE_PIXY = true;
+    public static final boolean USE_VELOCITY_CONTROL = false;
     //
     // Global objects.
     //
