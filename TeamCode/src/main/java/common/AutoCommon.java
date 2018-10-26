@@ -57,7 +57,7 @@ public abstract class AutoCommon extends FtcOpMode
         DO_NOTHING
     }   //enum Strategy
 
-    private final String moduleName;
+    private static final String moduleName = "FtcAuto";
     private Robot robot;
     protected TrcRobot.RobotCommand autoCommand = null;
     protected MatchType matchType = MatchType.PRACTICE;
@@ -73,11 +73,6 @@ public abstract class AutoCommon extends FtcOpMode
     protected boolean doMineral = false;
     protected boolean doTeamMarker = false;
     protected boolean doTeammateMineral = false;
-
-    public AutoCommon(String moduleName)
-    {
-        this.moduleName = moduleName;
-    }   //AutoCommon
 
     public void setRobot(Robot robot)
     {
@@ -187,7 +182,7 @@ public abstract class AutoCommon extends FtcOpMode
         //
         // Traverse menus.
         //
-        FtcMenu.walkMenuTree(matchTypeMenu, this);
+        FtcMenu.walkMenuTree(matchTypeMenu);
         //
         // Fetch choices.
         //

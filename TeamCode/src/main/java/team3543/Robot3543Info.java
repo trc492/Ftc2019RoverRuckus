@@ -44,7 +44,7 @@ class Robot3543Info extends RobotInfo
     static final double ENCODER_Y_KI                            = 0.0;
     static final double ENCODER_Y_KD                            = 0.0022;
     static final double ENCODER_Y_TOLERANCE                     = 1.0;
-    static final double ENCODER_Y_INCHES_PER_COUNT              = 68.0/4100.5;
+    static final double ENCODER_Y_INCHES_PER_COUNT              = 63.0/3667.0;
 
     static final double GYRO_KP                                 = 0.018;
     static final double GYRO_KI                                 = 0.0;

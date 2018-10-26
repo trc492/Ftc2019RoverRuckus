@@ -36,7 +36,7 @@ public abstract class TeleOpCommon extends FtcOpMode implements TrcGameControlle
         MECANUM_MODE,
     }   //enum DriveMode
 
-    protected final String moduleName;
+    protected static final String moduleName = "FtcTeleOp";
     protected Robot robot;
 
     protected HalDashboard dashboard;
@@ -47,11 +47,6 @@ public abstract class TeleOpCommon extends FtcOpMode implements TrcGameControlle
 
     protected double drivePowerScale = 1.0;
     protected boolean invertedDrive = false;
-
-    public TeleOpCommon(String moduleName)
-    {
-        this.moduleName = moduleName;
-    }   //TeleOpCommon
 
     public void setRobot(Robot robot)
     {
@@ -102,7 +97,7 @@ public abstract class TeleOpCommon extends FtcOpMode implements TrcGameControlle
         //
         // DriveBase subsystem.
         //
-        switch(driveMode)
+        switch (driveMode)
         {
             case TANK_MODE:
                 double leftPower = driverGamepad.getLeftStickY(true)*drivePowerScale;

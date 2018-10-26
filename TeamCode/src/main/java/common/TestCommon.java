@@ -22,24 +22,19 @@
 
 package common;
 
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-
 import org.firstinspires.ftc.robotcore.external.matrices.OpenGLMatrix;
 import org.firstinspires.ftc.robotcore.external.matrices.VectorF;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 
 import ftclib.FtcChoiceMenu;
-import ftclib.FtcGamepad;
 import ftclib.FtcMenu;
 import ftclib.FtcValueMenu;
 import trclib.TrcEvent;
-import trclib.TrcGameController;
 import trclib.TrcStateMachine;
 import trclib.TrcTimer;
 import trclib.TrcUtil;
 
-@TeleOp(name="Test", group="Test")
-public abstract class FtcTest extends TeleOpCommon
+public class TestCommon
 {
     private static final String moduleName = "FtcTest";
 
@@ -61,6 +56,7 @@ public abstract class FtcTest extends TeleOpCommon
         DONE
     }   //enum State
 
+    private Robot robot;
     //
     // State machine.
     //
@@ -72,6 +68,7 @@ public abstract class FtcTest extends TeleOpCommon
     //
     private Test test = Test.SENSORS_TEST;
     private double driveTime = 0.0;
+    private double drivePower = 0.0;
     private double driveDistance = 0.0;
     private double turnDegrees = 0.0;
 
@@ -80,22 +77,13 @@ public abstract class FtcTest extends TeleOpCommon
 
     private int motorIndex = 0;
 
-    public FtcTest(String moduleName)
-    {
-        super(moduleName);
-    }   //FtcTest
-
     //
     // Implements FtcOpMode interface.
     //
 
-    @Override
-    public void initRobot()
+    public void init(Robot robot)
     {
-        //
-        // FtcTest inherits from FtcTeleOp3543 so it can do everything that FtcTeleOp can do and more.
-        //
-        super.initRobot();
+        this.robot = robot;
         //
         // Initialize additional objects.
         //
@@ -111,12 +99,12 @@ public abstract class FtcTest extends TeleOpCommon
         {
             case X_TIMED_DRIVE:
                 timedDriveCommand = new CmdTimedDrive(
-                        robot, 0.0, driveTime, 1.0, 0.0, 0.0);
+                        robot, 0.0, driveTime, drivePower, 0.0, 0.0);
                 break;
 
             case Y_TIMED_DRIVE:
                 timedDriveCommand = new CmdTimedDrive(
-                        robot, 0.0, driveTime, 0.0, 0.5, 0.0);
+                        robot, 0.0, driveTime, 0.0, drivePower, 0.0);
                 break;
 
             case X_DISTANCE_DRIVE:
@@ -136,13 +124,13 @@ public abstract class FtcTest extends TeleOpCommon
         }
 
         sm.start(State.START);
-    }   //initRobot
+    }   //init
 
-    //
-    // Overrides TrcRobot.RobotMode methods.
-    //
+    public boolean shouldRunTeleOpPeriodic()
+    {
+        return test == Test.SENSORS_TEST;
+    }   //shouldRunTeleOpPeriodic
 
-    @Override
     public void runPeriodic(double elapsedTime)
     {
         //
@@ -154,7 +142,6 @@ public abstract class FtcTest extends TeleOpCommon
                 //
                 // Allow TeleOp to run so we can control the robot in sensors test mode.
                 //
-                super.runPeriodic(elapsedTime);
                 doSensorsTest();
                 doVisionTest();
                 break;
@@ -165,11 +152,10 @@ public abstract class FtcTest extends TeleOpCommon
         }
     }   //runPeriodic
 
-    @Override
     public void runContinuous(double elapsedTime)
     {
         State state = sm.getState();
-        dashboard.displayPrintf(8, "%s: %s", test.toString(), state != null? state.toString(): "STOPPED!");
+        robot.dashboard.displayPrintf(8, "%s: %s", test.toString(), state != null? state.toString(): "STOPPED!");
 
         switch (test)
         {
@@ -179,24 +165,20 @@ public abstract class FtcTest extends TeleOpCommon
                 double rfEnc = robot.rightFrontWheel.getPosition();
                 double lrEnc = robot.leftRearWheel.getPosition();
                 double rrEnc = robot.rightRearWheel.getPosition();
-                dashboard.displayPrintf(9, "Timed Drive: %.0f sec", time);
-                dashboard.displayPrintf(10, "Enc:lf=%.0f,rf=%.0f", lfEnc, rfEnc);
-                dashboard.displayPrintf(11, "Enc:lr=%.0f,rr=%.0f", lrEnc, rrEnc);
-                dashboard.displayPrintf(12, "average=%f", (lfEnc + rfEnc + lrEnc + rrEnc)/4.0);
-                dashboard.displayPrintf(13, "xPos=%.1f,yPos=%.1f,heading=%.1f",
-                                        robot.driveBase.getXPosition(),
-                                        robot.driveBase.getYPosition(),
-                                        robot.driveBase.getHeading());
+                robot.dashboard.displayPrintf(9, "Timed Drive: %.0f sec", driveTime);
+                robot.dashboard.displayPrintf(10, "Enc:lf=%.0f,rf=%.0f", lfEnc, rfEnc);
+                robot.dashboard.displayPrintf(11, "Enc:lr=%.0f,rr=%.0f", lrEnc, rrEnc);
+                robot.dashboard.displayPrintf(12, "average=%f", (lfEnc + rfEnc + lrEnc + rrEnc)/4.0);
+                robot.dashboard.displayPrintf(13, "xPos=%.1f,yPos=%.1f,heading=%.1f",
+                        robot.driveBase.getXPosition(), robot.driveBase.getYPosition(), robot.driveBase.getHeading());
                 timedDriveCommand.cmdPeriodic(elapsedTime);
                 break;
 
             case X_DISTANCE_DRIVE:
             case Y_DISTANCE_DRIVE:
             case GYRO_TURN:
-                dashboard.displayPrintf(9, "xPos=%.1f,yPos=%.1f,heading=%.1f",
-                                        robot.driveBase.getXPosition(),
-                                        robot.driveBase.getYPosition(),
-                                        robot.driveBase.getHeading());
+                robot.dashboard.displayPrintf(9, "xPos=%.1f,yPos=%.1f,heading=%.1f",
+                        robot.driveBase.getXPosition(), robot.driveBase.getYPosition(), robot.driveBase.getHeading());
                 robot.encoderXPidCtrl.displayPidInfo(10);
                 robot.encoderYPidCtrl.displayPidInfo(12);
                 robot.gyroPidCtrl.displayPidInfo(14);
@@ -215,6 +197,9 @@ public abstract class FtcTest extends TeleOpCommon
         FtcValueMenu driveTimeMenu = new FtcValueMenu(
                 "Drive time:", testMenu, robot, 1.0, 10.0, 1.0, 4.0,
                 " %.0f sec");
+        FtcValueMenu drivePowerMenu = new FtcValueMenu(
+                "Drive power:", testMenu, robot, 0.0, 1.0, 0.1, 0.5,
+                " %.0f");
         FtcValueMenu driveDistanceMenu = new FtcValueMenu(
                 "Drive distance:", testMenu, robot, -10.0, 10.0, 0.5, 4.0,
                 " %.1f ft");
@@ -232,21 +217,25 @@ public abstract class FtcTest extends TeleOpCommon
         testMenu.addChoice("X Distance drive", Test.X_DISTANCE_DRIVE, false, driveDistanceMenu);
         testMenu.addChoice("Y Distance drive", Test.Y_DISTANCE_DRIVE, false, driveDistanceMenu);
         testMenu.addChoice("Degrees turn", Test.GYRO_TURN, false, turnDegreesMenu);
+
+        driveTimeMenu.setChildMenu(drivePowerMenu);
+
         //
         // Traverse menus.
         //
-        FtcMenu.walkMenuTree(testMenu, this);
+        FtcMenu.walkMenuTree(testMenu);
         //
         // Fetch choices.
         //
         test = testMenu.getCurrentChoiceObject();
         driveTime = driveTimeMenu.getCurrentValue();
+        drivePower = drivePowerMenu.getCurrentValue();
         driveDistance = driveDistanceMenu.getCurrentValue();
         turnDegrees = turnDegreesMenu.getCurrentValue();
         //
         // Show choices.
         //
-        dashboard.displayPrintf(0, "Test: %s", testMenu.getCurrentChoiceText());
+        robot.dashboard.displayPrintf(0, "Test: %s", testMenu.getCurrentChoiceText());
     }   //doMenus
 
     /**
@@ -261,13 +250,13 @@ public abstract class FtcTest extends TeleOpCommon
         // Read all sensors and display on the dashboard.
         // Drive the robot around to sample different locations of the field.
         //
-        dashboard.displayPrintf(3, LABEL_WIDTH, "Enc: ", "lf=%.0f,rf=%.0f,lr=%.0f,rr=%.0f",
-                                robot.leftFrontWheel.getPosition(), robot.rightFrontWheel.getPosition(),
-                                robot.leftRearWheel.getPosition(), robot.rightRearWheel.getPosition());
+        robot.dashboard.displayPrintf(3, LABEL_WIDTH, "Enc: ", "lf=%.0f,rf=%.0f,lr=%.0f,rr=%.0f",
+                robot.leftFrontWheel.getPosition(), robot.rightFrontWheel.getPosition(),
+                robot.leftRearWheel.getPosition(), robot.rightRearWheel.getPosition());
 
         if (robot.gyro != null)
         {
-            dashboard.displayPrintf(4, LABEL_WIDTH, "Gyro: ", "Rate=%.3f,Heading=%.1f",
+            robot.dashboard.displayPrintf(4, LABEL_WIDTH, "Gyro: ", "Rate=%.3f,Heading=%.1f",
                     robot.gyro.getZRotationRate().value, robot.gyro.getZHeading().value);
         }
 
@@ -276,7 +265,7 @@ public abstract class FtcTest extends TeleOpCommon
             PixyVision.TargetInfo targetInfo = robot.pixyVision.getTargetInfo(RobotInfo.PIXY_GOLD_MINERAL_SIGNATURE);
             if (targetInfo != null)
             {
-                dashboard.displayPrintf(5, LABEL_WIDTH,
+                robot.dashboard.displayPrintf(5, LABEL_WIDTH,
                         "Pixy-Gold: ", "x=%.1f,y=%.1f,angle=%.1f %s",
                         targetInfo.xDistance, targetInfo.yDistance, targetInfo.angle, targetInfo.rect);
             }
@@ -284,7 +273,7 @@ public abstract class FtcTest extends TeleOpCommon
             targetInfo = robot.pixyVision.getTargetInfo(RobotInfo.PIXY_SILVER_MINERAL_SIGNATURE);
             if (targetInfo != null)
             {
-                dashboard.displayPrintf(6, LABEL_WIDTH,
+                robot.dashboard.displayPrintf(6, LABEL_WIDTH,
                         "Pixy-Silver: ", "x=%.1f,y=%.1f,angle=%.1f %s",
                         targetInfo.xDistance, targetInfo.yDistance, targetInfo.angle, targetInfo.rect);
             }
@@ -324,9 +313,9 @@ public abstract class FtcTest extends TeleOpCommon
         double lrEnc = robot.leftRearWheel.getPosition();
         double rrEnc = robot.rightRearWheel.getPosition();
 
-        dashboard.displayPrintf(9, "Motors Test: index=%d", motorIndex);
-        dashboard.displayPrintf(10, "Enc: lf=%.0f, rf=%.0f", lfEnc, rfEnc);
-        dashboard.displayPrintf(11, "Enc: lr=%.0f, rr=%.0f", lrEnc, rrEnc);
+        robot.dashboard.displayPrintf(9, "Motors Test: index=%d", motorIndex);
+        robot.dashboard.displayPrintf(10, "Enc: lf=%.0f, rf=%.0f", lfEnc, rfEnc);
+        robot.dashboard.displayPrintf(11, "Enc: lr=%.0f, rr=%.0f", lrEnc, rrEnc);
 
         if (sm.isReady())
         {
@@ -438,4 +427,4 @@ public abstract class FtcTest extends TeleOpCommon
         }
     }   //doMotorsTest
 
-}   //class FtcTest
+}   //class TestCommon

@@ -35,11 +35,6 @@ public class FtcAuto6541 extends AutoCommon
     private static final String moduleName = "FtcAuto6541";
     private Robot6541 robot;
 
-    public FtcAuto6541()
-    {
-        super(moduleName);
-    }   //FtcAuto6541
-
     //
     // Implements FtcOpMode abstract method.
     //

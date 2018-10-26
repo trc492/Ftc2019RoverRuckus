@@ -32,13 +32,8 @@ import trclib.TrcRobot;
 @TeleOp(name="TeleOp6541", group="TeleOp")
 public class FtcTeleOp6541 extends TeleOpCommon implements TrcGameController.ButtonHandler
 {
-    private static final String moduleName = "FtcTeleOp6541";
-    private Robot6541 robot;
-
-    public FtcTeleOp6541()
-    {
-        super(moduleName);
-    }   //FtcTeleOp6541
+    protected static final String moduleName = "FtcTeleOp6541";
+    protected Robot6541 robot;
 
     //
     // Implements FtcOpMode abstract method.
@@ -47,12 +42,13 @@ public class FtcTeleOp6541 extends TeleOpCommon implements TrcGameController.But
     @Override
     public void initRobot()
     {
-        super.initRobot();
         //
         // Initializing robot objects.
         //
         robot = new Robot6541(TrcRobot.RunMode.TELEOP_MODE);
+        driveMode = DriveMode.TANK_MODE;
         super.setRobot(robot);
+        super.initRobot();
     }   //initRobot
 
     @Override
