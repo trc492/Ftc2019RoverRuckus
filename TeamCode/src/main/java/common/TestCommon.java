@@ -199,7 +199,7 @@ public class TestCommon
                 " %.0f sec");
         FtcValueMenu drivePowerMenu = new FtcValueMenu(
                 "Drive power:", testMenu, robot, 0.0, 1.0, 0.1, 0.5,
-                " %.0f");
+                " %.1f");
         FtcValueMenu driveDistanceMenu = new FtcValueMenu(
                 "Drive distance:", testMenu, robot, -10.0, 10.0, 0.5, 4.0,
                 " %.1f ft");
