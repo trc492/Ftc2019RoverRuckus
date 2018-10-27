@@ -178,7 +178,7 @@ public class FtcTeleOp6541 extends TeleOpCommon implements TrcGameController.But
                 case FtcGamepad.GAMEPAD_START:
                     if (robot.pixyVision != null && pressed)
                     {
-                        robot.pixyVision.toggleLight();
+                        robot.pixyVision.toggleCamera();
                     }
                     break;
             }

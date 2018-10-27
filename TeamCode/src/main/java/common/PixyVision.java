@@ -101,11 +101,18 @@ public class PixyVision
         pixyCamera.setBrightness((byte)brightness);
     }   //PixyVision
 
-    public void setEnabled(boolean enabled)
+    public void setCameraEnabled(boolean enabled)
     {
         setLightOn(enabled);
         pixyCamera.setEnabled(enabled);
-    }   //setEnabled
+    }   //setCameraEnabled
+
+    public void toggleCamera()
+    {
+        boolean enabled = pixyCamera.isEnabled();
+        enabled = !enabled;
+        setCameraEnabled(enabled);
+    }   //toggleCamera
 
     public boolean isEnabled()
     {

@@ -176,9 +176,9 @@ public class Robot implements FtcMenu.MenuButtons
             vuforiaVision.setEnabled(true);
         }
 
-        if (pixyVision != null)
+        if (pixyVision != null && runMode == TrcRobot.RunMode.AUTO_MODE)
         {
-            pixyVision.setEnabled(true);
+            pixyVision.setCameraEnabled(true);
         }
         //
         // Reset all X, Y and heading values.
@@ -206,7 +206,7 @@ public class Robot implements FtcMenu.MenuButtons
 
         if (pixyVision != null)
         {
-            pixyVision.setEnabled(false);
+            pixyVision.setCameraEnabled(false);
         }
     }   //stopMode
 
