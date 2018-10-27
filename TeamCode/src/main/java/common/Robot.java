@@ -175,7 +175,9 @@ public class Robot implements FtcMenu.MenuButtons
         {
             vuforiaVision.setEnabled(true);
         }
-
+        //
+        // Vision generally will impact performance, so we only enable it if it's needed such as in autonomous.
+        //
         if (pixyVision != null && runMode == TrcRobot.RunMode.AUTO_MODE)
         {
             pixyVision.setCameraEnabled(true);
