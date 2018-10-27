@@ -42,8 +42,8 @@ public class Elevator6541
     {
         upperLimitSwitch = new FtcDigitalInput("elevatorUpperLimit");
         lowerLimitSwitch = new FtcDigitalInput("elevatorLowerLimit");
-        upperLimitSwitch.setInverted(true);
-        lowerLimitSwitch.setInverted(true);
+        upperLimitSwitch.setInverted(false);
+        lowerLimitSwitch.setInverted(false);
 
         elevatorMotor = new FtcDcMotor("elevatorMotor", lowerLimitSwitch, upperLimitSwitch);
         elevatorMotor.setBrakeModeEnabled(true);
@@ -72,6 +72,11 @@ public class Elevator6541
     public void setPosition(double target, TrcEvent event, double timeout)
     {
         pidElevator.setTarget(target, event, timeout);
+    }
+
+    public void setPosition(double target)
+    {
+        pidElevator.setTarget(target, null, 0.0);
     }
 
     public double getPosition()

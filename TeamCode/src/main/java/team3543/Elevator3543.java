@@ -70,6 +70,11 @@ public class Elevator3543
         pidElevator.setTarget(target, event, timeout);
     }
 
+    public void setPosition(double target)
+    {
+        pidElevator.setTarget(target, null, 0.0);
+    }
+
     public double getPosition()
     {
         return pidElevator.getPosition();

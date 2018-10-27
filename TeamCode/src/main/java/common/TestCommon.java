@@ -270,13 +270,13 @@ public class TestCommon
                         targetInfo.xDistance, targetInfo.yDistance, targetInfo.angle, targetInfo.rect);
             }
 
-            targetInfo = robot.pixyVision.getTargetInfo(RobotInfo.PIXY_SILVER_MINERAL_SIGNATURE);
-            if (targetInfo != null)
-            {
-                robot.dashboard.displayPrintf(6, LABEL_WIDTH,
-                        "Pixy-Silver: ", "x=%.1f,y=%.1f,angle=%.1f %s",
-                        targetInfo.xDistance, targetInfo.yDistance, targetInfo.angle, targetInfo.rect);
-            }
+//            targetInfo = robot.pixyVision.getTargetInfo(RobotInfo.PIXY_SILVER_MINERAL_SIGNATURE);
+//            if (targetInfo != null)
+//            {
+//                robot.dashboard.displayPrintf(6, LABEL_WIDTH,
+//                        "Pixy-Silver: ", "x=%.1f,y=%.1f,angle=%.1f %s",
+//                        targetInfo.xDistance, targetInfo.yDistance, targetInfo.angle, targetInfo.rect);
+//            }
         }
     }   //doSensorsTest
 

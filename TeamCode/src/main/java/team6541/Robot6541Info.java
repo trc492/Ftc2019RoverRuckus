@@ -63,6 +63,7 @@ class Robot6541Info extends RobotInfo
     public static final double ELEVATOR_TOLERANCE               = 0.2;
     public static final double ELEVATOR_MIN_HEIGHT              = ELEVATOR_ZERO_OFFSET - 0.1;
     public static final double ELEVATOR_MAX_HEIGHT              = 24.0;
+    public static final double ELEVATOR_HANGING_HEIGHT          = ELEVATOR_MAX_HEIGHT - 1.0;
     public static final double ELEVATOR_CAL_POWER               = 0.3;
     //
     // Other subsystems.

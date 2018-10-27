@@ -107,12 +107,23 @@ public class FtcTeleOp6541 extends TeleOpCommon implements TrcGameController.But
             switch (button)
             {
                 case FtcGamepad.GAMEPAD_A:
+                    //
+                    // extend the elevator to hanging height.
+                    //
+                    if (pressed)
+                    {
+                        robot.elevator.setPosition(Robot6541Info.ELEVATOR_HANGING_HEIGHT);
+                    }
                     break;
 
                 case FtcGamepad.GAMEPAD_B:
                     break;
 
                 case FtcGamepad.GAMEPAD_X:
+                    if (robot.pixyVision != null && pressed)
+                    {
+                        robot.pixyVision.toggleLight();
+                    }
                     break;
 
                 case FtcGamepad.GAMEPAD_Y:

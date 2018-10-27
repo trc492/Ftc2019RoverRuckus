@@ -26,6 +26,7 @@ import org.opencv.core.Rect;
 
 import java.util.ArrayList;
 
+import ftclib.FtcDcMotor;
 import ftclib.FtcPixyCam;
 import trclib.TrcPixyCam;
 import trclib.TrcUtil;
@@ -69,7 +70,7 @@ public class PixyVision
         UPSIDEDOWN_LANDSCAPE
     }   //enum Orientation
 
-    private static final double PIXY_DISTANCE_SCALE = 14.0*40.0;   //DistanceInInches*targetWidthdInPixels
+    private static final double PIXY_DISTANCE_SCALE = 7.0*62.0;   //DistanceInInches*targetWidthdInPixels
     private static final double TARGET_SIDE_WIDTH = 2.0;
     private static final double TARGET_FACE_DIAGONAL = Math.sqrt(2.0)*TARGET_SIDE_WIDTH;
     private static final double TARGET_CUBE_DIAGONAL = Math.sqrt(3.0)*TARGET_SIDE_WIDTH;
@@ -85,6 +86,8 @@ public class PixyVision
     private FtcPixyCam pixyCamera;
     private Robot robot;
     private Orientation orientation;
+    private FtcDcMotor light;
+    private boolean lightOn = false;
     private Rect lastTargetRect = null;
     private double lastTargetRectExpireTime = TrcUtil.getCurrentTime();
 
@@ -93,11 +96,14 @@ public class PixyVision
         pixyCamera = new FtcPixyCam(instanceName);
         this.robot = robot;
         this.orientation = orientation;
+        light = new FtcDcMotor("pixyRingLight");
+        setLightOn(false);
         pixyCamera.setBrightness((byte)brightness);
     }   //PixyVision
 
     public void setEnabled(boolean enabled)
     {
+        setLightOn(enabled);
         pixyCamera.setEnabled(enabled);
     }   //setEnabled
 
@@ -105,6 +111,29 @@ public class PixyVision
     {
         return pixyCamera.isEnabled();
     }   //isEnabled
+
+    public void setLightOn(boolean enabled)
+    {
+        if (enabled)
+        {
+            light.set(1.0);
+        }
+        else
+        {
+            light.set(0.0);
+        }
+    }   //setLightOn
+
+    public void toggleLight()
+    {
+        lightOn = !lightOn;
+        setLightOn(lightOn);
+    }   //toggleLight
+
+    public boolean isLightOn()
+    {
+        return lightOn;
+    }   //isLightOn
 
     /**
      * This method gets the rectangle of the last detected target from the camera. If the camera does not have
