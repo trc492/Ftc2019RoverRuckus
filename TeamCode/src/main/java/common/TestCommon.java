@@ -250,13 +250,13 @@ public class TestCommon
         // Read all sensors and display on the dashboard.
         // Drive the robot around to sample different locations of the field.
         //
-        robot.dashboard.displayPrintf(3, LABEL_WIDTH, "Enc: ", "lf=%.0f,rf=%.0f,lr=%.0f,rr=%.0f",
+        robot.dashboard.displayPrintf(9, LABEL_WIDTH, "Enc: ", "lf=%.0f,rf=%.0f,lr=%.0f,rr=%.0f",
                 robot.leftFrontWheel.getPosition(), robot.rightFrontWheel.getPosition(),
                 robot.leftRearWheel.getPosition(), robot.rightRearWheel.getPosition());
 
         if (robot.gyro != null)
         {
-            robot.dashboard.displayPrintf(4, LABEL_WIDTH, "Gyro: ", "Rate=%.3f,Heading=%.1f",
+            robot.dashboard.displayPrintf(10, LABEL_WIDTH, "Gyro: ", "Rate=%.3f,Heading=%.1f",
                     robot.gyro.getZRotationRate().value, robot.gyro.getZHeading().value);
         }
 
@@ -265,7 +265,7 @@ public class TestCommon
             PixyVision.TargetInfo targetInfo = robot.pixyVision.getTargetInfo(RobotInfo.PIXY_GOLD_MINERAL_SIGNATURE);
             if (targetInfo != null)
             {
-                robot.dashboard.displayPrintf(5, LABEL_WIDTH,
+                robot.dashboard.displayPrintf(11, LABEL_WIDTH,
                         "Pixy-Gold: ", "x=%.1f,y=%.1f,angle=%.1f %s",
                         targetInfo.xDistance, targetInfo.yDistance, targetInfo.angle, targetInfo.rect);
             }
@@ -273,7 +273,7 @@ public class TestCommon
 //            targetInfo = robot.pixyVision.getTargetInfo(RobotInfo.PIXY_SILVER_MINERAL_SIGNATURE);
 //            if (targetInfo != null)
 //            {
-//                robot.dashboard.displayPrintf(6, LABEL_WIDTH,
+//                robot.dashboard.displayPrintf(12, LABEL_WIDTH,
 //                        "Pixy-Silver: ", "x=%.1f,y=%.1f,angle=%.1f %s",
 //                        targetInfo.xDistance, targetInfo.yDistance, targetInfo.angle, targetInfo.rect);
 //            }
@@ -289,11 +289,11 @@ public class TestCommon
             {
                 VectorF translation = robot.vuforiaVision.getRobotTranslation(robotLocation);
                 Orientation orientation = robot.vuforiaVision.getRobotOrientation(robotLocation);
-                robot.dashboard.displayPrintf(11, "Translation: x=%6.2f,y=%6.2f,z=%6.2f",
+                robot.dashboard.displayPrintf(13, "Translation: x=%6.2f,y=%6.2f,z=%6.2f",
                         translation.get(0)/ TrcUtil.MM_PER_INCH,
                         translation.get(1)/TrcUtil.MM_PER_INCH,
                         translation.get(2)/TrcUtil.MM_PER_INCH);
-                robot.dashboard.displayPrintf(12, "Orientation: roll=%6.2f, pitch=%6.2f, heading=%6.2f",
+                robot.dashboard.displayPrintf(14, "Orientation: roll=%6.2f, pitch=%6.2f, heading=%6.2f",
                         orientation.firstAngle, orientation.secondAngle, orientation.thirdAngle);
             }
         }

@@ -59,10 +59,6 @@ public class FtcTeleOp3543 extends TeleOpCommon implements TrcGameController.But
         double elevatorPower = operatorGamepad.getRightStickY(true);
         robot.elevator.setPower(elevatorPower);
 
-        dashboard.displayPrintf(2, "DriveBase: x=%.2f,y=%.2f,heading=%.2f",
-                robot.driveBase.getXPosition(),
-                robot.driveBase.getYPosition(),
-                robot.driveBase.getHeading());
         dashboard.displayPrintf(3, "Elevator: power=%.1f, pos=%.1f (%s,%s)",
                 elevatorPower, robot.elevator.getPosition(),
                 robot.elevator.isLowerLimitSwitchActive(), robot.elevator.isUpperLimitSwitchActive());
