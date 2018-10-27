@@ -120,13 +120,17 @@ public class FtcTeleOp6541 extends TeleOpCommon implements TrcGameController.But
                     break;
 
                 case FtcGamepad.GAMEPAD_X:
-                    if (robot.pixyVision != null && pressed)
+                    if (pressed)
                     {
-                        robot.pixyVision.toggleLight();
+                        robot.elevator.openHook();
                     }
                     break;
 
                 case FtcGamepad.GAMEPAD_Y:
+                    if (pressed)
+                    {
+                        robot.elevator.closeHook();
+                    }
                     break;
 
                 case FtcGamepad.GAMEPAD_LBUMPER:
@@ -172,6 +176,10 @@ public class FtcTeleOp6541 extends TeleOpCommon implements TrcGameController.But
                     break;
 
                 case FtcGamepad.GAMEPAD_START:
+                    if (robot.pixyVision != null && pressed)
+                    {
+                        robot.pixyVision.toggleLight();
+                    }
                     break;
             }
         }
