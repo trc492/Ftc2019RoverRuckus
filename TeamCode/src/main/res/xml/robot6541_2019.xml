@@ -23,15 +23,15 @@ SOFTWARE.
 <Robot type="FirstInspires-FTC" name="Robot6541_2019">
     <LynxUsbDevice name="Expansion Hub Portal 1" serialNumber="DQ2GEVMX" parentModuleAddress="1">
         <LynxModule name="Expansion Hub 2" port="2">
-            <NeveRest40Gearmotor name="rfWheel" port="0" />
-            <NeveRest40Gearmotor name="rrWheel" port="1" />
-            <NeveRest40Gearmotor name="lfWheel" port="2" />
-            <NeveRest40Gearmotor name="lrWheel" port="3" />
+            <NeveRest40Gearmotor name="lfWheel" port="0" />
+            <NeveRest40Gearmotor name="lrWheel" port="1" />
+            <NeveRest40Gearmotor name="rfWheel" port="2" />
+            <NeveRest40Gearmotor name="rrWheel" port="3" />
             <Servo name="sweeperServo" port="0" />
             <Servo name="deployerServo" port="1" />
             <Servo name="hookServo" port="2" />
             <DigitalDevice name="elevatorLowerLimit" port="0" />
-            <DigitalDevice name="elevatorUpperLimit" port="2" />
+            <DigitalDevice name="elevatorUpperLimit" port="1" />
             <LynxEmbeddedIMU name="imu" port="0" bus="0" />
             <I2cSyncDevice name="pixy" port="0" bus="1" />
         </LynxModule>

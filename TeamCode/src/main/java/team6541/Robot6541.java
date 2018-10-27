@@ -72,7 +72,7 @@ public class Robot6541 extends Robot
 
         leftFrontWheel.setInverted(false);
         leftRearWheel.setInverted(false);
-        rightFrontWheel.setInverted(true);
+        rightFrontWheel.setInverted(false);
         rightRearWheel.setInverted(true);
 
         leftFrontWheel.setBrakeModeEnabled(true);
