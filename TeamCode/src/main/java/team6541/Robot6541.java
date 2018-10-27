@@ -81,15 +81,10 @@ public class Robot6541 extends Robot
         rightRearWheel.setBrakeModeEnabled(true);
 
         driveBase = new TrcSimpleDriveBase(leftFrontWheel, leftRearWheel, rightFrontWheel, rightRearWheel, gyro);
-        driveBase.setPositionScales(Robot6541Info.ENCODER_X_INCHES_PER_COUNT, Robot6541Info.ENCODER_Y_INCHES_PER_COUNT);
+        driveBase.setPositionScales(Robot6541Info.ENCODER_Y_INCHES_PER_COUNT);
         //
         // Initialize PID drive.
         //
-        encoderXPidCtrl = new TrcPidController(
-                "encoderXPidCtrl",
-                new TrcPidController.PidCoefficients(
-                        Robot6541Info.ENCODER_X_KP, Robot6541Info.ENCODER_X_KI, Robot6541Info.ENCODER_X_KD),
-                Robot6541Info.ENCODER_X_TOLERANCE, driveBase::getXPosition);
         encoderYPidCtrl = new TrcPidController(
                 "encoderYPidCtrl",
                 new TrcPidController.PidCoefficients(

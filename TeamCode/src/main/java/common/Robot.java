@@ -46,7 +46,7 @@ import trclib.TrcSimpleDriveBase;
 public class Robot implements FtcMenu.MenuButtons
 {
     public static final boolean USE_SPEECH = true;
-    public static final boolean USE_VUFORIA = false;
+    public static final boolean USE_VUFORIA = true;
     public static final boolean USE_PIXY = true;
     public static final boolean USE_VELOCITY_CONTROL = false;
     //
@@ -140,7 +140,7 @@ public class Robot implements FtcMenu.MenuButtons
 
         if (robotLocation != null)
         {
-            robotOrientation = vuforiaVision.getRobotTranslation(robotLocation).get(3);
+            robotOrientation = vuforiaVision.getLocationOrientation(robotLocation).thirdAngle;
             speak(String.format("Robot angle is %.1f degrees", robotOrientation));
         }
 

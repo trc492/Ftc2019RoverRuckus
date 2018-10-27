@@ -39,8 +39,8 @@ import static org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocaliz
 
 public class VuforiaVision
 {
-    private static final int IMAGE_WIDTH = 640;
-    private static final int IMAGE_HEIGHT = 480;
+    private static final int IMAGE_WIDTH = 640;     //in pixels
+    private static final int IMAGE_HEIGHT = 480;    //in pixels
     private static final int FRAME_QUEUE_CAPACITY = 2;
     // Since ImageTarget trackables use mm to specifiy their dimensions, we must use mm for all the physical dimension.
     // We will define some constants and conversions here
@@ -55,17 +55,12 @@ public class VuforiaVision
     public VuforiaVision(Robot robot, int cameraViewId)
     {
         final String VUFORIA_LICENSE_KEY =
-//                "ATu19Kj/////AAAAGcw4SDCVwEBSiKcUtdmQd2aOugrxo/OgeBJUt7XwMSi3e0KSZaylbsTnWp8EBxyA5o/00JFJVDY1OxJ" +
-//                "XLxQOpz1tbM4ex1sl1EbF25olEZ3w9xXZ1QaqMP+5T63VqTwvkgKbtM+dS+tLi8EHMvJ2viYf6WwOE776e0s3QNfl/XvONM" +
-//                "XS4ZtEWLNeiSEMTCdO9bdeaxnSb2RfErcmjadAThDWf6PC9HrMRHLmgfcFaZlj5JN+figOjgKhyQZeYYrcDEm0lICN5kAr2" +
-//                "pdfNKNOii3A80eXyTVDfPGfzTwVa4eNBY/SgmoIdBbMPb3hfZBOz7GVoVHHQWbCNbzm31p1OY+zqPPWMfzzpyiJ4mA9bLTQ";
-                "AdCwzDH/////AAAAGeDkDS3ukU9+lIXc19LMh+cKk29caNhOl8UqmZOymRGwVwT1ZN8uaPdE3Q+zceDu9AKNsqL9qLblSFV" +
-                "/x8Y3jfOZdjMFs0CQSQOEyWv3xfJsdSmevXDQDQr+4KI31HY2YSf/KB/kyxfuRMk4Pi+vWS+oLl65o7sWPiyFgzoM74ENyb" +
-                "j4FgteD/2b6B+UFuwkHWKBNpp18wrpkaiFfr/FCbRFcdWP5mrjlEZM6eOj171dybw97HPeZbGihnnxOeeUv075O7P167AVq" +
-                "aiPy2eRK7OCubR32KXOqQKoyF6AXp+qu2cOTApXS5dqOOseEm+HE4eMF0S2Pld3i5AWBIR+JlPXDuc9LwoH2Q8iDwUK1+4g";
+                "ATu19Kj/////AAAAGcw4SDCVwEBSiKcUtdmQd2aOugrxo/OgeBJUt7XwMSi3e0KSZaylbsTnWp8EBxyA5o/00JFJVDY1OxJ" +
+                "XLxQOpz1tbM4ex1sl1EbF25olEZ3w9xXZ1QaqMP+5T63VqTwvkgKbtM+dS+tLi8EHMvJ2viYf6WwOE776e0s3QNfl/XvONM" +
+                "XS4ZtEWLNeiSEMTCdO9bdeaxnSb2RfErcmjadAThDWf6PC9HrMRHLmgfcFaZlj5JN+figOjgKhyQZeYYrcDEm0lICN5kAr2" +
+                "pdfNKNOii3A80eXyTVDfPGfzTwVa4eNBY/SgmoIdBbMPb3hfZBOz7GVoVHHQWbCNbzm31p1OY+zqPPWMfzzpyiJ4mA9bLTQ";
         final VuforiaLocalizer.CameraDirection CAMERA_DIR = VuforiaLocalizer.CameraDirection.BACK;
         final String TRACKABLE_IMAGES_FILE = "RoverRuckus";
-        final String TRACKABLE_OBJECTS_FILE = "Hyroplane";
 
         this.robot = robot;
         vuforia = new FtcVuforia(VUFORIA_LICENSE_KEY, cameraViewId, CAMERA_DIR);
@@ -179,12 +174,12 @@ public class VuforiaVision
             imageTargets[i] = vuforia.getTarget(imageTargetsInfo[i].name);
         }
 
-        FtcVuforia.TargetInfo[] objectTargetsInfo =
-        {
-                new FtcVuforia.TargetInfo(0, "Team-Marker", true, null)
-        };
-
-        vuforia.addTargetList(TRACKABLE_OBJECTS_FILE, objectTargetsInfo, null);
+//        FtcVuforia.TargetInfo[] objectTargetsInfo =
+//        {
+//                new FtcVuforia.TargetInfo(0, "Team-Marker", true, null)
+//        };
+//
+//        vuforia.addTargetList(TRACKABLE_OBJECTS_FILE, objectTargetsInfo, null);
     }   //VuforiaVision
 
     public void setEnabled(boolean enabled)
@@ -221,9 +216,9 @@ public class VuforiaVision
         return robotLocation;
     }   //getRobotLocation
 
-    public VectorF getRobotTranslation(OpenGLMatrix location)
+    public VectorF getLocationTranslation(OpenGLMatrix location)
     {
-        final String funcName = "getRobotTranslation";
+        final String funcName = "getLocationTranslation";
 
         VectorF translation = location.getTranslation();
         // express position (translation) of robot in inches.
@@ -232,17 +227,17 @@ public class VuforiaVision
                 translation.get(1)/TrcUtil.MM_PER_INCH,
                 translation.get(2)/TrcUtil.MM_PER_INCH);
         return translation;
-    }   //getRobotTranslation
+    }   //getLocationTranslation
 
-    public Orientation getRobotOrientation(OpenGLMatrix location)
+    public Orientation getLocationOrientation(OpenGLMatrix location)
     {
-        final String funcName = "getRobotOrientation";
+        final String funcName = "getLocationOrientation";
 
         Orientation orientation = Orientation.getOrientation(location, EXTRINSIC, XYZ, DEGREES);
         // express the rotation of the robot in degrees.
         robot.tracer.traceInfo(funcName, "Orientation: roll=%6.2f, pitch=%6.2f, heading=%6.2f",
                 orientation.firstAngle, orientation.secondAngle, orientation.thirdAngle);
         return orientation;
-    }   //getRobotOrientation
+    }   //getLocationOrientation
 
 }   //class VuforiaVision

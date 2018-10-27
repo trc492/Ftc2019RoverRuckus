@@ -33,27 +33,34 @@ class Robot3543Info extends RobotInfo
     //
     static final DcMotor.RunMode DRIVE_MOTOR_MODE               = DcMotor.RunMode.RUN_WITHOUT_ENCODER;
     static final double TURN_POWER_LIMIT                        = 0.5;
-
-    static final double ENCODER_X_KP                            = 0.0;
+    //
+    // 2018-10-27: Kp=0.1, Ki=0.0, Kd=0.0, Scale=0.0177558441951763
+    //
+    static final double ENCODER_X_KP                            = 0.1;
     static final double ENCODER_X_KI                            = 0.0;
     static final double ENCODER_X_KD                            = 0.0;
     static final double ENCODER_X_TOLERANCE                     = 2.0;
-    static final double ENCODER_X_INCHES_PER_COUNT              = 0.0191600936386266;
-
+    static final double ENCODER_X_INCHES_PER_COUNT              = 0.0177558441951763;
+    //
+    // 2018-10-27: Kp=0.035, Ki=0.0, Kd=0.0025, Scale=0.0172934
+    //
     static final double ENCODER_Y_KP                            = 0.035;
     static final double ENCODER_Y_KI                            = 0.0;
     static final double ENCODER_Y_KD                            = 0.0025;
     static final double ENCODER_Y_TOLERANCE                     = 1.0;
-    static final double ENCODER_Y_INCHES_PER_COUNT              = 66.0/3946.0;  //Done
-
-    static final double GYRO_KP                                 = 0.018;
+    static final double ENCODER_Y_INCHES_PER_COUNT              = 0.0172934;
+    //
+    // 2018-10-27: Kp=0.025, Ki=0.0, Kd=0.0
+    //
+    static final double GYRO_KP                                 = 0.025;
     static final double GYRO_KI                                 = 0.0;
-    static final double GYRO_KD                                 = 0.002;
+    static final double GYRO_KD                                 = 0.0;
     static final double GYRO_TOLERANCE                          = 1.0;
 
     static final double PIDDRIVE_STALL_TIMEOUT                  = 0.25;     //in msec.
     //
     // Elevator subsystem.
+    // 2018-10-27: Kp=
     //
     public static final double ELEVATOR_INCHES_PER_COUNT        = 5.625/8498;
     public static final double ELEVATOR_ZERO_OFFSET             = 15.8;

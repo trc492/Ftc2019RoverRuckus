@@ -204,7 +204,7 @@ public class TestCommon
                 "Drive distance:", testMenu, robot, -10.0, 10.0, 0.5, 4.0,
                 " %.1f ft");
         FtcValueMenu turnDegreesMenu = new FtcValueMenu(
-                "Turn degrees:", testMenu, robot, -360.0, 360.0, 5.0, 45.0,
+                "Turn degrees:", testMenu, robot, -360.0, 360.0, 5.0, 90.0,
                 " %.0f deg");
 
         //
@@ -287,13 +287,13 @@ public class TestCommon
             OpenGLMatrix robotLocation = robot.vuforiaVision.getRobotLocation();
             if (robotLocation != null)
             {
-                VectorF translation = robot.vuforiaVision.getRobotTranslation(robotLocation);
-                Orientation orientation = robot.vuforiaVision.getRobotOrientation(robotLocation);
+                VectorF translation = robot.vuforiaVision.getLocationTranslation(robotLocation);
+                Orientation orientation = robot.vuforiaVision.getLocationOrientation(robotLocation);
                 robot.dashboard.displayPrintf(13, "Translation: x=%6.2f,y=%6.2f,z=%6.2f",
                         translation.get(0)/ TrcUtil.MM_PER_INCH,
                         translation.get(1)/TrcUtil.MM_PER_INCH,
                         translation.get(2)/TrcUtil.MM_PER_INCH);
-                robot.dashboard.displayPrintf(14, "Orientation: roll=%6.2f, pitch=%6.2f, heading=%6.2f",
+                robot.dashboard.displayPrintf(14, "Orientation: roll=%6.2f,pitch=%6.2f,heading=%6.2f",
                         orientation.firstAngle, orientation.secondAngle, orientation.thirdAngle);
             }
         }

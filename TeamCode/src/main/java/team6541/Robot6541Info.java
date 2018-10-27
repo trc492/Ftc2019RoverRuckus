@@ -34,12 +34,6 @@ class Robot6541Info extends RobotInfo
     static final DcMotor.RunMode DRIVE_MOTOR_MODE               = DcMotor.RunMode.RUN_WITHOUT_ENCODER;
     static final double TURN_POWER_LIMIT                        = 0.5;
 
-    static final double ENCODER_X_KP                            = 0.15;
-    static final double ENCODER_X_KI                            = 0.0;
-    static final double ENCODER_X_KD                            = 0.015;
-    static final double ENCODER_X_TOLERANCE                     = 2.0;
-    static final double ENCODER_X_INCHES_PER_COUNT              = 63.0/4403.2;
-
     static final double ENCODER_Y_KP                            = 0.02;
     static final double ENCODER_Y_KI                            = 0.0;
     static final double ENCODER_Y_KD                            = 0.0022;
