@@ -64,6 +64,11 @@ public class Elevator6541
         pidElevator.zeroCalibrate();
     }
 
+    public void setManualOverride(boolean enabled)
+    {
+        pidElevator.setManualOverride(enabled);
+    }
+
     public void setPower(double power)
     {
         pidElevator.setPower(power);

@@ -130,17 +130,10 @@ public class FtcTeleOp3543 extends TeleOpCommon implements TrcGameController.But
                     break;
 
                 case FtcGamepad.GAMEPAD_LBUMPER:
-                    if (pressed)
-                    {
-                        robot.teamMarkerDeployer.close();
-                    }
                     break;
 
                 case FtcGamepad.GAMEPAD_RBUMPER:
-                    if (pressed)
-                    {
-                        robot.teamMarkerDeployer.open();
-                    }
+                    robot.elevator.setManualOverride(pressed);
                     break;
 
                 case FtcGamepad.GAMEPAD_DPAD_UP:
@@ -158,9 +151,17 @@ public class FtcTeleOp3543 extends TeleOpCommon implements TrcGameController.But
                     break;
 
                 case FtcGamepad.GAMEPAD_DPAD_LEFT:
+                    if (pressed)
+                    {
+                        robot.teamMarkerDeployer.close();
+                    }
                     break;
 
                 case FtcGamepad.GAMEPAD_DPAD_RIGHT:
+                    if (pressed)
+                    {
+                        robot.teamMarkerDeployer.open();
+                    }
                     break;
 
                 case FtcGamepad.GAMEPAD_BACK:

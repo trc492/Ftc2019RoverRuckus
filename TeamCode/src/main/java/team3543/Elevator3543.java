@@ -60,6 +60,11 @@ public class Elevator3543
         pidElevator.zeroCalibrate();
     }
 
+    public void setManualOverride(boolean enabled)
+    {
+        pidElevator.setManualOverride(enabled);
+    }
+
     public void setPower(double power)
     {
         pidElevator.setPower(power);
