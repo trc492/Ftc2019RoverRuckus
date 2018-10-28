@@ -108,7 +108,7 @@ public class FtcTeleOp6541 extends TeleOpCommon implements TrcGameController.But
                     //
                     if (pressed)
                     {
-                        robot.elevator.setPosition(Robot6541Info.ELEVATOR_HANGING_HEIGHT);
+                        robot.elevator.setPosition(RobotInfo6541.ELEVATOR_HANGING_HEIGHT);
                     }
                     break;
 

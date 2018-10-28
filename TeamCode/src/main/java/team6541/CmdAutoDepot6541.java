@@ -29,20 +29,20 @@ import trclib.TrcRobot;
 import trclib.TrcStateMachine;
 import trclib.TrcTimer;
 
-class CmdAuto6541Crater implements TrcRobot.RobotCommand
+class CmdAutoDepot6541 implements TrcRobot.RobotCommand
 {
     private static final boolean debugXPid = true;
     private static final boolean debugYPid = true;
     private static final boolean debugTurnPid = true;
 
-    private static final String moduleName = "CmdAuto6541Crater";
+    private static final String moduleName = "CmdAutoDepot6541";
 
     private Robot6541 robot;
     private AutoCommon.Alliance alliance;
     private double delay;
+    private boolean startHung;
     private boolean doMineral;
     private boolean doTeamMarker;
-    private boolean doTeammateMineral;
 
     private TrcEvent event;
     private TrcTimer timer;
@@ -51,30 +51,31 @@ class CmdAuto6541Crater implements TrcRobot.RobotCommand
     private double targetY = 0.0;
     private CmdSweepMineral cmdSweepMineral = null;
 
-    CmdAuto6541Crater(Robot6541 robot, AutoCommon.Alliance alliance, double delay,
-                      boolean startHung, boolean doMineral, boolean doTeamMarker, boolean doTeammateMineral)
+    CmdAutoDepot6541(Robot6541 robot, AutoCommon.Alliance alliance, double delay,
+                     boolean startHung, boolean doMineral, boolean doTeamMarker)
     {
         robot.tracer.traceInfo(moduleName,
-                "Alliance=%s,Delay=%.0f,startHung=%s,Mineral=%s,TeamMarker=%s,TeammateMineral=%s",
-                alliance, delay, startHung, doMineral, doTeamMarker, doTeammateMineral);
+                "Alliance=%s,Delay=%.0f,Hanging=%s,Mineral=%s,TeamMarker=%s",
+                alliance, delay, startHung, doMineral, doTeamMarker);
 
         this.robot = robot;
         this.alliance = alliance;
         this.delay = delay;
+        this.startHung = startHung;
         this.doMineral = doMineral;
         this.doTeamMarker = doTeamMarker;
-        this.doTeammateMineral = doTeammateMineral;
 
         event = new TrcEvent(moduleName);
         timer = new TrcTimer(moduleName);
         sm = new TrcStateMachine<>(moduleName);
-        sm.start(startHung? State.LOWER_ROBOT: State.GO_TOWARDS_MINERAL);
-    }   //CmdAuto6541Crater
+        sm.start(startHung? State.LOWER_ROBOT: State.DO_DELAY);
+    }   //CmdAutoDepot6541
 
     private enum State
     {
         LOWER_ROBOT,
         UNHOOK_ROBOT,
+        DO_DELAY,
         GO_TOWARDS_MINERAL,
         ALIGN_MINERAL_SWEEPER,
         ALIGN_ROBOT_WITH_VUFORIA,
@@ -82,16 +83,9 @@ class CmdAuto6541Crater implements TrcRobot.RobotCommand
         DRIVE_TO_MID_WALL,
         TURN_PARALLEL_TO_WALL,
         DRIVE_FROM_MID_WALL_TO_CRATER,
-        DO_DELAY,
         DRIVE_FROM_MID_WALL_TO_DEPOT,
         DROP_TEAM_MARKER,
         DRIVE_FROM_DEPOT_TO_CRATER,
-        BACK_OFF_FROM_DEPOT,
-        ROTATE_TO_TEAMMATE_MINERALS,
-        SWEEP_TEAMMATE_MINERAL,
-        DRIVE_BACK_TO_MID_WALL_AFTER_TEAMMATE_MINERAL,
-        TURN_TO_CRATER_AFTER_TEAMMATE_MINERAL,
-        DRIVE_TO_CRATER_AFTER_TEAMMATE_MINERAL,
         DONE
     }   //enum State
 
@@ -120,7 +114,7 @@ class CmdAuto6541Crater implements TrcRobot.RobotCommand
                     //
                     // The robot started hanging on the lander, lower it to the ground.
                     //
-                    robot.elevator.setPosition(Robot6541Info.ELEVATOR_MAX_HEIGHT, event, 0.0);
+                    robot.elevator.setPosition(RobotInfo6541.ELEVATOR_MAX_HEIGHT, event, 0.0);
                     sm.waitForSingleEvent(event, State.UNHOOK_ROBOT);
                     break;
 
@@ -130,6 +124,15 @@ class CmdAuto6541Crater implements TrcRobot.RobotCommand
                     //
                     robot.elevator.openHook();
                     timer.set(0.3, event);
+                    nextState = delay == 0 ? State.GO_TOWARDS_MINERAL : State.DO_DELAY;
+                    sm.waitForSingleEvent(event, nextState);
+                    break;
+
+                case DO_DELAY:
+                    //
+                    // Do delay if any.
+                    //
+                    timer.set(delay, event);
                     sm.waitForSingleEvent(event, State.GO_TOWARDS_MINERAL);
                     break;
 
@@ -214,8 +217,7 @@ class CmdAuto6541Crater implements TrcRobot.RobotCommand
                     targetY = 0.0;
                     robot.targetHeading -= 45.0;
                     robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
-                    nextState = !doTeamMarker? State.DRIVE_FROM_MID_WALL_TO_CRATER :
-                                delay != 0.0? State.DO_DELAY: State.DRIVE_FROM_MID_WALL_TO_DEPOT;
+                    nextState = !doTeamMarker? State.DRIVE_FROM_MID_WALL_TO_CRATER : State.DRIVE_FROM_MID_WALL_TO_DEPOT;
                     sm.waitForSingleEvent(event, nextState);
                     break;
 
@@ -224,17 +226,9 @@ class CmdAuto6541Crater implements TrcRobot.RobotCommand
                     // Go direct to crater and park there.
                     //
                     targetX = 0.0;
-                    targetY = 24.0;
+                    targetY = -24.0;
                     robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
                     sm.waitForSingleEvent(event, State.DONE);
-                    break;
-
-                case DO_DELAY:
-                    //
-                    // Wait for alliance partner to clear the path.
-                    //
-                    timer.set(delay, event);
-                    sm.waitForSingleEvent(event, State.DRIVE_FROM_MID_WALL_TO_DEPOT);
                     break;
 
                 case DRIVE_FROM_MID_WALL_TO_DEPOT:
@@ -242,7 +236,7 @@ class CmdAuto6541Crater implements TrcRobot.RobotCommand
                     // Drive to depot to drop off team marker.
                     //
                     targetX = 0.0;
-                    targetY = -30.0;
+                    targetY = 30.0;
                     robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
                     sm.waitForSingleEvent(event, State.DROP_TEAM_MARKER);
                     break;
@@ -253,8 +247,7 @@ class CmdAuto6541Crater implements TrcRobot.RobotCommand
                     //
                     robot.teamMarkerDeployer.open();
                     timer.set(0.3, event);
-                    nextState = !doTeammateMineral ? State.DRIVE_FROM_DEPOT_TO_CRATER: State.BACK_OFF_FROM_DEPOT;
-                    sm.waitForSingleEvent(event, nextState);
+                    sm.waitForSingleEvent(event, State.DRIVE_FROM_DEPOT_TO_CRATER);
                     break;
 
                 case DRIVE_FROM_DEPOT_TO_CRATER:
@@ -263,70 +256,6 @@ class CmdAuto6541Crater implements TrcRobot.RobotCommand
                     //
                     targetX = 0.0;
                     targetY = -72.0;
-                    robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
-                    sm.waitForSingleEvent(event, State.DONE);
-                    break;
-
-                case BACK_OFF_FROM_DEPOT:
-                    //
-                    // Back off from the depot a little so we don't trample on our team marker and better aligned
-                    // with our teammate's mineral.
-                    //
-                    targetX = 0.0;
-                    targetY = 10.0;
-                    robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
-                    sm.waitForSingleEvent(event, State.ROTATE_TO_TEAMMATE_MINERALS);
-                    break;
-
-                case ROTATE_TO_TEAMMATE_MINERALS:
-                    //
-                    // Align sweeper with teammates minerals.
-                    //
-                    targetX = 0.0;
-                    targetY = 0.0;
-                    robot.targetHeading += 135.0;
-                    cmdSweepMineral = new CmdSweepMineral(robot, -22.0);
-                    robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
-                    sm.waitForSingleEvent(event, State.SWEEP_TEAMMATE_MINERAL);
-                    break;
-
-                case SWEEP_TEAMMATE_MINERAL:
-                    //
-                    // Remain in this state until sweeping is done.
-                    //
-                    if (cmdSweepMineral.cmdPeriodic(elapsedTime))
-                    {
-                        sm.setState(State.DRIVE_BACK_TO_MID_WALL_AFTER_TEAMMATE_MINERAL);
-                    }
-                    break;
-
-                case DRIVE_BACK_TO_MID_WALL_AFTER_TEAMMATE_MINERAL:
-                    //
-                    // Go back to mid wall.
-                    //
-                    targetX = 0.0;
-                    targetY = -cmdSweepMineral.getDistanceYTravelled();
-                    robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
-                    sm.waitForSingleEvent(event, State.TURN_TO_CRATER_AFTER_TEAMMATE_MINERAL);
-                    break;
-
-                case TURN_TO_CRATER_AFTER_TEAMMATE_MINERAL:
-                    //
-                    // Align the robot parallel to wall.
-                    //
-                    targetX = 0.0;
-                    targetY = 0.0;
-                    robot.targetHeading += 45.0;
-                    robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
-                    sm.waitForSingleEvent(event, State.DRIVE_TO_CRATER_AFTER_TEAMMATE_MINERAL);
-                    break;
-
-                case DRIVE_TO_CRATER_AFTER_TEAMMATE_MINERAL:
-                    //
-                    // Go to crater and park there.
-                    //
-                    targetX = 0.0;
-                    targetY = -24.0;
                     robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
                     sm.waitForSingleEvent(event, State.DONE);
                     break;
@@ -376,4 +305,4 @@ class CmdAuto6541Crater implements TrcRobot.RobotCommand
         return !sm.isEnabled();
     }   //cmdPeriodic
 
-}   //class CmdAuto6541Crater
+}   //class CmdAutoDepot6541

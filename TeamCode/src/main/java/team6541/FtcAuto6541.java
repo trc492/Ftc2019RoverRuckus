@@ -64,12 +64,12 @@ public class FtcAuto6541 extends AutoCommon
         switch (strategy)
         {
             case CRATER_AUTO:
-                autoCommand = new CmdAuto6541Crater(robot, alliance, delay, startHung, doMineral, doTeamMarker,
+                autoCommand = new CmdAutoCrater6541(robot, alliance, delay, startHung, doMineral, doTeamMarker,
                         doTeammateMineral);
                 break;
 
             case DEPOT_AUTO:
-                autoCommand = new CmdAuto6541Depot(robot, alliance, delay, startHung, doMineral, doTeamMarker);
+                autoCommand = new CmdAutoDepot6541(robot, alliance, delay, startHung, doMineral, doTeamMarker);
                 break;
 
             case DISTANCE_DRIVE:

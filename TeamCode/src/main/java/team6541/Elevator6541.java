@@ -50,11 +50,11 @@ public class Elevator6541
 
         pidController = new TrcPidController("elevatorPidController",
                 new TrcPidController.PidCoefficients(
-                        Robot6541Info.ELEVATOR_KP, Robot6541Info.ELEVATOR_KI, Robot6541Info.ELEVATOR_KD),
-                Robot6541Info.ELEVATOR_TOLERANCE, this::getPosition);
+                        RobotInfo6541.ELEVATOR_KP, RobotInfo6541.ELEVATOR_KI, RobotInfo6541.ELEVATOR_KD),
+                RobotInfo6541.ELEVATOR_TOLERANCE, this::getPosition);
         pidElevator = new TrcPidActuator("pidElevator", elevatorMotor, lowerLimitSwitch, pidController,
-                Robot6541Info.ELEVATOR_CAL_POWER, Robot6541Info.ELEVATOR_MIN_HEIGHT, Robot6541Info.ELEVATOR_MAX_HEIGHT);
-        pidElevator.setPositionScale(Robot6541Info.ELEVATOR_INCHES_PER_COUNT, Robot6541Info.ELEVATOR_ZERO_OFFSET);
+                RobotInfo6541.ELEVATOR_CAL_POWER, RobotInfo6541.ELEVATOR_MIN_HEIGHT, RobotInfo6541.ELEVATOR_MAX_HEIGHT);
+        pidElevator.setPositionScale(RobotInfo6541.ELEVATOR_INCHES_PER_COUNT, RobotInfo6541.ELEVATOR_ZERO_OFFSET);
 
         hookServo = new FtcServo("hookServo");
     }
@@ -106,12 +106,12 @@ public class Elevator6541
 
     public void openHook()
     {
-        hookServo.setPosition(Robot6541Info.HANGING_HOOK_OPEN_POSITION);
+        hookServo.setPosition(RobotInfo6541.HANGING_HOOK_OPEN_POSITION);
     }
 
     public void closeHook()
     {
-        hookServo.setPosition(Robot6541Info.HANGING_HOOK_CLOSE_POSITION);
+        hookServo.setPosition(RobotInfo6541.HANGING_HOOK_CLOSE_POSITION);
     }
 
 }   //class Elevator6541

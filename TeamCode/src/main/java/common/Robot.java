@@ -46,8 +46,6 @@ import trclib.TrcSimpleDriveBase;
 public class Robot implements FtcMenu.MenuButtons
 {
     public static final boolean USE_SPEECH = true;
-    public static final boolean USE_VUFORIA = true;
-    public static final boolean USE_PIXY = true;
     public static final boolean USE_VELOCITY_CONTROL = false;
     //
     // Global objects.
@@ -110,21 +108,6 @@ public class Robot implements FtcMenu.MenuButtons
             speak("Init starting");
         }
         //
-        // Initialize vision subsystems.
-        //
-        if (USE_VUFORIA)
-        {
-            int cameraViewId = opMode.hardwareMap.appContext.getResources().getIdentifier(
-                    "cameraMonitorViewId", "id", opMode.hardwareMap.appContext.getPackageName());
-            vuforiaVision = new VuforiaVision(this, -1);//cameraViewId);
-        }
-
-        if (USE_PIXY)
-        {
-            pixyVision = new PixyVision("pixy", this,
-                    RobotInfo.PIXY_ORIENTATION, RobotInfo.PIXY_BRIGHTNESS);
-        }
-        //
         // Initialize sensors.
         //
         imu = new FtcBNO055Imu("imu");
@@ -144,7 +127,6 @@ public class Robot implements FtcMenu.MenuButtons
             speak(String.format("Robot angle is %.1f degrees", robotOrientation));
         }
 
-        tracer.traceInfo(funcName, "orientation=%.3f", robotOrientation);
         targetHeading = robotOrientation;
         headingOffset = robotOrientation - driveBase.getHeading();
     }   //alignHeading

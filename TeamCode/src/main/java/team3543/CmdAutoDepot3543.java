@@ -20,7 +20,7 @@
  * SOFTWARE.
  */
 
-package team6541;
+package team3543;
 
 import common.AutoCommon;
 import common.CmdSweepMineral;
@@ -29,15 +29,15 @@ import trclib.TrcRobot;
 import trclib.TrcStateMachine;
 import trclib.TrcTimer;
 
-class CmdAuto6541Depot implements TrcRobot.RobotCommand
+class CmdAutoDepot3543 implements TrcRobot.RobotCommand
 {
     private static final boolean debugXPid = true;
     private static final boolean debugYPid = true;
     private static final boolean debugTurnPid = true;
 
-    private static final String moduleName = "CmdAuto6541Depot";
+    private static final String moduleName = "CmdAutoDepot3543";
 
-    private Robot6541 robot;
+    private Robot3543 robot;
     private AutoCommon.Alliance alliance;
     private double delay;
     private boolean startHung;
@@ -49,9 +49,10 @@ class CmdAuto6541Depot implements TrcRobot.RobotCommand
     private TrcStateMachine<State> sm;
     private double targetX = 0.0;
     private double targetY = 0.0;
+    private double unhookedTurnAngle = 0.0;
     private CmdSweepMineral cmdSweepMineral = null;
 
-    CmdAuto6541Depot(Robot6541 robot, AutoCommon.Alliance alliance, double delay,
+    CmdAutoDepot3543(Robot3543 robot, AutoCommon.Alliance alliance, double delay,
                      boolean startHung, boolean doMineral, boolean doTeamMarker)
     {
         robot.tracer.traceInfo(moduleName,
@@ -69,7 +70,7 @@ class CmdAuto6541Depot implements TrcRobot.RobotCommand
         timer = new TrcTimer(moduleName);
         sm = new TrcStateMachine<>(moduleName);
         sm.start(startHung? State.LOWER_ROBOT: State.DO_DELAY);
-    }   //CmdAuto6541Depot
+    }   //CmdAutoDepot3543
 
     private enum State
     {
@@ -114,18 +115,21 @@ class CmdAuto6541Depot implements TrcRobot.RobotCommand
                     //
                     // The robot started hanging on the lander, lower it to the ground.
                     //
-                    robot.elevator.setPosition(Robot6541Info.ELEVATOR_MAX_HEIGHT, event, 0.0);
+                    robot.elevator.setPosition(RobotInfo3543.ELEVATOR_MAX_HEIGHT, event, 0.0);
                     sm.waitForSingleEvent(event, State.UNHOOK_ROBOT);
                     break;
 
                 case UNHOOK_ROBOT:
                     //
                     // The robot is still hooked, need to unhook first.
+                    // TODO: should we strafe instead???
                     //
-                    robot.elevator.openHook();
-                    timer.set(0.3, event);
-                    nextState = delay == 0 ? State.GO_TOWARDS_MINERAL : State.DO_DELAY;
-                    sm.waitForSingleEvent(event, nextState);
+                    unhookedTurnAngle = -10.0;
+                    targetX = 0.0;
+                    targetY = 0.0;
+                    robot.targetHeading += unhookedTurnAngle;
+                    robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
+                    sm.waitForSingleEvent(event, State.GO_TOWARDS_MINERAL);
                     break;
 
                 case DO_DELAY:
@@ -152,7 +156,7 @@ class CmdAuto6541Depot implements TrcRobot.RobotCommand
                     //
                     targetX = 0.0;
                     targetY = 0.0;
-                    robot.targetHeading += 90.0;
+                    robot.targetHeading += 90.0 - unhookedTurnAngle;
                     robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
                     sm.waitForSingleEvent(event, State.ALIGN_ROBOT_WITH_VUFORIA);
                     break;
@@ -305,4 +309,4 @@ class CmdAuto6541Depot implements TrcRobot.RobotCommand
         return !sm.isEnabled();
     }   //cmdPeriodic
 
-}   //class CmdAuto6541Depot
+}   //class CmdAutoDepot3543

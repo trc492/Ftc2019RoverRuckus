@@ -33,69 +33,40 @@ import trclib.TrcUtil;
 
 import static org.firstinspires.ftc.robotcore.external.navigation.AngleUnit.DEGREES;
 import static org.firstinspires.ftc.robotcore.external.navigation.AxesOrder.XYZ;
-import static org.firstinspires.ftc.robotcore.external.navigation.AxesOrder.YZX;
 import static org.firstinspires.ftc.robotcore.external.navigation.AxesReference.EXTRINSIC;
-import static org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer.CameraDirection.FRONT;
 
 public class VuforiaVision
 {
     private static final int IMAGE_WIDTH = 640;     //in pixels
     private static final int IMAGE_HEIGHT = 480;    //in pixels
     private static final int FRAME_QUEUE_CAPACITY = 2;
-    // Since ImageTarget trackables use mm to specifiy their dimensions, we must use mm for all the physical dimension.
-    // We will define some constants and conversions here
-    private static final float FTC_FIELD_WIDTH_MM  = (12*6) * (float)TrcUtil.MM_PER_INCH;// the width of the FTC field (from the center point to the outer panels)
-    private static final float TARGET_HEIGHT_MM = (6) * (float)TrcUtil.MM_PER_INCH;      // the height of the center of the target image above the floor
+    //
+    // Since ImageTarget trackables use mm to specify their dimensions, we must use mm for all the physical dimension.
+    // We will define some constants and conversions here.
+    //
+    // Width of the FTC field (from the center point to the outer panels)
+    private static final float FTC_FIELD_WIDTH_MM  = (12*6) * (float)TrcUtil.MM_PER_INCH;   //6 ft. in mm
+    // Height of the center of the target image above the floor.
+    private static final float TARGET_HEIGHT_MM = (6) * (float)TrcUtil.MM_PER_INCH;         //6 inches in mm
 
     private Robot robot;
     private FtcVuforia vuforia;
     private VuforiaTrackable[] imageTargets = null;
     private OpenGLMatrix lastRobotLocation = null;
 
-    public VuforiaVision(Robot robot, int cameraViewId)
+    public VuforiaVision(
+            Robot robot, int cameraViewId, VuforiaLocalizer.CameraDirection cameraDir, OpenGLMatrix phoneLocation)
     {
         final String VUFORIA_LICENSE_KEY =
                 "ATu19Kj/////AAAAGcw4SDCVwEBSiKcUtdmQd2aOugrxo/OgeBJUt7XwMSi3e0KSZaylbsTnWp8EBxyA5o/00JFJVDY1OxJ" +
                 "XLxQOpz1tbM4ex1sl1EbF25olEZ3w9xXZ1QaqMP+5T63VqTwvkgKbtM+dS+tLi8EHMvJ2viYf6WwOE776e0s3QNfl/XvONM" +
                 "XS4ZtEWLNeiSEMTCdO9bdeaxnSb2RfErcmjadAThDWf6PC9HrMRHLmgfcFaZlj5JN+figOjgKhyQZeYYrcDEm0lICN5kAr2" +
                 "pdfNKNOii3A80eXyTVDfPGfzTwVa4eNBY/SgmoIdBbMPb3hfZBOz7GVoVHHQWbCNbzm31p1OY+zqPPWMfzzpyiJ4mA9bLTQ";
-        final VuforiaLocalizer.CameraDirection CAMERA_DIR = VuforiaLocalizer.CameraDirection.BACK;
         final String TRACKABLE_IMAGES_FILE = "RoverRuckus";
 
         this.robot = robot;
-        vuforia = new FtcVuforia(VUFORIA_LICENSE_KEY, cameraViewId, CAMERA_DIR);
+        vuforia = new FtcVuforia(VUFORIA_LICENSE_KEY, cameraViewId, cameraDir);
         vuforia.configVideoSource(IMAGE_WIDTH, IMAGE_HEIGHT, FRAME_QUEUE_CAPACITY);
-
-        /*
-         * Create a transformation matrix describing where the phone is on the robot.
-         *
-         * The coordinate frame for the robot looks the same as the field.
-         * The robot's "forward" direction is facing out along X axis, with the LEFT side facing out along the Y axis.
-         * Z is UP on the robot.  This equates to a bearing angle of Zero degrees.
-         *
-         * The phone starts out lying flat, with the screen facing Up and with the physical top of the phone
-         * pointing to the LEFT side of the Robot.  It's very important when you test this code that the top of the
-         * camera is pointing to the left side of the  robot.  The rotation angles don't work if you flip the phone.
-         *
-         * If using the rear (High Res) camera:
-         * We need to rotate the camera around it's long axis to bring the rear camera forward.
-         * This requires a negative 90 degree rotation on the Y axis
-         *
-         * If using the Front (Low Res) camera
-         * We need to rotate the camera around it's long axis to bring the FRONT camera forward.
-         * This requires a Positive 90 degree rotation on the Y axis
-         *
-         * Next, translate the camera lens to where it is on the robot.
-         * In this example, it is centered (left to right), but 110 mm forward of the middle of the robot, and 200 mm above ground level.
-         */
-        final int CAMERA_FORWARD_DISPLACEMENT  = 110;   // eg: Camera is 110 mm in front of robot center
-        final int CAMERA_VERTICAL_DISPLACEMENT = 200;   // eg: Camera is 200 mm above ground
-        final int CAMERA_LEFT_DISPLACEMENT     = 0;     // eg: Camera is ON the robot's center line
-
-        OpenGLMatrix phoneLocationOnRobot = OpenGLMatrix
-                .translation(CAMERA_FORWARD_DISPLACEMENT, CAMERA_LEFT_DISPLACEMENT, CAMERA_VERTICAL_DISPLACEMENT)
-                .multiplied(Orientation.getRotationMatrix(EXTRINSIC, YZX, DEGREES,
-                        CAMERA_DIR == FRONT ? 90 : -90, 0, 0));
 
         /*
          * In order for localization to work, we need to tell the system where each target is on the field, and
@@ -167,7 +138,7 @@ public class VuforiaVision
                 new FtcVuforia.TargetInfo(3, "Back-Space", false, backSpaceLocationOnField)
         };
 
-        vuforia.addTargetList(TRACKABLE_IMAGES_FILE, imageTargetsInfo, phoneLocationOnRobot);
+        vuforia.addTargetList(TRACKABLE_IMAGES_FILE, imageTargetsInfo, phoneLocation);
         imageTargets = new VuforiaTrackable[imageTargetsInfo.length];
         for (int i = 0; i < imageTargets.length; i++)
         {

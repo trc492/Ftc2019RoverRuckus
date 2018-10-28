@@ -26,28 +26,33 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 
 import common.RobotInfo;
 
-class Robot6541Info extends RobotInfo
+class RobotInfo6541 extends RobotInfo
 {
     //
     // DriveBase subsystem.
     //
     static final DcMotor.RunMode DRIVE_MOTOR_MODE               = DcMotor.RunMode.RUN_WITHOUT_ENCODER;
     static final double TURN_POWER_LIMIT                        = 0.5;
-
-    static final double ENCODER_Y_KP                            = 0.02;
+    //
+    // 2018-10-27: Kp=0.035, Ki=0.0, Kd=0.0025, Scale=0.0172934
+    //
+    static final double ENCODER_Y_KP                            = 0.035;
     static final double ENCODER_Y_KI                            = 0.0;
-    static final double ENCODER_Y_KD                            = 0.0022;
+    static final double ENCODER_Y_KD                            = 0.0025;
     static final double ENCODER_Y_TOLERANCE                     = 1.0;
-    static final double ENCODER_Y_INCHES_PER_COUNT              = 68.0/4100.5;
-
-    static final double GYRO_KP                                 = 0.018;
+    static final double ENCODER_Y_INCHES_PER_COUNT              = 0.0172934;
+    //
+    // 2018-10-27: Kp=0.025, Ki=0.0, Kd=0.0
+    //
+    static final double GYRO_KP                                 = 0.025;
     static final double GYRO_KI                                 = 0.0;
-    static final double GYRO_KD                                 = 0.002;
+    static final double GYRO_KD                                 = 0.0;
     static final double GYRO_TOLERANCE                          = 1.0;
 
     static final double PIDDRIVE_STALL_TIMEOUT                  = 0.25;     //in msec.
     //
     // Elevator subsystem.
+    // 2018-10-27: Kp=3.0, Ki=0.0, Kd=0.0, Scale=5.625/8498
     //
     public static final double ELEVATOR_INCHES_PER_COUNT        = 5.625/8498;
     public static final double ELEVATOR_ZERO_OFFSET             = 15.8;
@@ -62,11 +67,11 @@ class Robot6541Info extends RobotInfo
     //
     // Other subsystems.
     //
-    public static final double DEPLOYER_OPEN_POSITION           = 0.8;
-    public static final double DEPLOYER_CLOSE_POSITION          = 0.2;
     public static final double MINERAL_SWEEPER_EXTEND_POSITION  = 0.8;
     public static final double MINERAL_SWEEPER_RETRACT_POSITION = 0.2;
+    public static final double DEPLOYER_OPEN_POSITION           = 0.8;
+    public static final double DEPLOYER_CLOSE_POSITION          = 0.2;
     public static final double HANGING_HOOK_OPEN_POSITION       = 0.8;
     public static final double HANGING_HOOK_CLOSE_POSITION      = 0.2;
 
-}   //class Robot6541Info
+}   //class RobotInfo6541

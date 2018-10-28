@@ -48,11 +48,11 @@ public class Elevator3543
 
         pidController = new TrcPidController("elevatorPidController",
                 new TrcPidController.PidCoefficients(
-                    Robot3543Info.ELEVATOR_KP, Robot3543Info.ELEVATOR_KI, Robot3543Info.ELEVATOR_KD),
-                Robot3543Info.ELEVATOR_TOLERANCE, this::getPosition);
+                        RobotInfo3543.ELEVATOR_KP, RobotInfo3543.ELEVATOR_KI, RobotInfo3543.ELEVATOR_KD),
+                RobotInfo3543.ELEVATOR_TOLERANCE, this::getPosition);
         pidElevator = new TrcPidActuator("pidElevator", elevatorMotor, lowerLimitSwitch, pidController,
-                Robot3543Info.ELEVATOR_CAL_POWER, Robot3543Info.ELEVATOR_MIN_HEIGHT, Robot3543Info.ELEVATOR_MAX_HEIGHT);
-        pidElevator.setPositionScale(Robot3543Info.ELEVATOR_INCHES_PER_COUNT, Robot3543Info.ELEVATOR_ZERO_OFFSET);
+                RobotInfo3543.ELEVATOR_CAL_POWER, RobotInfo3543.ELEVATOR_MIN_HEIGHT, RobotInfo3543.ELEVATOR_MAX_HEIGHT);
+        pidElevator.setPositionScale(RobotInfo3543.ELEVATOR_INCHES_PER_COUNT, RobotInfo3543.ELEVATOR_ZERO_OFFSET);
     }
 
     public void zeroCalibrate()
