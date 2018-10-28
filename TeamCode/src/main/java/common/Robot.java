@@ -124,7 +124,12 @@ public class Robot implements FtcMenu.MenuButtons
         if (robotLocation != null)
         {
             robotOrientation = vuforiaVision.getLocationOrientation(robotLocation).thirdAngle;
+            tracer.traceInfo(funcName, "Vuforia detected heading: %.1f", robotOrientation);
             speak(String.format("Robot angle is %.1f degrees", robotOrientation));
+        }
+        else
+        {
+            tracer.traceInfo(funcName, "Default heading: %.1f", robotOrientation);
         }
 
         targetHeading = robotOrientation;

@@ -165,7 +165,7 @@ class CmdAutoCrater3543 implements TrcRobot.RobotCommand
                     // Align the robot heading with robot orientation reported by Vuforia.
                     // In case Vuforia failed to see images, set the default orientation accordingly.
                     //
-                    robot.alignHeadingWithVuforia(alliance == AutoCommon.Alliance.RED_ALLIANCE? -45.0: 135.0);
+                    robot.alignHeadingWithVuforia(alliance == AutoCommon.Alliance.RED_ALLIANCE? 135.0: -45.0);
                     if (doMineral)
                     {
                         nextState = State.SWEEP_MINERAL;
