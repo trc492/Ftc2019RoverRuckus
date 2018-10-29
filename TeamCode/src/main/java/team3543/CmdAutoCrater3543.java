@@ -76,8 +76,10 @@ class CmdAutoCrater3543 implements TrcRobot.RobotCommand
     {
         LOWER_ROBOT,
         UNHOOK_ROBOT,
+        CALIBRATE_IMU,
         GO_TOWARDS_MINERAL,
         ALIGN_MINERAL_SWEEPER,
+        GO_TOWARDS_IMAGE,
         ALIGN_ROBOT_WITH_VUFORIA,
         SWEEP_MINERAL,
         DRIVE_TO_MID_WALL,
@@ -129,12 +131,22 @@ class CmdAutoCrater3543 implements TrcRobot.RobotCommand
                     //
                     // The robot is still hooked, need to unhook first.
                     //
-//                    unhookedTurnAngle = -10.0;
-                    targetX = -6.0;
-                    targetY = 0.0;
-//                    robot.targetHeading += unhookedTurnAngle;
-                    robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
-                    sm.waitForSingleEvent(event, State.GO_TOWARDS_MINERAL);
+                    robot.driveBase.holonomicDrive(-0.5, 0.0,0.0);
+                    timer.set(0.2, event);
+                    sm.waitForSingleEvent(event, State.CALIBRATE_IMU);
+//                    targetX = -6.0;
+//                    targetY = 0.0;
+//                    robot.encoderXPidCtrl.setNoOscillation(true);
+//                    robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
+//                    sm.waitForSingleEvent(event, State.GO_TOWARDS_MINERAL);
+                    break;
+
+                case CALIBRATE_IMU:
+                    robot.driveBase.stop();
+                    robot.imu.initialize(); //this is a blocking call and won't come back until it's done.
+                    sm.setState(State.GO_TOWARDS_MINERAL);
+//                    timer.set(0.1, event);
+//                    sm.waitForSingleEvent(event, State.GO_TOWARDS_MINERAL);
                     break;
 
                 case GO_TOWARDS_MINERAL:
@@ -142,7 +154,9 @@ class CmdAutoCrater3543 implements TrcRobot.RobotCommand
                     // Move closer to the mineral so the sweeper can reach them.
                     //
                     targetX = 0.0;
-                    targetY = 12.0;
+                    targetY = 14.0;
+//                    robot.encoderXPidCtrl.setNoOscillation(false);
+//                    robot.encoderYPidCtrl.setNoOscillation(true);
                     robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
                     robot.tracer.traceInfo("DEBUG", "heading=%f", robot.driveBase.getHeading());
                     sm.waitForSingleEvent(event, State.ALIGN_MINERAL_SWEEPER);
@@ -155,7 +169,14 @@ class CmdAutoCrater3543 implements TrcRobot.RobotCommand
                     robot.elevator.setPosition(RobotInfo3543.ELEVATOR_MIN_HEIGHT);
                     targetX = 0.0;
                     targetY = 0.0;
-                    robot.targetHeading += 90.0 - unhookedTurnAngle;
+                    robot.targetHeading += 60.0;
+                    robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
+                    sm.waitForSingleEvent(event, State.DONE);//GO_TOWARDS_IMAGE);
+                    break;
+
+                case GO_TOWARDS_IMAGE:
+                    targetX = 0.0;
+                    targetY = 12.0;
                     robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
                     sm.waitForSingleEvent(event, State.ALIGN_ROBOT_WITH_VUFORIA);
                     break;
@@ -169,7 +190,7 @@ class CmdAutoCrater3543 implements TrcRobot.RobotCommand
                     if (doMineral)
                     {
                         nextState = State.SWEEP_MINERAL;
-                        cmdSweepMineral = new CmdSweepMineral(robot, 0.0);  //TODO: may need to adjust startingY
+                        cmdSweepMineral = new CmdSweepMineral(robot, 12.0);  //TODO: may need to adjust startingY (orig. 0.0, 12.0 new, need measuring)
                     }
                     else
                     {
@@ -342,6 +363,7 @@ class CmdAutoCrater3543 implements TrcRobot.RobotCommand
                     //
                     // We are done.
                     //
+                    robot.driveBase.stop();
                     sm.stop();
                     break;
             }

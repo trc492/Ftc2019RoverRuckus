@@ -54,8 +54,8 @@ class RobotInfo3543 extends RobotInfo
     //
     static final double GYRO_KP                                 = 0.025;
     static final double GYRO_KI                                 = 0.0;
-    static final double GYRO_KD                                 = 0.0;
-    static final double GYRO_TOLERANCE                          = 1.0;
+    static final double GYRO_KD                                 = 0.002;
+    static final double GYRO_TOLERANCE                          = 2.0;
 
     static final double PIDDRIVE_STALL_TIMEOUT                  = 0.25;     //in msec.
     //

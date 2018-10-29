@@ -94,9 +94,9 @@ public class Robot3543 extends Robot
              */
             final double ROBOT_LENGTH = 17.5;           //Robot length in inches
             final double ROBOT_WIDTH = 17.5;            //Robot width in inches
-            final double PHONE_FRONT_OFFSET = 1.25;     //Phone offset from front of robot in inches
+            final double PHONE_FRONT_OFFSET = 0.75;     //Phone offset from front of robot in inches
             final double PHONE_HEIGHT_OFFSET = 6.25;    //Phone offset from the floor in inches
-            final double PHONE_LEFT_OFFSET = 4.75;      //Phone offset from the left side of the robot in inches
+            final double PHONE_LEFT_OFFSET = 8.75;      //Phone offset from the left side of the robot in inches
             final int CAMERA_FORWARD_DISPLACEMENT = (int)((ROBOT_LENGTH/2.0 - PHONE_FRONT_OFFSET)*TrcUtil.MM_PER_INCH);
             final int CAMERA_VERTICAL_DISPLACEMENT = (int)(PHONE_HEIGHT_OFFSET*TrcUtil.MM_PER_INCH);
             final int CAMERA_LEFT_DISPLACEMENT = (int)((ROBOT_WIDTH/2.0 - PHONE_LEFT_OFFSET)*TrcUtil.MM_PER_INCH);
@@ -106,7 +106,7 @@ public class Robot3543 extends Robot
                     .multiplied(Orientation.getRotationMatrix(EXTRINSIC, YZX, DEGREES,
                             CAMERA_DIR == BACK? -90: 90, 0, 0));
 
-            vuforiaVision = new VuforiaVision(this, cameraViewId, CAMERA_DIR, phoneLocationOnRobot);
+            vuforiaVision = new VuforiaVision(this, /*cameraViewId*/-1, CAMERA_DIR, phoneLocationOnRobot);
         }
 
         if (USE_PIXY)

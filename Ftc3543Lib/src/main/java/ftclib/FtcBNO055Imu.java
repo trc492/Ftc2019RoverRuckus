@@ -113,7 +113,7 @@ public class FtcBNO055Imu
          * @return raw data of the specified type for the x-axis.
          */
         @Override
-        public SensorData<Double> getRawXData(DataType dataType)
+        public synchronized SensorData<Double> getRawXData(DataType dataType)
         {
             final String funcName = "getRawXData";
             double value = 0.0;
@@ -172,7 +172,7 @@ public class FtcBNO055Imu
          * @return raw data of the specified type for the y-axis.
          */
         @Override
-        public SensorData<Double> getRawYData(DataType dataType)
+        public synchronized SensorData<Double> getRawYData(DataType dataType)
         {
             final String funcName = "getRawYData";
             double value = 0.0;
@@ -231,7 +231,7 @@ public class FtcBNO055Imu
          * @return raw data of the specified type for the z-axis.
          */
         @Override
-        public SensorData<Double> getRawZData(DataType dataType)
+        public synchronized SensorData<Double> getRawZData(DataType dataType)
         {
             final String funcName = "getRawZData";
             double value = 0.0;
@@ -326,7 +326,7 @@ public class FtcBNO055Imu
          * @return raw data of the specified type for the x-axis.
          */
         @Override
-        public SensorData<Double> getRawXData(DataType dataType)
+        public synchronized SensorData<Double> getRawXData(DataType dataType)
         {
             final String funcName = "getRawXData";
             double value = 0.0;
@@ -378,7 +378,7 @@ public class FtcBNO055Imu
          * @return raw data of the specified type for the y-axis.
          */
         @Override
-        public SensorData<Double> getRawYData(DataType dataType)
+        public synchronized SensorData<Double> getRawYData(DataType dataType)
         {
             final String funcName = "getRawYData";
             double value = 0.0;
@@ -430,7 +430,7 @@ public class FtcBNO055Imu
          * @return raw data of the specified type for the z-axis.
          */
         @Override
-        public SensorData<Double> getRawZData(DataType dataType)
+        public synchronized SensorData<Double> getRawZData(DataType dataType)
         {
             final String funcName = "getRawZData";
             double value = 0.0;
@@ -496,24 +496,8 @@ public class FtcBNO055Imu
         //
         // Initialize the BNO055 IMU.
         //
-        BNO055IMU.Parameters imuParams = new BNO055IMU.Parameters();
-        if (USE_QUATERNION)
-        {
-            imuParams.mode = BNO055IMU.SensorMode.IMU;
-            imuParams.useExternalCrystal = true;
-            imuParams.pitchMode = BNO055IMU.PitchMode.WINDOWS;
-        }
-        else
-        {
-            imuParams.calibrationDataFile = "BNO055IMUCalibration.json";
-        }
-        imuParams.angleUnit = BNO055IMU.AngleUnit.DEGREES;
-        imuParams.accelUnit = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
-        imuParams.loggingEnabled = true;
-        imuParams.loggingTag = "IMU";
-        imuParams.accelerationIntegrationAlgorithm = new JustLoggingAccelerationIntegrator();
         imu = hardwareMap.get(BNO055IMU.class, instanceName);
-        imu.initialize(imuParams);
+        initialize();
         //
         // Create the gyro object of the IMU.
         // Note that the heading data on the z-axis is in Ordinal system with a range of -180 to 180 degrees.
@@ -544,5 +528,28 @@ public class FtcBNO055Imu
     {
         this(FtcOpMode.getInstance().hardwareMap, instanceName);
     }   //FtcBNO055Imu
+
+    public void initialize()
+    {
+        BNO055IMU.Parameters imuParams = new BNO055IMU.Parameters();
+
+        if (USE_QUATERNION)
+        {
+            imuParams.mode = BNO055IMU.SensorMode.IMU;
+            imuParams.useExternalCrystal = true;
+            imuParams.pitchMode = BNO055IMU.PitchMode.WINDOWS;
+        }
+        else
+        {
+            imuParams.calibrationDataFile = "BNO055IMUCalibration.json";
+        }
+        imuParams.angleUnit = BNO055IMU.AngleUnit.DEGREES;
+        imuParams.accelUnit = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
+        imuParams.loggingEnabled = true;
+        imuParams.loggingTag = "IMU";
+        imuParams.accelerationIntegrationAlgorithm = new JustLoggingAccelerationIntegrator();
+
+        imu.initialize(imuParams);
+    }   //initialize
 
 }   //class FtcBNO055Imu
