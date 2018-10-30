@@ -63,20 +63,20 @@ class RobotInfo3543 extends RobotInfo
     // 2018-10-27: Kp=3.0, Ki=0.0, Kd=0.0, Scale=5.625/8498
     //
     public static final double ELEVATOR_INCHES_PER_COUNT        = 5.625/8498;
-    public static final double ELEVATOR_ZERO_OFFSET             = 15.8;
+    public static final double ELEVATOR_ZERO_OFFSET             = 17.0;
     public static final double ELEVATOR_KP                      = 3.0;
     public static final double ELEVATOR_KI                      = 0.0;
     public static final double ELEVATOR_KD                      = 0.0;
     public static final double ELEVATOR_TOLERANCE               = 0.2;
     public static final double ELEVATOR_MIN_HEIGHT              = ELEVATOR_ZERO_OFFSET - 0.1;
-    public static final double ELEVATOR_MAX_HEIGHT              = 24.0;
-    public static final double ELEVATOR_HANGING_HEIGHT          = ELEVATOR_MAX_HEIGHT - 1.0;
+    public static final double ELEVATOR_MAX_HEIGHT              = 23.0;
+    public static final double ELEVATOR_HANGING_HEIGHT          = ELEVATOR_MAX_HEIGHT - 0.5;
     public static final double ELEVATOR_CAL_POWER               = 0.3;
     //
     // Other subsystems.
     //
-    public static final double MINERAL_SWEEPER_EXTEND_POSITION  = 0.8;
-    public static final double MINERAL_SWEEPER_RETRACT_POSITION = 0.2;
+    public static final double MINERAL_SWEEPER_EXTEND_POSITION  = 0.0;
+    public static final double MINERAL_SWEEPER_RETRACT_POSITION = 0.5;
     public static final double DEPLOYER_OPEN_POSITION           = 0.8;
     public static final double DEPLOYER_CLOSE_POSITION          = 0.2;
 

@@ -46,13 +46,13 @@ public class CmdSweepMineral implements TrcRobot.RobotCommand
     private static final String moduleName = "CmdSweepMineral";
 
     private Robot robot;
-    private double startingY;
     private TrcEvent event;
     private TrcTimer timer;
     private TrcStateMachine<State> sm;
     private double targetX = 0.0;
     private double targetY = 0.0;
     private int retries = 0;
+    private int mineralsExamined = 0;
     private double distanceYTravelled = 0.0;
 
     /**
@@ -64,7 +64,7 @@ public class CmdSweepMineral implements TrcRobot.RobotCommand
     public CmdSweepMineral(Robot robot, double startingY)
     {
         this.robot = robot;
-        this.startingY = startingY;
+        this.distanceYTravelled = startingY;
         event = new TrcEvent(moduleName);
         timer = new TrcTimer(moduleName);
         sm = new TrcStateMachine<>(moduleName);
@@ -88,17 +88,25 @@ public class CmdSweepMineral implements TrcRobot.RobotCommand
             switch (state)
             {
                 case START:
+                    mineralsExamined = 0;
+                    retries = 0;
+                    sm.setState(State.SCAN_MINERALS);
                     //
-                    // Get to the Y position of the very first mineral which is about 25 inches back from the
-                    // middle mineral. So we need to calculate the distance to go from the starting Y position.
-                    // If for some reason pixy camera is not enabled, just sweep the first mineral hoping it's
-                    // the right one. There is nothing to lose.
+                    // Intentionally falling through.
                     //
-                    setTarget(0.0, -25.0 - startingY);
-                    robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
-                    nextState = robot.pixyVision != null? State.SCAN_MINERALS: State.EXTEND_MINERAL_SWEEPER;
-                    sm.waitForSingleEvent(event, nextState);
-                    break;
+
+//                case START:
+//                    //
+//                    // Get to the Y position of the very first mineral which is about 25 inches back from the
+//                    // middle mineral. So we need to calculate the distance to go from the starting Y position.
+//                    // If for some reason pixy camera is not enabled, just sweep the first mineral hoping it's
+//                    // the right one. There is nothing to lose.
+//                    //
+//                    setTarget(0.0, -25.0 - startingY);
+//                    robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
+//                    nextState = robot.pixyVision != null? State.SCAN_MINERALS: State.EXTEND_MINERAL_SWEEPER;
+//                    sm.waitForSingleEvent(event, nextState);
+//                    break;
 
                 case SCAN_MINERALS:
                     PixyVision.TargetInfo targetInfo =
@@ -106,40 +114,107 @@ public class CmdSweepMineral implements TrcRobot.RobotCommand
                     if (targetInfo != null)
                     {
                         //
-                        // Get the sweeper right behind the gold mineral. The pixy camera is 4 inches behind the arm.
-                        // We will give another 4 inches margin so a total of 8 inches.
+                        // Found gold mineral.
                         //
-                        setTarget(0.0, targetInfo.xDistance - 8.0);
-                        nextState = State.EXTEND_MINERAL_SWEEPER;
+                        robot.tracer.traceInfo(moduleName, "%s[%d,%d]: found gold mineral (x/y/angle/rect) %s.",
+                                state, mineralsExamined, retries,
+                                targetInfo.xDistance, targetInfo.yDistance, targetInfo.angle, targetInfo.rect);
+                        sm.setState(State.EXTEND_MINERAL_SWEEPER);
+                        //
+                        // Intentionally falling through.
+                        //
                     }
                     else
                     {
                         //
-                        // This is the distance between two minerals.
+                        // Don't see gold mineral.
                         //
-                        setTarget(0.0, 14.5);
                         retries++;
-                        if (retries == 3)
+                        if (retries < 3)
                         {
                             //
-                            // This is the third mineral and the pixy still failed to detect it, sweep it anyway
-                            // in hope that's the right one. There's nothing to lose.
+                            // Gold not found, remain in this state and try again.
                             //
-                            nextState = State.EXTEND_MINERAL_SWEEPER;
+                            robot.tracer.traceInfo(moduleName, "%s[%d,%d]: gold mineral not found, try again.",
+                                    state, mineralsExamined, retries);
+                            break;
                         }
                         else
                         {
-                            nextState = State.SCAN_MINERALS;
+                            //
+                            // We tried 3 times and still don't see gold mineral, move on to the next position.
+                            //
+                            mineralsExamined++;
+                            if (mineralsExamined >= 3)
+                            {
+                                //
+                                // This is the last mineral and we still don't see gold, just sweep it and hope it's
+                                // the right one. There is nothing to lose.
+                                //
+                                robot.tracer.traceInfo(moduleName,
+                                        "%s[%d,%d]: last mineral still not gold, sweep it and hope for the best.",
+                                        state, mineralsExamined, retries);
+                                sm.setState(State.EXTEND_MINERAL_SWEEPER);
+                                //
+                                // Intentionally falling through.
+                                //
+                            }
+                            else
+                            {
+                                robot.tracer.traceInfo(moduleName,
+                                        "%s[%d,%d]: move on to the next mineral.",
+                                        state, mineralsExamined, retries);
+                                setTarget(0.0, -14.5);
+                                robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
+                                sm.waitForSingleEvent(event, State.SCAN_MINERALS);
+                                break;
+                            }
                         }
                     }
-                    robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
-                    sm.waitForSingleEvent(event, nextState);
-                    break;
+                    //
+                    // Intentional falling through.
+                    //
+//                    if (targetInfo != null)
+//                    {
+//                        //
+//                        // Get the sweeper right behind the gold mineral. The pixy camera is 4 inches behind the arm.
+//                        // We will give another 4 inches margin so a total of 8 inches.
+//                        //
+//                        setTarget(0.0, targetInfo.xDistance - 8.0);
+//                        nextState = State.EXTEND_MINERAL_SWEEPER;
+//                    }
+//                    else
+//                    {
+//                        //
+//                        // This is the distance between two minerals.
+//                        //
+//                        setTarget(0.0, 14.5);
+//                        retries++;
+//                        if (retries == 3)
+//                        {
+//                            //
+//                            // This is the third mineral and the pixy still failed to detect it, sweep it anyway
+//                            // in hope that's the right one. There's nothing to lose.
+//                            //
+//                            nextState = State.EXTEND_MINERAL_SWEEPER;
+//                        }
+//                        else
+//                        {
+//                            nextState = State.SCAN_MINERALS;
+//                        }
+//                    }
+//                    robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
+//                    sm.waitForSingleEvent(event, nextState);
+//                    break;
 
                 case EXTEND_MINERAL_SWEEPER:
                     //
                     // Deploy the sweeper.
                     //
+                    if (robot.pixyVision != null)
+                    {
+                        robot.pixyVision.setCameraEnabled(false);
+                    }
                     robot.mineralSweeper.extend();
                     timer.set(0.3, event);
                     sm.waitForSingleEvent(event, State.DISPLACE_MINERAL);
@@ -150,8 +225,7 @@ public class CmdSweepMineral implements TrcRobot.RobotCommand
                     // We are supposed to be 4 inches behind the mineral. So go forward 8 inches will displace
                     // it about 4 inches.
                     //
-                    targetX = 0.0;
-                    targetY = 8.0;
+                    setTarget(0.0, -8.0);
                     robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
                     sm.waitForSingleEvent(event, State.RETRACT_MINERAL_SWEEPER);
                     break;

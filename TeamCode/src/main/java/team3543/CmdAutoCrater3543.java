@@ -49,8 +49,8 @@ class CmdAutoCrater3543 implements TrcRobot.RobotCommand
     private TrcStateMachine<State> sm;
     private double targetX = 0.0;
     private double targetY = 0.0;
-    private double unhookedTurnAngle = 0.0;
     private CmdSweepMineral cmdSweepMineral = null;
+    private double startingY = 0.0;
 
     CmdAutoCrater3543(Robot3543 robot, AutoCommon.Alliance alliance, double delay,
                       boolean startHung, boolean doMineral, boolean doTeamMarker, boolean doTeammateMineral)
@@ -78,8 +78,7 @@ class CmdAutoCrater3543 implements TrcRobot.RobotCommand
         UNHOOK_ROBOT,
         CALIBRATE_IMU,
         GO_TOWARDS_MINERAL,
-        ALIGN_MINERAL_SWEEPER,
-        GO_TOWARDS_IMAGE,
+        TURN_TOWARDS_IMAGE,
         ALIGN_ROBOT_WITH_VUFORIA,
         SWEEP_MINERAL,
         DRIVE_TO_MID_WALL,
@@ -131,52 +130,47 @@ class CmdAutoCrater3543 implements TrcRobot.RobotCommand
                     //
                     // The robot is still hooked, need to unhook first.
                     //
-                    robot.driveBase.holonomicDrive(-0.5, 0.0,0.0);
-                    timer.set(0.2, event);
+                    robot.driveBase.holonomicDrive(0.5, 0.0,0.0);
+                    timer.set(0.3, event);
                     sm.waitForSingleEvent(event, State.CALIBRATE_IMU);
-//                    targetX = -6.0;
-//                    targetY = 0.0;
-//                    robot.encoderXPidCtrl.setNoOscillation(true);
-//                    robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
-//                    sm.waitForSingleEvent(event, State.GO_TOWARDS_MINERAL);
                     break;
 
                 case CALIBRATE_IMU:
+                    robot.tracer.traceInfo(moduleName, "heading=%f", robot.driveBase.getHeading());
                     robot.driveBase.stop();
-                    robot.imu.initialize(); //this is a blocking call and won't come back until it's done.
+                    //
+                    // We are on solid ground, reinitialize IMU.
+                    // This is a blocking call and won't come back until it's done so we can fall straight through
+                    // the next state.
+                    //
+                    robot.imu.initialize();
+                    robot.targetHeading = robot.driveBase.getHeading();
                     sm.setState(State.GO_TOWARDS_MINERAL);
-//                    timer.set(0.1, event);
-//                    sm.waitForSingleEvent(event, State.GO_TOWARDS_MINERAL);
-                    break;
-
+                    //
+                    // Intentionally falling through.
+                    //
                 case GO_TOWARDS_MINERAL:
                     //
                     // Move closer to the mineral so the sweeper can reach them.
                     //
                     targetX = 0.0;
-                    targetY = 14.0;
-//                    robot.encoderXPidCtrl.setNoOscillation(false);
-//                    robot.encoderYPidCtrl.setNoOscillation(true);
+                    targetY = 22.0;
                     robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
-                    robot.tracer.traceInfo("DEBUG", "heading=%f", robot.driveBase.getHeading());
-                    sm.waitForSingleEvent(event, State.ALIGN_MINERAL_SWEEPER);
+                    sm.waitForSingleEvent(event, State.TURN_TOWARDS_IMAGE);
                     break;
 
-                case ALIGN_MINERAL_SWEEPER:
+                case TURN_TOWARDS_IMAGE:
                     //
                     // Turn robot sideway so the sweeper is facing mineral.
                     //
+                    if (robot.vuforiaVision != null)
+                    {
+                        robot.vuforiaVision.setEnabled(true);
+                    }
                     robot.elevator.setPosition(RobotInfo3543.ELEVATOR_MIN_HEIGHT);
                     targetX = 0.0;
                     targetY = 0.0;
-                    robot.targetHeading += 60.0;
-                    robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
-                    sm.waitForSingleEvent(event, State.DONE);//GO_TOWARDS_IMAGE);
-                    break;
-
-                case GO_TOWARDS_IMAGE:
-                    targetX = 0.0;
-                    targetY = 12.0;
+                    robot.targetHeading += 90.0;
                     robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
                     sm.waitForSingleEvent(event, State.ALIGN_ROBOT_WITH_VUFORIA);
                     break;
@@ -189,18 +183,28 @@ class CmdAutoCrater3543 implements TrcRobot.RobotCommand
                     robot.alignHeadingWithVuforia(alliance == AutoCommon.Alliance.RED_ALLIANCE? 135.0: -45.0);
                     if (doMineral)
                     {
-                        nextState = State.SWEEP_MINERAL;
-                        cmdSweepMineral = new CmdSweepMineral(robot, 12.0);  //TODO: may need to adjust startingY (orig. 0.0, 12.0 new, need measuring)
+                        startingY = 18.0;
+                        cmdSweepMineral = new CmdSweepMineral(robot, startingY);
+                        //
+                        // Vision generally will impact performance, so we only enable it if it's needed.
+                        //
+                        if (robot.pixyVision != null)
+                        {
+                            robot.pixyVision.setCameraEnabled(true);
+                        }
+                        targetX = 0.0;
+                        targetY = startingY;
+                        robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
+                        sm.waitForSingleEvent(event, State.SWEEP_MINERAL);
                     }
                     else
                     {
-                        nextState = State.DRIVE_TO_MID_WALL;
+                        startingY = 0.0;
                         cmdSweepMineral = null;
+                        sm.setState(State.DRIVE_TO_MID_WALL);
                     }
-                    sm.setState(State.DONE);//nextState);
-                    //
-                    // Intentionally fall through to the next state to save one cycle time.
-                    //
+                    break;
+
                 case SWEEP_MINERAL:
                     //
                     // Remain in this state until sweeping is done.
@@ -226,6 +230,16 @@ class CmdAutoCrater3543 implements TrcRobot.RobotCommand
                         //
                         // Adjust the distance by how far we went for sweeping mineral.
                         //
+                        if (robot.pixyVision != null)
+                        {
+                            robot.pixyVision.setCameraEnabled(false);
+                        }
+
+                        if (robot.vuforiaVision != null)
+                        {
+                            robot.vuforiaVision.setEnabled(false);
+                        }
+
                         targetY -= cmdSweepMineral.getDistanceYTravelled();
                         cmdSweepMineral = null;
                     }

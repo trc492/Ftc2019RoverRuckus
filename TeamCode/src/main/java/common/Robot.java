@@ -158,17 +158,17 @@ public class Robot implements FtcMenu.MenuButtons
         gyro.setEnabled(true);
         targetHeading = 0.0;
 
-        if (vuforiaVision != null)
-        {
-            vuforiaVision.setEnabled(true);
-        }
-        //
-        // Vision generally will impact performance, so we only enable it if it's needed such as in autonomous.
-        //
-        if (pixyVision != null && runMode == TrcRobot.RunMode.AUTO_MODE)
-        {
-            pixyVision.setCameraEnabled(true);
-        }
+//        if (vuforiaVision != null)
+//        {
+//            vuforiaVision.setEnabled(true);
+//        }
+//        //
+//        // Vision generally will impact performance, so we only enable it if it's needed such as in autonomous.
+//        //
+//        if (pixyVision != null && runMode == TrcRobot.RunMode.AUTO_MODE)
+//        {
+//            pixyVision.setCameraEnabled(true);
+//        }
         //
         // Reset all X, Y and heading values.
         //
@@ -188,15 +188,15 @@ public class Robot implements FtcMenu.MenuButtons
             textToSpeech.shutdown();
         }
 
-        if (vuforiaVision != null)
-        {
-            vuforiaVision.setEnabled(false);
-        }
-
-        if (pixyVision != null)
-        {
-            pixyVision.setCameraEnabled(false);
-        }
+//        if (vuforiaVision != null)
+//        {
+//            vuforiaVision.setEnabled(false);
+//        }
+//
+//        if (pixyVision != null)
+//        {
+//            pixyVision.setCameraEnabled(false);
+//        }
     }   //stopMode
 
     public void traceStateInfo(double elapsedTime, String stateName, double xDistance, double yDistance, double heading)

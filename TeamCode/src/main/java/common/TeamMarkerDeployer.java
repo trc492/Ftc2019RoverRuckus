@@ -35,6 +35,7 @@ public class TeamMarkerDeployer
         this.openPos = openPos;
         this.closePos = closePos;
         teamMarkerDeployer = new FtcServo("deployerServo");
+        teamMarkerDeployer.setPosition(closePos);
     }
 
     public void setPosition(double pos)
