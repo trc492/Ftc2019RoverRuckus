@@ -90,27 +90,15 @@ public class CmdSweepMineral implements TrcRobot.RobotCommand
                 case START:
                     mineralsExamined = 0;
                     retries = 0;
-                    sm.setState(State.SCAN_MINERALS);
+                    nextState = robot.vuforiaVision == null? State.EXTEND_MINERAL_SWEEPER: State.SCAN_MINERALS;
+                    sm.setState(nextState);
                     //
                     // Intentionally falling through.
                     //
-
-//                case START:
-//                    //
-//                    // Get to the Y position of the very first mineral which is about 25 inches back from the
-//                    // middle mineral. So we need to calculate the distance to go from the starting Y position.
-//                    // If for some reason pixy camera is not enabled, just sweep the first mineral hoping it's
-//                    // the right one. There is nothing to lose.
-//                    //
-//                    setTarget(0.0, -25.0 - startingY);
-//                    robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
-//                    nextState = robot.pixyVision != null? State.SCAN_MINERALS: State.EXTEND_MINERAL_SWEEPER;
-//                    sm.waitForSingleEvent(event, nextState);
-//                    break;
-
                 case SCAN_MINERALS:
                     PixyVision.TargetInfo targetInfo =
-                            robot.pixyVision.getTargetInfo(RobotInfo.PIXY_GOLD_MINERAL_SIGNATURE);
+                            robot.pixyVision == null? null:
+                                    robot.pixyVision.getTargetInfo(RobotInfo.PIXY_GOLD_MINERAL_SIGNATURE);
                     if (targetInfo != null)
                     {
                         //
@@ -174,39 +162,6 @@ public class CmdSweepMineral implements TrcRobot.RobotCommand
                     //
                     // Intentional falling through.
                     //
-//                    if (targetInfo != null)
-//                    {
-//                        //
-//                        // Get the sweeper right behind the gold mineral. The pixy camera is 4 inches behind the arm.
-//                        // We will give another 4 inches margin so a total of 8 inches.
-//                        //
-//                        setTarget(0.0, targetInfo.xDistance - 8.0);
-//                        nextState = State.EXTEND_MINERAL_SWEEPER;
-//                    }
-//                    else
-//                    {
-//                        //
-//                        // This is the distance between two minerals.
-//                        //
-//                        setTarget(0.0, 14.5);
-//                        retries++;
-//                        if (retries == 3)
-//                        {
-//                            //
-//                            // This is the third mineral and the pixy still failed to detect it, sweep it anyway
-//                            // in hope that's the right one. There's nothing to lose.
-//                            //
-//                            nextState = State.EXTEND_MINERAL_SWEEPER;
-//                        }
-//                        else
-//                        {
-//                            nextState = State.SCAN_MINERALS;
-//                        }
-//                    }
-//                    robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
-//                    sm.waitForSingleEvent(event, nextState);
-//                    break;
-
                 case EXTEND_MINERAL_SWEEPER:
                     //
                     // Deploy the sweeper.
@@ -225,7 +180,7 @@ public class CmdSweepMineral implements TrcRobot.RobotCommand
                     // We are supposed to be 4 inches behind the mineral. So go forward 8 inches will displace
                     // it about 4 inches.
                     //
-                    setTarget(0.0, -8.0);
+                    setTarget(0.0, -12.0);
                     robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
                     sm.waitForSingleEvent(event, State.RETRACT_MINERAL_SWEEPER);
                     break;
@@ -235,12 +190,13 @@ public class CmdSweepMineral implements TrcRobot.RobotCommand
                     // Done with sweeping, retract sweeper.
                     //
                     robot.mineralSweeper.retract();
-                    timer.set(0.3, event);
+                    timer.set(0.1, event);
                     sm.waitForSingleEvent(event, State.DONE);
                     break;
 
                 default:
                 case DONE:
+                    sm.stop();
                     break;
             }
             robot.traceStateInfo(elapsedTime, state.toString(), targetX, targetY, robot.targetHeading);

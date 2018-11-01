@@ -46,8 +46,8 @@ import static org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocaliz
 
 public class Robot6541 extends Robot
 {
-    public static final boolean USE_VUFORIA = true;
-    public static final boolean USE_PIXY = true;
+    public static final boolean USE_VUFORIA = false;
+    public static final boolean USE_PIXY = false;
 
     static final String ROBOT_NAME = "Robot6541";
     //

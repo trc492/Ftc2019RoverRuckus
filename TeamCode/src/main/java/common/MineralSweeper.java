@@ -35,6 +35,7 @@ public class MineralSweeper
         this.extendPos = extendPos;
         this.retractPos = retractPos;
         sweeperServo = new FtcServo("sweeperServo");
+        sweeperServo.setPosition(retractPos);
     }
 
     public void setPosition(double pos)

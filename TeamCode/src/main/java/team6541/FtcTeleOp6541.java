@@ -118,14 +118,14 @@ public class FtcTeleOp6541 extends TeleOpCommon implements TrcGameController.But
                 case FtcGamepad.GAMEPAD_X:
                     if (pressed)
                     {
-                        robot.elevator.openHook();
+                        robot.teamMarkerDeployer.close();
                     }
                     break;
 
                 case FtcGamepad.GAMEPAD_Y:
                     if (pressed)
                     {
-                        robot.elevator.closeHook();
+                        robot.teamMarkerDeployer.open();
                     }
                     break;
 
@@ -153,14 +153,14 @@ public class FtcTeleOp6541 extends TeleOpCommon implements TrcGameController.But
                 case FtcGamepad.GAMEPAD_DPAD_LEFT:
                     if (pressed)
                     {
-                        robot.teamMarkerDeployer.close();
+                        robot.elevator.openHook();
                     }
                     break;
 
                 case FtcGamepad.GAMEPAD_DPAD_RIGHT:
                     if (pressed)
                     {
-                        robot.teamMarkerDeployer.open();
+                        robot.elevator.closeHook();
                     }
                     break;
 
