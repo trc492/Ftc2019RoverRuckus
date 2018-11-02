@@ -318,7 +318,7 @@ class CmdAutoCrater3543 implements TrcRobot.RobotCommand
                     //
                     robot.teamMarkerDeployer.open();
                     timer.set(4.0, event);
-                    nextState = !doTeammateMineral ? State.DRIVE_FROM_DEPOT_TO_CRATER: State.BACK_OFF_FROM_DEPOT;
+                    nextState = !doTeammateMineral? State.DRIVE_FROM_DEPOT_TO_CRATER: State.BACK_OFF_FROM_DEPOT;
                     sm.waitForSingleEvent(event, nextState);
                     break;
 
@@ -401,7 +401,6 @@ class CmdAutoCrater3543 implements TrcRobot.RobotCommand
                     //
                     // We are done.
                     //
-                    robot.driveBase.stop();
                     sm.stop();
                     break;
             }
