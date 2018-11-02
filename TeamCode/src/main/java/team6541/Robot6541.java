@@ -106,7 +106,7 @@ public class Robot6541 extends Robot
                     .multiplied(Orientation.getRotationMatrix(EXTRINSIC, YZX, DEGREES,
                             CAMERA_DIR == BACK? -90: 90, 0, 0));
 
-            vuforiaVision = new VuforiaVision(this, cameraViewId, CAMERA_DIR, phoneLocationOnRobot);
+            vuforiaVision = new VuforiaVision(this, /*cameraViewId*/-1, CAMERA_DIR, phoneLocationOnRobot);
         }
 
         if (USE_PIXY)
