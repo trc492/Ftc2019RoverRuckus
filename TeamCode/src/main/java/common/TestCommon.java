@@ -179,7 +179,10 @@ public class TestCommon
             case GYRO_TURN:
                 robot.dashboard.displayPrintf(9, "xPos=%.1f,yPos=%.1f,heading=%.1f",
                         robot.driveBase.getXPosition(), robot.driveBase.getYPosition(), robot.driveBase.getHeading());
-                robot.encoderXPidCtrl.displayPidInfo(10);
+                if (robot.encoderXPidCtrl != null)
+                {
+                    robot.encoderXPidCtrl.displayPidInfo(10);
+                }
                 robot.encoderYPidCtrl.displayPidInfo(12);
                 robot.gyroPidCtrl.displayPidInfo(14);
 

@@ -126,7 +126,7 @@ public class CmdPidDrive implements TrcRobot.RobotCommand
             robot.tracer.traceInfo("Battery", "Voltage=%5.2fV (%5.2fV)",
                                    robot.battery.getVoltage(), robot.battery.getLowestVoltage());
 
-            if (debugXPid)
+            if (debugXPid && robot.encoderXPidCtrl != null)
             {
                 pidDrive.getXPidCtrl().printPidInfo(robot.tracer, elapsedTime);
             }
