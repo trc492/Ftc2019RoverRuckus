@@ -31,7 +31,7 @@ import trclib.TrcTimer;
 
 class CmdAutoDepot6541 implements TrcRobot.RobotCommand
 {
-    private static final boolean debugXPid = true;
+    private static final boolean debugXPid = false;
     private static final boolean debugYPid = true;
     private static final boolean debugTurnPid = true;
 
