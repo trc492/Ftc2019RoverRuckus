@@ -266,8 +266,10 @@ class CmdAutoCrater3543 implements TrcRobot.RobotCommand
                     // The corridor to the depot is narrow. This will make sure the robot reorients itself
                     // so it doesn't run into our partner's minerals.
                     //
-                    robot.driveBase.holonomicDrive(0.5, 0.0, 0.0);
-                    timer.set(0.8, event);
+                    // robot.driveBase.holonomicDrive(0.5, 0.0, 0.0);
+                    // timer.set(0.8, event);
+                    robot.driveBase.holonomicDrive(0.35, 0.0, 0.0); // 0.25 prev
+                    timer.set(1.3, event); // prev: 1.2 UwU
                     sm.waitForSingleEvent(event, State.CALIBRATE_WALL_DISTANCE);
                     break;
 
