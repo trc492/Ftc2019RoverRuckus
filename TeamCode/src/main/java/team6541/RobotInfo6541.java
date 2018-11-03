@@ -40,14 +40,14 @@ class RobotInfo6541 extends RobotInfo
     static final double ENCODER_Y_KI                            = 0.0;
     static final double ENCODER_Y_KD                            = 0.0025;
     static final double ENCODER_Y_TOLERANCE                     = 1.0;
-    static final double ENCODER_Y_INCHES_PER_COUNT              = 0.0172934;
+    static final double ENCODER_Y_INCHES_PER_COUNT              = (50.0 / 3565.25); // New2: ( / ) New1: (50 / 3565.25) // old: 0.0172934
     //
     // 2018-10-27: Kp=0.025, Ki=0.0, Kd=0.0
     //
     static final double GYRO_KP                                 = 0.025;
     static final double GYRO_KI                                 = 0.0;
-    static final double GYRO_KD                                 = 0.0;
-    static final double GYRO_TOLERANCE                          = 1.0;
+    static final double GYRO_KD                                 = 0.002;
+    static final double GYRO_TOLERANCE                          = 2.0;
 
     static final double PIDDRIVE_STALL_TIMEOUT                  = 0.25;     //in msec.
     //

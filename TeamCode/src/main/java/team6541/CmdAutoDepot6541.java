@@ -75,6 +75,7 @@ class CmdAutoDepot6541 implements TrcRobot.RobotCommand
     {
         LOWER_ROBOT,
         UNHOOK_ROBOT,
+        DRIVE_FORWARD_HOTFIX, // lol
         DO_DELAY,
         GO_TOWARDS_MINERAL,
         ALIGN_MINERAL_SWEEPER,
@@ -124,9 +125,22 @@ class CmdAutoDepot6541 implements TrcRobot.RobotCommand
                     //
                     robot.elevator.openHook();
                     timer.set(0.3, event);
-                    //nextState = delay == 0 ? State.GO_TOWARDS_MINERAL : State.DO_DELAY;
-                    nextState = State.DONE;
+
+                    // BEGIN HOTFIX CODE
+                    nextState = State.DRIVE_FORWARD_HOTFIX;
+                    // END HOTFIX CODE
+
+                    // THE NEXT LINE IS COMMENTED BECAUSE OF HOTFIX, CHANGE LATER WHEN WE ACTUALLY HAVE TUNING
+                    // nextState = delay == 0 ? State.GO_TOWARDS_MINERAL : State.DO_DELAY;
                     sm.waitForSingleEvent(event, nextState);
+                    break;
+
+                case DRIVE_FORWARD_HOTFIX:
+                    // BEGIN HOTFIX CODE
+                    robot.driveBase.tankDrive(0.5, 0.5, false);
+                    timer.set(1.0, event);
+                    sm.waitForSingleEvent(event, State.DONE);
+                    // END HOTFIX CODE
                     break;
 
                 case DO_DELAY:
