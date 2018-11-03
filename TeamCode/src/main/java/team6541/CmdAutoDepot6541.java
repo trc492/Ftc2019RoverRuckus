@@ -70,15 +70,17 @@ class CmdAutoDepot6541 implements TrcRobot.RobotCommand
         event = new TrcEvent(moduleName);
         timer = new TrcTimer(moduleName);
         sm = new TrcStateMachine<>(moduleName);
-        sm.start(startHung? State.LOWER_ROBOT: State.DO_DELAY);
+        sm.start(startHung? State.LOWER_ROBOT : State.DO_DELAY);
     }   //CmdAutoDepot6541
 
     private enum State
     {
+        PRE_DELAY,
         LOWER_ROBOT,
         UNHOOK_ROBOT,
         DRIVE_FORWARD_HOTFIX, // lol
         DROP_MARKER_HOTFIX, // lol
+        GO_BACK_A_BIT_HOTFIX, // lol
         DO_DELAY,
         GO_TOWARDS_MINERAL,
         ALIGN_MINERAL_SWEEPER,
@@ -114,6 +116,11 @@ class CmdAutoDepot6541 implements TrcRobot.RobotCommand
 
             switch (state)
             {
+                case PRE_DELAY:
+                    timer.set(delay, event);
+                    sm.waitForSingleEvent(event, State.LOWER_ROBOT);
+                    break;
+
                 case LOWER_ROBOT:
                     //
                     // The robot started hanging on the lander, lower it to the ground.
@@ -150,6 +157,13 @@ class CmdAutoDepot6541 implements TrcRobot.RobotCommand
                     robot.driveBase.stop();
                     robot.teamMarkerDeployer.open();
                     timer.set(0.3, event);
+                    sm.waitForSingleEvent(event, State.GO_BACK_A_BIT_HOTFIX);
+                    break;
+
+                case GO_BACK_A_BIT_HOTFIX:
+                    targetX = 0.0;
+                    targetY = -36.0;
+                    robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
                     sm.waitForSingleEvent(event, State.DONE);
                     break;
 

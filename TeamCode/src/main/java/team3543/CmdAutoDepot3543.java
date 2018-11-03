@@ -35,6 +35,8 @@ class CmdAutoDepot3543 implements TrcRobot.RobotCommand
     private static final boolean debugYPid = true;
     private static final boolean debugTurnPid = true;
 
+    private static final double ELEVATOR_OFFSET = -0.5;
+
     private static final String moduleName = "CmdAutoDepot3543";
 
     private Robot3543 robot;
@@ -115,7 +117,7 @@ class CmdAutoDepot3543 implements TrcRobot.RobotCommand
                     //
                     // The robot started hanging on the lander, lower it to the ground.
                     //
-                    robot.elevator.setPosition(RobotInfo3543.ELEVATOR_MAX_HEIGHT, event, 0.0);
+                    robot.elevator.setPosition(RobotInfo3543.ELEVATOR_MAX_HEIGHT + ELEVATOR_OFFSET, event, 0.0);
                     sm.waitForSingleEvent(event, State.UNHOOK_ROBOT);
                     break;
 
@@ -124,11 +126,15 @@ class CmdAutoDepot3543 implements TrcRobot.RobotCommand
                     // The robot is still hooked, need to unhook first.
                     // TODO: should we strafe instead???
                     //
-                    unhookedTurnAngle = -10.0;
-                    targetX = 0.0;
+
+                    //unhookedTurnAngle = -10.0;
+                    targetX = 5.0;
                     targetY = 0.0;
-                    robot.targetHeading += unhookedTurnAngle;
+                    //robot.targetHeading += unhookedTurnAngle;
                     robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
+
+                    //robot.driveBase.holonomicDrive(1.0, 0.0, 0.0);
+                    //timer.set(0.5, event);
                     sm.waitForSingleEvent(event, State.GO_TOWARDS_MINERAL);
                     break;
 
@@ -145,7 +151,7 @@ class CmdAutoDepot3543 implements TrcRobot.RobotCommand
                     // Move closer to the mineral so the sweeper can reach them.
                     //
                     targetX = 0.0;
-                    targetY = 12.0;
+                    targetY = 24.0; // prev: 22.0
                     robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
                     sm.waitForSingleEvent(event, State.ALIGN_MINERAL_SWEEPER);
                     break;
@@ -197,7 +203,7 @@ class CmdAutoDepot3543 implements TrcRobot.RobotCommand
                     // Drive towards mid wall.
                     //
                     targetX = 0.0;
-                    targetY = -36.0;
+                    targetY = -56.0; // prev: -36.0
                     //
                     // cmdSweepMineral may be null if doMineral is false.
                     //
@@ -239,8 +245,8 @@ class CmdAutoDepot3543 implements TrcRobot.RobotCommand
                     //
                     // Drive to depot to drop off team marker.
                     //
-                    targetX = 0.0;
-                    targetY = 30.0;
+                    targetX = -4.0; // prev: 0.0
+                    targetY = 50.0; // prev: 30.0
                     robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
                     sm.waitForSingleEvent(event, State.DROP_TEAM_MARKER);
                     break;
@@ -250,7 +256,7 @@ class CmdAutoDepot3543 implements TrcRobot.RobotCommand
                     // Release team marker by opening the deployer.
                     //
                     robot.teamMarkerDeployer.open();
-                    timer.set(0.3, event);
+                    timer.set(4.0, event);
                     sm.waitForSingleEvent(event, State.DRIVE_FROM_DEPOT_TO_CRATER);
                     break;
 
@@ -259,7 +265,7 @@ class CmdAutoDepot3543 implements TrcRobot.RobotCommand
                     // Drive back to the crater and park there.
                     //
                     targetX = 0.0;
-                    targetY = -72.0;
+                    targetY = -84.0; // prev: -72.0
                     robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
                     sm.waitForSingleEvent(event, State.DONE);
                     break;

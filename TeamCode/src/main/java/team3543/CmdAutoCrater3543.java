@@ -69,11 +69,12 @@ class CmdAutoCrater3543 implements TrcRobot.RobotCommand
         event = new TrcEvent(moduleName);
         timer = new TrcTimer(moduleName);
         sm = new TrcStateMachine<>(moduleName);
-        sm.start(startHung? State.LOWER_ROBOT: State.GO_TOWARDS_MINERAL);
+        sm.start(startHung? State.PRE_DELAY: State.GO_TOWARDS_MINERAL);
     }   //CmdAutoCrater3543
 
     private enum State
     {
+        PRE_DELAY,
         LOWER_ROBOT,
         UNHOOK_ROBOT,
         GO_TOWARDS_MINERAL,
@@ -120,6 +121,11 @@ class CmdAutoCrater3543 implements TrcRobot.RobotCommand
 
             switch (state)
             {
+                case PRE_DELAY:
+                    timer.set(delay, event);
+                    sm.waitForSingleEvent(event, State.LOWER_ROBOT);
+                    break;
+
                 case LOWER_ROBOT:
                     //
                     // The robot started hanging on the lander, lower it to the ground.
@@ -133,8 +139,22 @@ class CmdAutoCrater3543 implements TrcRobot.RobotCommand
                     //
                     // The robot is still hooked, need to unhook first.
                     //
-                    robot.driveBase.holonomicDrive(1.0, 0.0,0.0);
+
+                    /*
+                    robot.driveBase.holonomicDrive(1.0, 0.0, 0.0);
                     timer.set(0.5, event);
+                    sm.waitForSingleEvent(event, State.GO_TOWARDS_MINERAL);
+                    break;
+                    */
+
+                    //unhookedTurnAngle = -10.0;
+                    targetX = 5.0;
+                    targetY = 0.0;
+                    //robot.targetHeading += unhookedTurnAngle;
+                    robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
+
+                    //robot.driveBase.holonomicDrive(1.0, 0.0, 0.0);
+                    //timer.set(0.5, event);
                     sm.waitForSingleEvent(event, State.GO_TOWARDS_MINERAL);
                     break;
 
@@ -142,7 +162,7 @@ class CmdAutoCrater3543 implements TrcRobot.RobotCommand
                     //
                     // Move closer to the mineral so the sweeper can reach them.
                     //
-                    robot.driveBase.stop();
+                    // robot.driveBase.stop();
                     targetX = 0.0;
                     targetY = 22.0;
                     robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
@@ -161,7 +181,7 @@ class CmdAutoCrater3543 implements TrcRobot.RobotCommand
                     targetX = 0.0;
                     targetY = 0.0;
                     robot.targetHeading += 90.0;
-                    nextState = delay != 0.0? State.DO_DELAY: State.ALIGN_ROBOT_WITH_VUFORIA;
+                    nextState = delay != 0.0? State.ALIGN_ROBOT_WITH_VUFORIA : State.ALIGN_ROBOT_WITH_VUFORIA; // left used to be DO_DELAY
                     robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
                     sm.waitForSingleEvent(event, nextState);
                     break;
