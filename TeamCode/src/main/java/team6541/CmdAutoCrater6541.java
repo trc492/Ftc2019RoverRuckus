@@ -76,6 +76,7 @@ class CmdAutoCrater6541 implements TrcRobot.RobotCommand
     {
         LOWER_ROBOT,
         UNHOOK_ROBOT,
+        BOOK_IT_TO_THE_CRATER, // lol
         GO_TOWARDS_MINERAL,
         TURN_TOWARDS_IMAGE,
         DO_DELAY,
@@ -132,7 +133,17 @@ class CmdAutoCrater6541 implements TrcRobot.RobotCommand
                     //
                     robot.elevator.openHook();
                     timer.set(1.0, event);
-                    sm.waitForSingleEvent(event, State.GO_TOWARDS_MINERAL);
+                    // sm.waitForSingleEvent(event, State.GO_TOWARDS_MINERAL);
+
+                    // THIS NEEDS CHANGING
+
+                    sm.waitForSingleEvent(event, State.BOOK_IT_TO_THE_CRATER);
+                    break;
+
+                case BOOK_IT_TO_THE_CRATER:
+                    robot.driveBase.tankDrive(0.5, 0.5, false);
+                    timer.set(5.0, event);
+                    sm.waitForSingleEvent(event, State.DONE);
                     break;
 
                 case GO_TOWARDS_MINERAL:

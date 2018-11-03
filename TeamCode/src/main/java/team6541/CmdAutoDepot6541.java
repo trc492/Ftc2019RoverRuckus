@@ -124,7 +124,8 @@ class CmdAutoDepot6541 implements TrcRobot.RobotCommand
                     //
                     robot.elevator.openHook();
                     timer.set(0.3, event);
-                    nextState = delay == 0 ? State.GO_TOWARDS_MINERAL : State.DO_DELAY;
+                    //nextState = delay == 0 ? State.GO_TOWARDS_MINERAL : State.DO_DELAY;
+                    nextState = State.DONE;
                     sm.waitForSingleEvent(event, nextState);
                     break;
 
