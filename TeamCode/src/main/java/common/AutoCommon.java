@@ -32,7 +32,7 @@ import trclib.TrcRobot;
 
 public abstract class AutoCommon extends FtcOpMode
 {
-    protected static final boolean USE_TRACELOG = false;
+    protected static final boolean USE_TRACELOG = true;
 
     public enum MatchType
     {
