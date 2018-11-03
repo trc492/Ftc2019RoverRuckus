@@ -213,7 +213,7 @@ public class CmdSweepMineral implements TrcRobot.RobotCommand
                     robot.leftRearWheel.getPosition(),
                     robot.rightRearWheel.getPosition());
 
-            if (debugXPid)
+            if (debugXPid && robot.encoderXPidCtrl != null)
             {
                 robot.encoderXPidCtrl.printPidInfo(robot.tracer, elapsedTime);
             }

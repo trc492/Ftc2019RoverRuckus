@@ -37,6 +37,8 @@ class CmdAutoDepot6541 implements TrcRobot.RobotCommand
 
     private static final String moduleName = "CmdAutoDepot6541";
 
+    private static final double ELEVATOR_OFFSET = -0.5;
+
     private Robot6541 robot;
     private AutoCommon.Alliance alliance;
     private double delay;
@@ -116,7 +118,7 @@ class CmdAutoDepot6541 implements TrcRobot.RobotCommand
                     //
                     // The robot started hanging on the lander, lower it to the ground.
                     //
-                    robot.elevator.setPosition(RobotInfo6541.ELEVATOR_MAX_HEIGHT, event, 0.0);
+                    robot.elevator.setPosition(RobotInfo6541.ELEVATOR_MAX_HEIGHT + ELEVATOR_OFFSET, event, 0.0);
                     sm.waitForSingleEvent(event, State.UNHOOK_ROBOT);
                     break;
 
@@ -139,12 +141,13 @@ class CmdAutoDepot6541 implements TrcRobot.RobotCommand
                 case DRIVE_FORWARD_HOTFIX:
                     // BEGIN HOTFIX CODE
                     robot.driveBase.tankDrive(0.5, 0.5, false);
-                    timer.set(1.5, event); // prev: 1.0s
+                    timer.set(3.5, event); // prev: 2.0s
                     sm.waitForSingleEvent(event, State.DROP_MARKER_HOTFIX);
                     // END HOTFIX CODE
                     break;
 
                 case DROP_MARKER_HOTFIX:
+                    robot.driveBase.stop();
                     robot.teamMarkerDeployer.open();
                     timer.set(0.3, event);
                     sm.waitForSingleEvent(event, State.DONE);
