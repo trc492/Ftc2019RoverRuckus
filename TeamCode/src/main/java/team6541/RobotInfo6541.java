@@ -36,11 +36,11 @@ class RobotInfo6541 extends RobotInfo
     //
     // 2018-10-27: Kp=0.035, Ki=0.0, Kd=0.0025, Scale=0.0172934
     //
-    static final double ENCODER_Y_KP                            = 0.035;
+    static final double ENCODER_Y_KP                            = 0.1;
     static final double ENCODER_Y_KI                            = 0.0;
-    static final double ENCODER_Y_KD                            = 0.0025;
+    static final double ENCODER_Y_KD                            = 0.0; // 0.0025 prev
     static final double ENCODER_Y_TOLERANCE                     = 1.0;
-    static final double ENCODER_Y_INCHES_PER_COUNT              = (50.0 / 3565.25); // New2: ( / ) New1: (50 / 3565.25) // old: 0.0172934
+    static final double ENCODER_Y_INCHES_PER_COUNT              = (50.0 / 3565.25) * (47.0 / 44.3) * (45.5 / 44.5); // old: 0.0172934
     //
     // 2018-10-27: Kp=0.025, Ki=0.0, Kd=0.0
     //

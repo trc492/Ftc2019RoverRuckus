@@ -76,6 +76,7 @@ class CmdAutoDepot6541 implements TrcRobot.RobotCommand
         LOWER_ROBOT,
         UNHOOK_ROBOT,
         DRIVE_FORWARD_HOTFIX, // lol
+        DROP_MARKER_HOTFIX, // lol
         DO_DELAY,
         GO_TOWARDS_MINERAL,
         ALIGN_MINERAL_SWEEPER,
@@ -124,7 +125,7 @@ class CmdAutoDepot6541 implements TrcRobot.RobotCommand
                     // The robot is still hooked, need to unhook first.
                     //
                     robot.elevator.openHook();
-                    timer.set(0.3, event);
+                    timer.set(1.5, event); // prev: 0.3s
 
                     // BEGIN HOTFIX CODE
                     nextState = State.DRIVE_FORWARD_HOTFIX;
@@ -138,9 +139,15 @@ class CmdAutoDepot6541 implements TrcRobot.RobotCommand
                 case DRIVE_FORWARD_HOTFIX:
                     // BEGIN HOTFIX CODE
                     robot.driveBase.tankDrive(0.5, 0.5, false);
-                    timer.set(1.0, event);
-                    sm.waitForSingleEvent(event, State.DONE);
+                    timer.set(1.5, event); // prev: 1.0s
+                    sm.waitForSingleEvent(event, State.DROP_MARKER_HOTFIX);
                     // END HOTFIX CODE
+                    break;
+
+                case DROP_MARKER_HOTFIX:
+                    robot.teamMarkerDeployer.open();
+                    timer.set(0.3, event);
+                    sm.waitForSingleEvent(event, State.DONE);
                     break;
 
                 case DO_DELAY:

@@ -119,8 +119,9 @@ public class Robot6541 extends Robot
         //
         leftFrontWheel = new FtcDcMotor("lfWheel");
         rightFrontWheel = new FtcDcMotor("rfWheel");
-        leftRearWheel = new FtcDcMotor("lrWheel");
-        rightRearWheel = new FtcDcMotor("rrWheel");
+
+        leftRearWheel = new FakeMotor("lrWheel", leftFrontWheel);
+        rightRearWheel = new FakeMotor("rrWheel", rightFrontWheel);
 
         leftFrontWheel.motor.setMode(RobotInfo6541.DRIVE_MOTOR_MODE);
         rightFrontWheel.motor.setMode(RobotInfo6541.DRIVE_MOTOR_MODE);

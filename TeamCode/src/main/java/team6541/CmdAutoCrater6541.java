@@ -31,7 +31,7 @@ import trclib.TrcTimer;
 
 class CmdAutoCrater6541 implements TrcRobot.RobotCommand
 {
-    private static final boolean debugXPid = true;
+    private static final boolean debugXPid = false;
     private static final boolean debugYPid = true;
     private static final boolean debugTurnPid = true;
 
@@ -132,12 +132,10 @@ class CmdAutoCrater6541 implements TrcRobot.RobotCommand
                     // The robot is still hooked, need to unhook first.
                     //
                     robot.elevator.openHook();
-                    timer.set(1.0, event);
+                    timer.set(1.5, event); // prev: 1.0s
                     // sm.waitForSingleEvent(event, State.GO_TOWARDS_MINERAL);
-
-                    // THIS NEEDS CHANGING
-
-                    sm.waitForSingleEvent(event, State.BOOK_IT_TO_THE_CRATER);
+                    nextState = doTeamMarker ? State.GO_TOWARDS_MINERAL : State.BOOK_IT_TO_THE_CRATER;
+                    sm.waitForSingleEvent(event, nextState);
                     break;
 
                 case BOOK_IT_TO_THE_CRATER:
@@ -377,6 +375,7 @@ class CmdAutoCrater6541 implements TrcRobot.RobotCommand
                     //
                     // We are done.
                     //
+                    robot.driveBase.stop();
                     sm.stop();
                     break;
             }
