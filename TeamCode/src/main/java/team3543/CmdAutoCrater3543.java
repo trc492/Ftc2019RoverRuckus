@@ -202,7 +202,7 @@ class CmdAutoCrater3543 implements TrcRobot.RobotCommand
                     robot.alignHeadingWithVuforia(alliance == AutoCommon.Alliance.RED_ALLIANCE? 135.0: -45.0);
                     if (doMineral)
                     {
-                        startingY = robot.vuforiaVision == null? -12.0: 18.0;
+                        startingY = robot.vuforiaVision == null? -14.0: 18.0;
                         cmdSweepMineral = new CmdSweepMineral(robot, startingY);
                         //
                         // Vision generally will impact performance, so we only enable it if it's needed.
@@ -240,7 +240,7 @@ class CmdAutoCrater3543 implements TrcRobot.RobotCommand
                     // Drive towards mid wall.
                     //
                     targetX = 0.0;
-                    targetY = -56.0;
+                    targetY = -54.0;
                     //
                     // cmdSweepMineral may be null if doMineral is false.
                     //
