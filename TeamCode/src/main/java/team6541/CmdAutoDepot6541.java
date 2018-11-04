@@ -31,18 +31,14 @@ import trclib.TrcTimer;
 
 class CmdAutoDepot6541 implements TrcRobot.RobotCommand
 {
-    private static final boolean debugXPid = false;
     private static final boolean debugYPid = true;
     private static final boolean debugTurnPid = true;
 
     private static final String moduleName = "CmdAutoDepot6541";
 
-    private static final double ELEVATOR_OFFSET = -0.5;
-
     private Robot6541 robot;
     private AutoCommon.Alliance alliance;
     private double delay;
-    private boolean startHung;
     private boolean doMineral;
     private boolean doTeamMarker;
 
@@ -63,25 +59,26 @@ class CmdAutoDepot6541 implements TrcRobot.RobotCommand
         this.robot = robot;
         this.alliance = alliance;
         this.delay = delay;
-        this.startHung = startHung;
         this.doMineral = doMineral;
         this.doTeamMarker = doTeamMarker;
 
         event = new TrcEvent(moduleName);
         timer = new TrcTimer(moduleName);
         sm = new TrcStateMachine<>(moduleName);
-        sm.start(startHung? State.LOWER_ROBOT : State.DO_DELAY);
+        sm.start(startHung? State.DO_DELAY:
+                 doMineral? State.GO_TOWARDS_MINERAL:
+                 doTeamMarker? State.PLOW_TO_DEPOT: State.DONE);
     }   //CmdAutoDepot6541
 
     private enum State
     {
-        PRE_DELAY,
+        DO_DELAY,
         LOWER_ROBOT,
         UNHOOK_ROBOT,
-        DRIVE_FORWARD_HOTFIX, // lol
-        DROP_MARKER_HOTFIX, // lol
-        GO_BACK_A_BIT_HOTFIX, // lol
-        DO_DELAY,
+        PLOW_TO_DEPOT,
+        DROP_TEAM_MARKER_ONLY,
+        TURN_TOWARDS_CRATER,
+        PARK_AT_CRATER,
         GO_TOWARDS_MINERAL,
         ALIGN_MINERAL_SWEEPER,
         ALIGN_ROBOT_WITH_VUFORIA,
@@ -116,63 +113,74 @@ class CmdAutoDepot6541 implements TrcRobot.RobotCommand
 
             switch (state)
             {
-                case PRE_DELAY:
-                    timer.set(delay, event);
-                    sm.waitForSingleEvent(event, State.LOWER_ROBOT);
-                    break;
-
+                case DO_DELAY:
+                    //
+                    // Do delay if we need to wait for partner to lower their robot first.
+                    //
+                    if (delay > 0.0)
+                    {
+                        timer.set(delay, event);
+                        sm.waitForSingleEvent(event, State.LOWER_ROBOT);
+                        break;
+                    }
+                    else
+                    {
+                        sm.setState(State.LOWER_ROBOT);
+                    }
+                    //
+                    // Intentional falling through.
+                    //
                 case LOWER_ROBOT:
                     //
                     // The robot started hanging on the lander, lower it to the ground.
                     //
-                    robot.elevator.setPosition(RobotInfo6541.ELEVATOR_MAX_HEIGHT + ELEVATOR_OFFSET, event, 0.0);
+                    robot.elevator.setPosition(RobotInfo6541.ELEVATOR_HANGING_HEIGHT, event, 0.0);
                     sm.waitForSingleEvent(event, State.UNHOOK_ROBOT);
                     break;
 
                 case UNHOOK_ROBOT:
+                    robot.tracer.traceInfo(moduleName, "Initial heading=%f", robot.driveBase.getHeading());
                     //
                     // The robot is still hooked, need to unhook first.
                     //
                     robot.elevator.openHook();
-                    timer.set(1.5, event); // prev: 0.3s
-
-                    // BEGIN HOTFIX CODE
-                    nextState = State.DRIVE_FORWARD_HOTFIX;
-                    // END HOTFIX CODE
-
-                    // THE NEXT LINE IS COMMENTED BECAUSE OF HOTFIX, CHANGE LATER WHEN WE ACTUALLY HAVE TUNING
-                    // nextState = delay == 0 ? State.GO_TOWARDS_MINERAL : State.DO_DELAY;
+                    timer.set(1.5, event);
+                    nextState = doMineral ? State.GO_TOWARDS_MINERAL: doTeamMarker? State.PLOW_TO_DEPOT: State.DONE;
                     sm.waitForSingleEvent(event, nextState);
                     break;
 
-                case DRIVE_FORWARD_HOTFIX:
-                    // BEGIN HOTFIX CODE
-                    robot.driveBase.tankDrive(0.5, 0.5, false);
-                    timer.set(3.5, event); // prev: 2.0s
-                    sm.waitForSingleEvent(event, State.DROP_MARKER_HOTFIX);
-                    // END HOTFIX CODE
+                case PLOW_TO_DEPOT:
+                    //
+                    // Plow through the middle mineral to the depot.
+                    //
+                    targetX = 0.0;
+                    targetY = 48.0;
+                    robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
+                    sm.waitForSingleEvent(event, State.DROP_TEAM_MARKER_ONLY);
                     break;
 
-                case DROP_MARKER_HOTFIX:
-                    robot.driveBase.stop();
+                case DROP_TEAM_MARKER_ONLY:
+                    //
+                    // Release team marker by opening the deployer.
+                    //
                     robot.teamMarkerDeployer.open();
                     timer.set(0.3, event);
-                    sm.waitForSingleEvent(event, State.GO_BACK_A_BIT_HOTFIX);
+                    sm.waitForSingleEvent(event, State.TURN_TOWARDS_CRATER);
                     break;
 
-                case GO_BACK_A_BIT_HOTFIX:
+                case TURN_TOWARDS_CRATER:
                     targetX = 0.0;
-                    targetY = -36.0;
+                    targetY = 0.0;
+                    robot.targetHeading += 45.0;
+                    robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
+                    sm.waitForSingleEvent(event, State.PARK_AT_CRATER);
+                    break;
+
+                case PARK_AT_CRATER:
+                    targetX = 0.0;
+                    targetY = -72.0;
                     robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
                     sm.waitForSingleEvent(event, State.DONE);
-                    break;
-
-                case DO_DELAY:
-                    //
-                    // Do delay if any.
-                    //
-                    timer.set(delay, event);
-                    sm.waitForSingleEvent(event, State.GO_TOWARDS_MINERAL);
                     break;
 
                 case GO_TOWARDS_MINERAL:
@@ -180,15 +188,21 @@ class CmdAutoDepot6541 implements TrcRobot.RobotCommand
                     // Move closer to the mineral so the sweeper can reach them.
                     //
                     targetX = 0.0;
-                    targetY = 12.0;
+                    targetY = 22.0;
                     robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
                     sm.waitForSingleEvent(event, State.ALIGN_MINERAL_SWEEPER);
                     break;
 
                 case ALIGN_MINERAL_SWEEPER:
                     //
+                    // Retract elevator.
                     // Turn robot sideway so the sweeper is facing mineral.
                     //
+                    robot.elevator.setPosition(RobotInfo6541.ELEVATOR_MIN_HEIGHT);
+                    if (robot.vuforiaVision != null)
+                    {
+                        robot.vuforiaVision.setEnabled(true);
+                    }
                     targetX = 0.0;
                     targetY = 0.0;
                     robot.targetHeading += 90.0;
@@ -204,18 +218,32 @@ class CmdAutoDepot6541 implements TrcRobot.RobotCommand
                     robot.alignHeadingWithVuforia(alliance == AutoCommon.Alliance.RED_ALLIANCE? -45.0: 135.0);
                     if (doMineral)
                     {
-                        nextState = State.SWEEP_MINERAL;
-                        cmdSweepMineral = new CmdSweepMineral(robot, 0.0);  //TODO: may need to adjust startingY
+                        //
+                        // Go to the starting position before engaging mineral sweeping.
+                        // If Pixy camera is active, we will start with the right most mineral. If not, we will always
+                        // sweep the left most mineral and hope it's the correct one.
+                        //
+                        double startingY = robot.pixyVision == null? -12.0: 18.0;
+                        cmdSweepMineral = new CmdSweepMineral(robot, startingY);
+                        //
+                        // Vision generally will impact performance, so we only enable it if it's needed.
+                        //
+                        if (robot.pixyVision != null)
+                        {
+                            robot.pixyVision.setCameraEnabled(true);
+                        }
+                        targetX = 0.0;
+                        targetY = startingY;
+                        robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
+                        sm.waitForSingleEvent(event, State.SWEEP_MINERAL);
                     }
                     else
                     {
-                        nextState = State.DRIVE_TO_MID_WALL;
                         cmdSweepMineral = null;
+                        sm.setState(State.DRIVE_TO_MID_WALL);
                     }
-                    sm.setState(nextState);
-                    //
-                    // Intentionally fall through to the next state to save one cycle time.
-                    //
+                    break;
+
                 case SWEEP_MINERAL:
                     //
                     // Remain in this state until sweeping is done.
@@ -231,8 +259,18 @@ class CmdAutoDepot6541 implements TrcRobot.RobotCommand
                     //
                     // Drive towards mid wall.
                     //
+                    if (robot.pixyVision != null)
+                    {
+                        robot.pixyVision.setCameraEnabled(false);
+                    }
+
+                    if (robot.vuforiaVision != null)
+                    {
+                        robot.vuforiaVision.setEnabled(false);
+                    }
+
                     targetX = 0.0;
-                    targetY = -36.0;
+                    targetY = -56.0;
                     //
                     // cmdSweepMineral may be null if doMineral is false.
                     //
@@ -241,7 +279,10 @@ class CmdAutoDepot6541 implements TrcRobot.RobotCommand
                         //
                         // Adjust the distance by how far we went for sweeping mineral.
                         //
-                        targetY -= cmdSweepMineral.getDistanceYTravelled();
+                        double distanceYTravelled = cmdSweepMineral.getDistanceYTravelled();
+                        targetY -= distanceYTravelled;
+                        robot.tracer.traceInfo(moduleName, "yTravelled=%.1f, yTarget=%.1f",
+                                distanceYTravelled, targetY);
                         cmdSweepMineral = null;
                     }
                     robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
@@ -256,7 +297,7 @@ class CmdAutoDepot6541 implements TrcRobot.RobotCommand
                     targetY = 0.0;
                     robot.targetHeading -= 45.0;
                     robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
-                    nextState = !doTeamMarker? State.DRIVE_FROM_MID_WALL_TO_CRATER : State.DRIVE_FROM_MID_WALL_TO_DEPOT;
+                    nextState = !doTeamMarker? State.DRIVE_FROM_MID_WALL_TO_CRATER: State.DRIVE_FROM_MID_WALL_TO_DEPOT;
                     sm.waitForSingleEvent(event, nextState);
                     break;
 
@@ -294,7 +335,7 @@ class CmdAutoDepot6541 implements TrcRobot.RobotCommand
                     // Drive back to the crater and park there.
                     //
                     targetX = 0.0;
-                    targetY = -72.0;
+                    targetY = -84.0;
                     robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
                     sm.waitForSingleEvent(event, State.DONE);
                     break;
@@ -324,11 +365,6 @@ class CmdAutoDepot6541 implements TrcRobot.RobotCommand
                     robot.rightFrontWheel.getPosition(),
                     robot.leftRearWheel.getPosition(),
                     robot.rightRearWheel.getPosition());
-
-            if (debugXPid)
-            {
-                robot.encoderXPidCtrl.printPidInfo(robot.tracer, elapsedTime);
-            }
 
             if (debugYPid)
             {

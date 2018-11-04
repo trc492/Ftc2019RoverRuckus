@@ -31,7 +31,6 @@ import trclib.TrcTimer;
 
 class CmdAutoCrater6541 implements TrcRobot.RobotCommand
 {
-    private static final boolean debugXPid = false;
     private static final boolean debugYPid = true;
     private static final boolean debugTurnPid = true;
 
@@ -50,7 +49,6 @@ class CmdAutoCrater6541 implements TrcRobot.RobotCommand
     private double targetX = 0.0;
     private double targetY = 0.0;
     private CmdSweepMineral cmdSweepMineral = null;
-    private double startingY = 0.0;
 
     CmdAutoCrater6541(Robot6541 robot, AutoCommon.Alliance alliance, double delay,
                       boolean startHung, boolean doMineral, boolean doTeamMarker, boolean doTeammateMineral)
@@ -69,17 +67,17 @@ class CmdAutoCrater6541 implements TrcRobot.RobotCommand
         event = new TrcEvent(moduleName);
         timer = new TrcTimer(moduleName);
         sm = new TrcStateMachine<>(moduleName);
-        sm.start(startHung? State.LOWER_ROBOT: State.GO_TOWARDS_MINERAL);
+        sm.start(startHung? State.DO_DELAY: State.GO_TOWARDS_MINERAL);
     }   //CmdAutoCrater6541
 
     private enum State
     {
+        DO_DELAY,
         LOWER_ROBOT,
         UNHOOK_ROBOT,
-        BOOK_IT_TO_THE_CRATER, // lol
+        PLOW_TO_CRATER,
         GO_TOWARDS_MINERAL,
-        TURN_TOWARDS_IMAGE,
-        DO_DELAY,
+        ALIGN_MINERAL_SWEEPER,
         ALIGN_ROBOT_WITH_VUFORIA,
         SWEEP_MINERAL,
         DRIVE_TO_MID_WALL,
@@ -118,6 +116,23 @@ class CmdAutoCrater6541 implements TrcRobot.RobotCommand
 
             switch (state)
             {
+                case DO_DELAY:
+                    //
+                    // Do delay if we need to wait for partner to lower their robot first.
+                    //
+                    if (delay > 0.0)
+                    {
+                        timer.set(delay, event);
+                        sm.waitForSingleEvent(event, State.LOWER_ROBOT);
+                        break;
+                    }
+                    else
+                    {
+                        sm.setState(State.LOWER_ROBOT);
+                    }
+                    //
+                    // Intentional falling through.
+                    //
                 case LOWER_ROBOT:
                     //
                     // The robot started hanging on the lander, lower it to the ground.
@@ -132,15 +147,18 @@ class CmdAutoCrater6541 implements TrcRobot.RobotCommand
                     // The robot is still hooked, need to unhook first.
                     //
                     robot.elevator.openHook();
-                    timer.set(1.5, event); // prev: 1.0s
-                    // sm.waitForSingleEvent(event, State.GO_TOWARDS_MINERAL);
-                    nextState = doTeamMarker ? State.GO_TOWARDS_MINERAL : State.BOOK_IT_TO_THE_CRATER;
+                    timer.set(1.5, event);
+                    nextState = doMineral ? State.GO_TOWARDS_MINERAL : State.PLOW_TO_CRATER;
                     sm.waitForSingleEvent(event, nextState);
                     break;
 
-                case BOOK_IT_TO_THE_CRATER:
-                    robot.driveBase.tankDrive(0.5, 0.5, false);
-                    timer.set(5.0, event);
+                case PLOW_TO_CRATER:
+                    //
+                    // Plow through the middle mineral to the crater and park there.
+                    //
+                    targetX = 0.0;
+                    targetY = 36.0;
+                    robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
                     sm.waitForSingleEvent(event, State.DONE);
                     break;
 
@@ -151,31 +169,23 @@ class CmdAutoCrater6541 implements TrcRobot.RobotCommand
                     targetX = 0.0;
                     targetY = 22.0;
                     robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
-                    sm.waitForSingleEvent(event, State.TURN_TOWARDS_IMAGE);
+                    sm.waitForSingleEvent(event, State.ALIGN_MINERAL_SWEEPER);
                     break;
 
-                case TURN_TOWARDS_IMAGE:
+                case ALIGN_MINERAL_SWEEPER:
                     //
+                    // Retract elevator.
                     // Turn robot sideway so the sweeper is facing mineral.
                     //
+                    robot.elevator.setPosition(RobotInfo6541.ELEVATOR_MIN_HEIGHT);
                     if (robot.vuforiaVision != null)
                     {
                         robot.vuforiaVision.setEnabled(true);
                     }
-                    robot.elevator.setPosition(RobotInfo6541.ELEVATOR_MIN_HEIGHT);
                     targetX = 0.0;
                     targetY = 0.0;
                     robot.targetHeading += 90.0;
-                    nextState = delay != 0.0? State.DO_DELAY: State.ALIGN_ROBOT_WITH_VUFORIA;
                     robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
-                    sm.waitForSingleEvent(event, nextState);
-                    break;
-
-                case DO_DELAY:
-                    //
-                    // Wait for alliance partner to clear the path.
-                    //
-                    timer.set(delay, event);
                     sm.waitForSingleEvent(event, State.ALIGN_ROBOT_WITH_VUFORIA);
                     break;
 
@@ -187,7 +197,12 @@ class CmdAutoCrater6541 implements TrcRobot.RobotCommand
                     robot.alignHeadingWithVuforia(alliance == AutoCommon.Alliance.RED_ALLIANCE? 135.0: -45.0);
                     if (doMineral)
                     {
-                        startingY = robot.vuforiaVision == null? -12.0: 18.0;
+                        //
+                        // Go to the starting position before engaging mineral sweeping.
+                        // If Pixy camera is active, we will start with the right most mineral. If not, we will always
+                        // sweep the left most mineral and hope it's the correct one.
+                        //
+                        double startingY = robot.pixyVision == null? -12.0: 18.0;
                         cmdSweepMineral = new CmdSweepMineral(robot, startingY);
                         //
                         // Vision generally will impact performance, so we only enable it if it's needed.
@@ -203,7 +218,6 @@ class CmdAutoCrater6541 implements TrcRobot.RobotCommand
                     }
                     else
                     {
-                        startingY = 0.0;
                         cmdSweepMineral = null;
                         sm.setState(State.DRIVE_TO_MID_WALL);
                     }
@@ -224,6 +238,16 @@ class CmdAutoCrater6541 implements TrcRobot.RobotCommand
                     //
                     // Drive towards mid wall.
                     //
+                    if (robot.pixyVision != null)
+                    {
+                        robot.pixyVision.setCameraEnabled(false);
+                    }
+
+                    if (robot.vuforiaVision != null)
+                    {
+                        robot.vuforiaVision.setEnabled(false);
+                    }
+
                     targetX = 0.0;
                     targetY = -56.0;
                     //
@@ -234,16 +258,6 @@ class CmdAutoCrater6541 implements TrcRobot.RobotCommand
                         //
                         // Adjust the distance by how far we went for sweeping mineral.
                         //
-                        if (robot.pixyVision != null)
-                        {
-                            robot.pixyVision.setCameraEnabled(false);
-                        }
-
-                        if (robot.vuforiaVision != null)
-                        {
-                            robot.vuforiaVision.setEnabled(false);
-                        }
-
                         double distanceYTravelled = cmdSweepMineral.getDistanceYTravelled();
                         targetY -= distanceYTravelled;
                         robot.tracer.traceInfo(moduleName, "yTravelled=%.1f, yTarget=%.1f",
@@ -256,7 +270,7 @@ class CmdAutoCrater6541 implements TrcRobot.RobotCommand
 
                 case TURN_PARALLEL_TO_WALL:
                     //
-                    // Align the robot parallel to the wall.
+                    // Align the robot parallel to the wall with team marker towards the depot.
                     //
                     targetX = 0.0;
                     targetY = 0.0;
@@ -375,7 +389,6 @@ class CmdAutoCrater6541 implements TrcRobot.RobotCommand
                     //
                     // We are done.
                     //
-                    robot.driveBase.stop();
                     sm.stop();
                     break;
             }
@@ -396,11 +409,6 @@ class CmdAutoCrater6541 implements TrcRobot.RobotCommand
                     robot.rightFrontWheel.getPosition(),
                     robot.leftRearWheel.getPosition(),
                     robot.rightRearWheel.getPosition());
-
-            if (debugXPid)
-            {
-                robot.encoderXPidCtrl.printPidInfo(robot.tracer, elapsedTime);
-            }
 
             if (debugYPid)
             {
