@@ -180,7 +180,7 @@ public class CmdSweepMineral implements TrcRobot.RobotCommand
                     // We are supposed to be 4 inches behind the mineral. So go forward 8 inches will displace
                     // it about 4 inches.
                     //
-                    setTarget(0.0, -12.0);
+                    setTarget(0.0, -17.0); // prev: (0.0, -12.0)
                     robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
                     sm.waitForSingleEvent(event, State.RETRACT_MINERAL_SWEEPER);
                     break;

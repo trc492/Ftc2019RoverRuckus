@@ -50,6 +50,8 @@ class CmdAutoDepot3543 implements TrcRobot.RobotCommand
     private double targetY = 0.0;
     private CmdSweepMineral cmdSweepMineral = null;
 
+    private State prevState = null;
+
     CmdAutoDepot3543(Robot3543 robot, AutoCommon.Alliance alliance, double delay,
                      boolean startHung, boolean doMineral, boolean doTeamMarker)
     {
@@ -88,6 +90,7 @@ class CmdAutoDepot3543 implements TrcRobot.RobotCommand
         TURN_PARALLEL_TO_WALL,
         DRIVE_FROM_MID_WALL_TO_CRATER,
         DRIVE_FROM_MID_WALL_TO_DEPOT,
+        KISS_THE_WALL,
         DROP_TEAM_MARKER,
         DRIVE_FROM_DEPOT_TO_CRATER,
         DONE
@@ -299,7 +302,9 @@ class CmdAutoDepot3543 implements TrcRobot.RobotCommand
                     targetY = 0.0;
                     robot.targetHeading -= 45.0;
                     robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
-                    nextState = !doTeamMarker? State.DRIVE_FROM_MID_WALL_TO_CRATER: State.DRIVE_FROM_MID_WALL_TO_DEPOT;
+                    prevState = State.TURN_PARALLEL_TO_WALL;
+                    nextState = !doTeamMarker? State.DRIVE_FROM_MID_WALL_TO_CRATER: State.KISS_THE_WALL;
+                    // nextState = State.DONE;
                     sm.waitForSingleEvent(event, nextState);
                     break;
 
@@ -313,11 +318,27 @@ class CmdAutoDepot3543 implements TrcRobot.RobotCommand
                     sm.waitForSingleEvent(event, State.DONE);
                     break;
 
+                case KISS_THE_WALL:
+                    robot.driveBase.holonomicDrive(-0.35, 0.0, 0.0);
+                    timer.set(1.6, event);
+
+                    if (prevState == State.TURN_PARALLEL_TO_WALL)
+                    {
+                        sm.waitForSingleEvent(event, State.DRIVE_FROM_MID_WALL_TO_DEPOT);
+                    }
+                    else if (prevState == State.DROP_TEAM_MARKER)
+                    {
+                        sm.waitForSingleEvent(event, State.DRIVE_FROM_DEPOT_TO_CRATER);
+                    }
+                    break;
+
                 case DRIVE_FROM_MID_WALL_TO_DEPOT:
                     //
                     // Drive to depot to drop off team marker.
                     //
-                    targetX = -4.0;
+                    robot.driveBase.stop();
+                    // robot.targetHeading = 0.0;
+                    targetX = 0.0; // prev: -4.0
                     targetY = 50.0;
                     robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
                     sm.waitForSingleEvent(event, State.DROP_TEAM_MARKER);
@@ -327,15 +348,17 @@ class CmdAutoDepot3543 implements TrcRobot.RobotCommand
                     //
                     // Release team marker by opening the deployer.
                     //
+                    prevState = State.DROP_TEAM_MARKER;
                     robot.teamMarkerDeployer.open();
                     timer.set(4.0, event);
-                    sm.waitForSingleEvent(event, State.DRIVE_FROM_DEPOT_TO_CRATER);
+                    sm.waitForSingleEvent(event, State.KISS_THE_WALL);
                     break;
 
                 case DRIVE_FROM_DEPOT_TO_CRATER:
                     //
                     // Drive back to the crater and park there.
                     //
+                    robot.driveBase.stop();
                     targetX = 0.0;
                     targetY = -84.0;
                     robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
