@@ -39,6 +39,13 @@ class CmdAutoDepot3543_Pixy implements TrcRobot.RobotCommand
 
     private static final String moduleName = "CmdAutoDepot3543_Pixy";
 
+    private enum GoldPosition
+    {
+        LEFT,
+        CENTER,
+        RIGHT
+    }
+
     private Robot3543 robot;
     private AutoCommon.Alliance alliance;
     private double delay;
@@ -53,7 +60,6 @@ class CmdAutoDepot3543_Pixy implements TrcRobot.RobotCommand
     private CmdSweepMineral cmdSweepMineral = null;
 
     private State prevState = null;
-
     private GoldPosition goldPosition = null;
 
     CmdAutoDepot3543_Pixy(Robot3543 robot, AutoCommon.Alliance alliance, double delay,
@@ -73,8 +79,8 @@ class CmdAutoDepot3543_Pixy implements TrcRobot.RobotCommand
         timer = new TrcTimer(moduleName);
         sm = new TrcStateMachine<>(moduleName);
         sm.start(startHung? State.DO_DELAY:
-                doMineral? State.GO_TOWARDS_MINERAL:
-                        doTeamMarker? State.PLOW_TO_DEPOT: State.DONE);
+                 doMineral? State.GO_TOWARDS_MINERAL:
+                 doTeamMarker? State.PLOW_TO_DEPOT: State.DONE);
     }   //CmdAutoDepot3543
 
     private enum State
@@ -101,13 +107,6 @@ class CmdAutoDepot3543_Pixy implements TrcRobot.RobotCommand
         DRIVE_FROM_DEPOT_TO_CRATER,
         DONE
     }   //enum State
-
-    private enum GoldPosition
-    {
-        LEFT,
-        CENTER,
-        RIGHT
-    }
 
     //
     // Implements the TrcRobot.RobotCommand interface.
@@ -153,7 +152,6 @@ class CmdAutoDepot3543_Pixy implements TrcRobot.RobotCommand
                     //
                     if (robot.pixyVision != null)
                     {
-                        robot.pixyVision.setLightOn(true);
                         robot.pixyVision.setCameraEnabled(true);
                     }
                     robot.elevator.setPosition(RobotInfo3543.ELEVATOR_HANGING_HEIGHT, event, 0.0);

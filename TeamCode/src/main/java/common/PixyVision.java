@@ -217,7 +217,10 @@ public class PixyVision
                     Rect rect = new Rect(detectedObjects[i].centerX - detectedObjects[i].width/2,
                             detectedObjects[i].centerY - detectedObjects[i].height/2,
                             detectedObjects[i].width, detectedObjects[i].height);
-
+                    //
+                    // The mineral will be at the lower screen of the camera. If we spot anything at the upper
+                    // screen, they are considered false targets, so discard them.
+                    //
                     if (rect.y >= (PIXYCAM_HEIGHT / 2))
                     {
                         objectList.add(rect);
