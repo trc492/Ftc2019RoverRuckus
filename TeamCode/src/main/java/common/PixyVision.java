@@ -33,8 +33,8 @@ import trclib.TrcUtil;
 
 public class PixyVision
 {
-    private static final int PIXYCAM_WIDTH = 320;
-    private static final int PIXYCAM_HEIGHT = 200;
+    public static final int PIXYCAM_WIDTH = 320;
+    public static final int PIXYCAM_HEIGHT = 200;
     private static final boolean debugEnabled = false;
 
     // If last target rect is this old, its stale data.
@@ -217,7 +217,11 @@ public class PixyVision
                     Rect rect = new Rect(detectedObjects[i].centerX - detectedObjects[i].width/2,
                             detectedObjects[i].centerY - detectedObjects[i].height/2,
                             detectedObjects[i].width, detectedObjects[i].height);
-                    objectList.add(rect);
+
+                    if (rect.y >= (PIXYCAM_HEIGHT / 2))
+                    {
+                        objectList.add(rect);
+                    }
 
                     if (debugEnabled)
                     {
