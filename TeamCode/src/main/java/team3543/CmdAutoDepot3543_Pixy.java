@@ -150,6 +150,7 @@ class CmdAutoDepot3543_Pixy implements TrcRobot.RobotCommand
                     //
                     // The robot started hanging on the lander, lower it to the ground.
                     //
+                    // CodeReview: if the robot started not hanging, this code will not run and pixy won't be enabled!
                     if (robot.pixyVision != null)
                     {
                         robot.pixyVision.setCameraEnabled(true);
@@ -164,6 +165,10 @@ class CmdAutoDepot3543_Pixy implements TrcRobot.RobotCommand
                     //
                     if (robot.pixyVision != null)
                     {
+                        //
+                        // CodeReview: Pixy may fail to find the target in which case it will return null.
+                        // You need to handle that! This will cause NullPointerException.
+                        //
                         PixyVision.TargetInfo targetInfo = robot.pixyVision.getTargetInfo(RobotInfo.PIXY_GOLD_MINERAL_SIGNATURE);
                         int third = PixyVision.PIXYCAM_WIDTH / 3;
                         int t2 = third * 2;
@@ -212,7 +217,9 @@ class CmdAutoDepot3543_Pixy implements TrcRobot.RobotCommand
                     }
                     targetX = 0.0;
                     targetY = 0.0;
-
+                    //
+                    // CodeReview: There should be more code here but I assume you stopped here last time.
+                    //
                     break;
 
                 case PLOW_TO_DEPOT:
