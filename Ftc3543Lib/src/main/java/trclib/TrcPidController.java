@@ -301,7 +301,7 @@ public class TrcPidController
      * @param tracer specifies the tracer to be used for debug tracing.
      * @param enabled specifies true to enable the debug tracer, false to disable.
      */
-    public void setDebugTraceEnabled(TrcDbgTrace tracer, boolean enabled)
+    public synchronized void setDebugTraceEnabled(TrcDbgTrace tracer, boolean enabled)
     {
         debugTracer = enabled? tracer: null;
     }   //setDebugTraceEnabled
@@ -314,7 +314,7 @@ public class TrcPidController
      *
      * @param inverted specifies true to invert the sign of the calculated error, false otherwise.
      */
-    public void setInverted(boolean inverted)
+    public synchronized void setInverted(boolean inverted)
     {
         final String funcName = "setInverted";
 
@@ -336,7 +336,7 @@ public class TrcPidController
      *
      * @param absolute specifies true if set point is absolute, false otherwise.
      */
-    public void setAbsoluteSetPoint(boolean absolute)
+    public synchronized void setAbsoluteSetPoint(boolean absolute)
     {
         final String funcName = "setAbsoluteSetPoint";
 
@@ -354,7 +354,7 @@ public class TrcPidController
      *
      * @return true if setpoints are absolute, false otherwise.
      */
-    public boolean hasAbsoluteSetPoint()
+    public synchronized boolean hasAbsoluteSetPoint()
     {
         final String funcName = "hasAbsoluteSetPoint";
 
@@ -375,7 +375,7 @@ public class TrcPidController
      *
      * @param noOscillation specifies true to enable no oscillation, false to disable.
      */
-    public void setNoOscillation(boolean noOscillation)
+    public synchronized void setNoOscillation(boolean noOscillation)
     {
         final String funcName = "setNoOscillation";
 
@@ -393,7 +393,7 @@ public class TrcPidController
      *
      * @return current PID coefficients.
      */
-    public PidCoefficients getPidCoefficients()
+    public synchronized PidCoefficients getPidCoefficients()
     {
         final String funcName = "getPidCoefficients";
 
@@ -412,7 +412,7 @@ public class TrcPidController
      *
      * @param pidCoefficients specifies new PID coefficients.
      */
-    public void setPidCoefficients(PidCoefficients pidCoefficients)
+    public synchronized void setPidCoefficients(PidCoefficients pidCoefficients)
     {
         final String funcName = "setPidCoefficients";
 
@@ -432,7 +432,7 @@ public class TrcPidController
      *
      * @param tolerance specifies the new target tolerance.
      */
-    public void setTargetTolerance(double tolerance)
+    public synchronized void setTargetTolerance(double tolerance)
     {
         this.tolerance = tolerance;
     }   //setTargetTolerance
@@ -443,7 +443,7 @@ public class TrcPidController
      * @param minTarget specifies the target set point lower range limit.
      * @param maxTarget specifies the target set point higher range limit.
      */
-    public void setTargetRange(double minTarget, double maxTarget)
+    public synchronized void setTargetRange(double minTarget, double maxTarget)
     {
         final String funcName = "setTargetRange";
 
@@ -465,7 +465,7 @@ public class TrcPidController
      * @param minOutput specifies the PID output lower range limit.
      * @param maxOutput specifies the PID output higher range limit.
      */
-    public void setOutputRange(double minOutput, double maxOutput)
+    public synchronized void setOutputRange(double minOutput, double maxOutput)
     {
         final String funcName = "setOutputRange";
 
@@ -495,7 +495,7 @@ public class TrcPidController
      *
      * @param limit specifies the output limit as a positive number.
      */
-    public void setOutputLimit(double limit)
+    public synchronized void setOutputLimit(double limit)
     {
         limit = Math.abs(limit);
         setOutputRange(-limit, limit);
@@ -508,7 +508,7 @@ public class TrcPidController
      *
      * @return last set output limit.
      */
-    public double getOutputLimit()
+    public synchronized double getOutputLimit()
     {
         final String funcName = "getOutputLimit";
 
@@ -532,7 +532,7 @@ public class TrcPidController
      * @param limit specifies the new output limit.
      * @return return the previous output limit.
      */
-    public double saveAndSetOutputLimit(double limit)
+    public synchronized double saveAndSetOutputLimit(double limit)
     {
         final String funcName = "saveAndSetOutputLimit";
         double prevLimit = outputLimit;
@@ -559,7 +559,7 @@ public class TrcPidController
      *
      * @return last saved output limit.
      */
-    public double restoreOutputLimit()
+    public synchronized double restoreOutputLimit()
     {
         final String funcName = "restoreOutputLimit";
         double limit;
@@ -596,7 +596,7 @@ public class TrcPidController
      *
      * @return current set point.
      */
-    public double getTarget()
+    public synchronized double getTarget()
     {
         final String funcName = "getTarget";
 
@@ -615,7 +615,7 @@ public class TrcPidController
      * @param target specifies the target set point.
      * @param warpSpace specifies the warp space object if the target is in one, null if not.
      */
-    public void setTarget(double target, TrcWarpSpace warpSpace)
+    public synchronized void setTarget(double target, TrcWarpSpace warpSpace)
     {
         final String funcName = "setTarget";
 
@@ -692,7 +692,7 @@ public class TrcPidController
      *
      * @return previous error.
      */
-    public double getError()
+    public synchronized double getError()
     {
         final String funcName = "getError";
 
@@ -708,7 +708,7 @@ public class TrcPidController
     /**
      * This method resets the PID controller clearing the set point, error, total error and output.
      */
-    public void reset()
+    public synchronized void reset()
     {
         final String funcName = "reset";
 
@@ -733,7 +733,7 @@ public class TrcPidController
      *
      * @return true if we reached target, false otherwise.
      */
-    public boolean isOnTarget()
+    public synchronized boolean isOnTarget()
     {
         final String funcName = "isOnTarget";
 
@@ -748,6 +748,10 @@ public class TrcPidController
         {
             //
             // Don't allow oscillation, so if we are within tolerance or we pass target, just quit.
+            // If setPointSign is positive, it means the target is "forward". So if currError <= tolerance,
+            // it means we are either within tolerance or have passed the target.
+            // If setPointSign is negative, it means the target is "backward". So if -currError <= tolerance,
+            // it means we are either within tolerance or have passed the target.
             //
             if (currError*setPointSign <= tolerance)
             {
@@ -777,7 +781,7 @@ public class TrcPidController
      *
      * @return PID output value.
      */
-    public double getOutput()
+    public synchronized double getOutput()
     {
         final String funcName = "getOutput";
 
