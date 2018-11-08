@@ -29,7 +29,7 @@ import java.util.HashSet;
  * This class provides methods for the callers to register/unregister cooperative multi-tasking tasks. It manages
  * these tasks and will work with the cooperative multi-tasking scheduler to run these tasks.
  */
-public class TrcTaskMgr implements TrcThread.PeriodicTask
+public class TrcTaskMgr implements TrcPeriodicThread.PeriodicTask
 {
     private static final String moduleName = "TrcTaskMgr";
     private static final boolean debugEnabled = false;
@@ -149,7 +149,7 @@ public class TrcTaskMgr implements TrcThread.PeriodicTask
         private HashSet<TaskType> taskTypes;
         private final String taskName;
         private Task task;
-        private TrcThread<Object> taskThread = null;
+        private TrcPeriodicThread<Object> taskThread = null;
         private long taskInterval = 0;
         private long[] taskTotalNanoTimes = new long[TaskType.values().length];
         private int[] taskTimeSlotCounts = new int[TaskType.values().length];
@@ -204,7 +204,7 @@ public class TrcTaskMgr implements TrcThread.PeriodicTask
             {
                 if (type == TaskType.STANDALONE_TASK)
                 {
-                    taskThread = new TrcThread<>(taskName, TrcTaskMgr.getInstance(), this);
+                    taskThread = new TrcPeriodicThread<>(taskName, TrcTaskMgr.getInstance(), this);
                     this.taskInterval = taskInterval;
                     taskThread.setProcessingInterval(taskInterval);
                     taskThread.setTaskEnabled(true);
@@ -492,7 +492,7 @@ public class TrcTaskMgr implements TrcThread.PeriodicTask
     }   //printTaskPerformanceMetrics
 
     //
-    // Implements TrcThread.PeriodicTask interface.
+    // Implements TrcPeriodicThread.PeriodicTask interface.
     //
 
     /**

@@ -24,15 +24,17 @@ package trclib;
 
 /**
  * This class implements a platform independent periodic task by using a separate thread. When enabled, the thread
- * periodically calls the runPeriodic method. Typically, this class is to be extended by a platform dependent task
- * who will provide the runPeriodic method that will acquire and/or process data of the given type. This class will
- * take care of the thread synchronization so the caller doesn't have to deal with it.
+ * periodically calls the runPeriodic method. Generally, this class is used by TrcTaskMgr to create a standalone
+ * thread that runs the periodic task when STANDALONE_TASK is registered. By doing so, the standalone task doesn't
+ * slow down the main robot thread even if it is performing something that may block for long period of time.
+ * In rare occasions, this class can also be used by a sensor that requires long period of time to acquire its
+ * data but arguably, one could just call TrcTaskMgr to create a STANDALONE_TASK instead.
  *
  * @param <T> specifies the data type that the periodic task will be acquiring/processing.
  */
-public class TrcThread<T>
+public class TrcPeriodicThread<T>
 {
-    private static final String moduleName = "TrcThread";
+    private static final String moduleName = "TrcPeriodicThread";
     private static final boolean debugEnabled = false;
     private static final boolean tracingEnabled = false;
     private static final boolean useGlobalTracer = false;
@@ -164,7 +166,7 @@ public class TrcThread<T>
      * @param instanceName specifies the instance name.
      * @param task specifies the periodic task the thread is to execute.
      */
-    public TrcThread(final String instanceName, PeriodicTask task, Object context)
+    public TrcPeriodicThread(final String instanceName, PeriodicTask task, Object context)
     {
         if (debugEnabled)
         {
@@ -177,7 +179,7 @@ public class TrcThread<T>
         this.task = task;
         this.context = context;
         taskState = new TaskState(instanceName, this::run);
-    }   //TrcThread
+    }   //TrcPeriodicThread
 
     /**
      * This method returns the instance name.
@@ -362,4 +364,4 @@ public class TrcThread<T>
         }
     }   //run
 
-}   //class TrcThread
+}   //class TrcPeriodicThread

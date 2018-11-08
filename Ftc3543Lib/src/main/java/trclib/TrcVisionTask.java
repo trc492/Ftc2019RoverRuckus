@@ -31,7 +31,7 @@ package trclib;
  * @param <I> specifies the type of the input image.
  * @param <O> specifies the type of the detected objects.
  */
-public class TrcVisionTask<I, O> implements TrcThread.PeriodicTask
+public class TrcVisionTask<I, O> implements TrcPeriodicThread.PeriodicTask
 {
     private static final String moduleName = "TrcVisionTask";
     private static final boolean debugEnabled = false;
@@ -80,7 +80,7 @@ public class TrcVisionTask<I, O> implements TrcThread.PeriodicTask
     private O[] detectedObjectBuffers;
     private int imageIndex = 0;
     private int bufferIndex = 0;
-    private TrcThread<O> visionTask;
+    private TrcPeriodicThread<O> visionTask;
 
     /**
      * Constructor: Create an instance of the object.
@@ -102,7 +102,7 @@ public class TrcVisionTask<I, O> implements TrcThread.PeriodicTask
         this.visionProcessor = visionProcessor;
         this.imageBuffers = imageBuffers;
         this.detectedObjectBuffers = detectedObjectBuffers;
-        visionTask = new TrcThread<>(instanceName, this, null);
+        visionTask = new TrcPeriodicThread<>(instanceName, this, null);
     }   //TrcVisionTask
 
     /**
@@ -230,7 +230,7 @@ public class TrcVisionTask<I, O> implements TrcThread.PeriodicTask
     }   //getProcessingInterval
 
     //
-    // Implements TrcThread.PeriodicTask interface.
+    // Implements TrcPeriodicThread.PeriodicTask interface.
     //
 
     /**
