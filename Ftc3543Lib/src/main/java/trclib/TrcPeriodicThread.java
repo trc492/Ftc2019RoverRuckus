@@ -25,10 +25,10 @@ package trclib;
 /**
  * This class implements a platform independent periodic task by using a separate thread. When enabled, the thread
  * periodically calls the runPeriodic method. Generally, this class is used by TrcTaskMgr to create a standalone
- * thread that runs the periodic task when STANDALONE_TASK is registered. By doing so, the standalone task doesn't
+ * thread that runs the periodic task when PERIODIC_THREAD is registered. By doing so, the standalone task doesn't
  * slow down the main robot thread even if it is performing something that may block for long period of time.
  * In rare occasions, this class can also be used by a sensor that requires long period of time to acquire its
- * data but arguably, one could just call TrcTaskMgr to create a STANDALONE_TASK instead.
+ * data but arguably, one could just call TrcTaskMgr to create a PERIODIC_THREAD instead.
  *
  * @param <T> specifies the data type that the periodic task will be acquiring/processing.
  */

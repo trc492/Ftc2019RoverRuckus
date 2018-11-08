@@ -161,11 +161,11 @@ public abstract class TrcPixyCam
         if (enabled)
         {
             sm.start(ReaderState.SYNC);
-            readerTaskObj.registerTask(TrcTaskMgr.TaskType.STANDALONE_TASK);
+            readerTaskObj.registerTask(TrcTaskMgr.TaskType.PERIODIC_THREAD);
         }
         else
         {
-            readerTaskObj.unregisterTask(TrcTaskMgr.TaskType.STANDALONE_TASK);
+            readerTaskObj.unregisterTask(TrcTaskMgr.TaskType.PERIODIC_THREAD);
             sm.stop();
         }
         this.enabled = enabled;

@@ -79,9 +79,9 @@ public class TrcTaskMgr implements TrcPeriodicThread.PeriodicTask
         POSTCONTINUOUS_TASK(5),
 
         /**
-         * STANDALONE_TASK is a task with its own thread. It is called periodically at the specified interval.
+         * PERIODIC_THREAD is a task with its own thread. It is called periodically at the specified interval.
          */
-        STANDALONE_TASK(6);
+        PERIODIC_THREAD(6);
 
         public int value;
 
@@ -187,13 +187,13 @@ public class TrcTaskMgr implements TrcPeriodicThread.PeriodicTask
          * This method adds the given task type to the task object.
          *
          * @param type specifies the task type.
-         * @param taskInterval specifies the periodic interval for STANDALONE_TASK, ignore for any other task types.
+         * @param taskInterval specifies the periodic interval for PERIODIC_THREAD, ignore for any other task types.
          *                     If zero interval is specified, the task will be run in a tight loop.
          * @return true if successful, false if the task with that task type is already registered in the task list.
          */
         public boolean registerTask(TaskType type, long taskInterval)
         {
-            if (type == TaskType.STANDALONE_TASK && taskInterval < 0)
+            if (type == TaskType.PERIODIC_THREAD && taskInterval < 0)
             {
                 throw new IllegalArgumentException("taskInterval must be greater than or equal to 0.");
             }
@@ -202,7 +202,7 @@ public class TrcTaskMgr implements TrcPeriodicThread.PeriodicTask
 
             if (added)
             {
-                if (type == TaskType.STANDALONE_TASK)
+                if (type == TaskType.PERIODIC_THREAD)
                 {
                     taskThread = new TrcPeriodicThread<>(taskName, TrcTaskMgr.getInstance(), this);
                     this.taskInterval = taskInterval;
@@ -233,7 +233,7 @@ public class TrcTaskMgr implements TrcPeriodicThread.PeriodicTask
          */
         public boolean unregisterTask(TaskType type)
         {
-            if (type == TaskType.STANDALONE_TASK && taskThread != null)
+            if (type == TaskType.PERIODIC_THREAD && taskThread != null)
             {
                 taskThread.terminateTask();
                 taskThread = null;
@@ -286,9 +286,9 @@ public class TrcTaskMgr implements TrcPeriodicThread.PeriodicTask
         }   //getTask
 
         /**
-         * This method returns the task interval for TaskType.STANDALONE_TASK.
+         * This method returns the task interval for TaskType.PERIODIC_THREAD.
          *
-         * @return task interval in msec. If there is no STANDALONE_TASK type in the task object, zero is returned.
+         * @return task interval in msec. If there is no PERIODIC_THREAD type in the task object, zero is returned.
          */
         public long getTaskInterval()
         {
@@ -356,7 +356,7 @@ public class TrcTaskMgr implements TrcPeriodicThread.PeriodicTask
     }   //createTask
 
     /**
-     * This method removes the task object from the task list. If the task object is registered as a STANDALONE_TASK,
+     * This method removes the task object from the task list. If the task object is registered as a PERIODIC_THREAD,
      * it will be unregistered so the standalone thread will be terminated.
      *
      * @param taskObj specifies the task object to be removed from the list.
@@ -364,12 +364,12 @@ public class TrcTaskMgr implements TrcPeriodicThread.PeriodicTask
      */
     public boolean removeTask(TaskObject taskObj)
     {
-        if (taskObj.hasType(TaskType.STANDALONE_TASK))
+        if (taskObj.hasType(TaskType.PERIODIC_THREAD))
         {
             //
-            // Task contains the type STANDALONE_TASK, unregister it so that the task thread will terminate.
+            // Task contains the type PERIODIC_THREAD, unregister it so that the task thread will terminate.
             //
-            taskObj.unregisterTask(TaskType.STANDALONE_TASK);
+            taskObj.unregisterTask(TaskType.PERIODIC_THREAD);
         }
 
         return taskList.remove(taskObj);
@@ -513,18 +513,18 @@ public class TrcTaskMgr implements TrcPeriodicThread.PeriodicTask
 
         long startNanoTime = TrcUtil.getCurrentTimeNanos();
 
-        taskObj.getTask().runTask(TaskType.STANDALONE_TASK, TrcRobot.getRunMode());
+        taskObj.getTask().runTask(TaskType.PERIODIC_THREAD, TrcRobot.getRunMode());
 
         long elapsedTime = TrcUtil.getCurrentTimeNanos() - startNanoTime;
-        taskObj.taskTotalNanoTimes[TaskType.STANDALONE_TASK.value] += elapsedTime;
-        taskObj.taskTimeSlotCounts[TaskType.STANDALONE_TASK.value]++;
+        taskObj.taskTotalNanoTimes[TaskType.PERIODIC_THREAD.value] += elapsedTime;
+        taskObj.taskTimeSlotCounts[TaskType.PERIODIC_THREAD.value]++;
 
         if (debugEnabled)
         {
             if (elapsedTime > taskObj.getTaskInterval())
             {
                 dbgTrace.traceWarn(funcName, "%s.%s takes too long (%.3f)",
-                        taskObj.taskName, TaskType.STANDALONE_TASK, elapsedTime/1000000000.0);
+                        taskObj.taskName, TaskType.PERIODIC_THREAD, elapsedTime/1000000000.0);
             }
         }
     }   //runPeriodic

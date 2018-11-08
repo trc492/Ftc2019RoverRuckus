@@ -117,9 +117,11 @@ public abstract class TrcDriveBase
         resetStallTimer();
 
         TrcTaskMgr taskMgr = TrcTaskMgr.getInstance();
-        TrcTaskMgr.TaskObject driveBaseTaskObj = taskMgr.createTask(moduleName + ".driveBaseTask", this::driveBaseTask);
-        driveBaseTaskObj.registerTask(TrcTaskMgr.TaskType.STOP_TASK);
-        driveBaseTaskObj.registerTask(TrcTaskMgr.TaskType.PRECONTINUOUS_TASK);
+        TrcTaskMgr.TaskObject odometryTaskObj = taskMgr.createTask(
+                moduleName + ".odometryTask", this::odometryTask);
+        TrcTaskMgr.TaskObject stopTaskObj = taskMgr.createTask(moduleName + ".stopTask", this::stopTask);
+        odometryTaskObj.registerTask(TrcTaskMgr.TaskType.PERIODIC_THREAD, 20);
+        stopTaskObj.registerTask(TrcTaskMgr.TaskType.STOP_TASK);
     }   //TrcDriveBase
 
     /**
@@ -140,7 +142,7 @@ public abstract class TrcDriveBase
      * @param yScale specifies the Y position scale.
      * @param rotScale specifies the rotation scale.
      */
-    public void setPositionScales(double xScale, double yScale, double rotScale)
+    public synchronized void setPositionScales(double xScale, double yScale, double rotScale)
     {
         final String funcName = "setPositionScales";
 
@@ -184,7 +186,7 @@ public abstract class TrcDriveBase
      *
      * @return raw X position.
      */
-    public double getRawXPosition()
+    public synchronized double getRawXPosition()
     {
         final String funcName = "getRawXPosition";
 
@@ -202,7 +204,7 @@ public abstract class TrcDriveBase
      *
      * @return raw Y position.
      */
-    public double getRawYPosition()
+    public synchronized double getRawYPosition()
     {
         final String funcName = "getRawYPosition";
 
@@ -220,7 +222,7 @@ public abstract class TrcDriveBase
      *
      * @return raw rotation position.
      */
-    public double getRawRotationPosition()
+    public synchronized double getRawRotationPosition()
     {
         final String funcName = "getRawRotationPosition";
 
@@ -238,7 +240,7 @@ public abstract class TrcDriveBase
      *
      * @return X position.
      */
-    public double getXPosition()
+    public synchronized double getXPosition()
     {
         final String funcName = "getXPosition";
         double pos = xRawPos*xScale;
@@ -257,7 +259,7 @@ public abstract class TrcDriveBase
      *
      * @return Y position.
      */
-    public double getYPosition()
+    public synchronized double getYPosition()
     {
         final String funcName = "getYPosition";
         double pos = yRawPos*yScale;
@@ -276,7 +278,7 @@ public abstract class TrcDriveBase
      *
      * @return rotation position.
      */
-    public double getRotationPosition()
+    public synchronized double getRotationPosition()
     {
         final String funcName = "getRotationPosition";
         double pos = rotRawPos*rotScale;
@@ -296,7 +298,7 @@ public abstract class TrcDriveBase
      *
      * @return drive base heading
      */
-    public double getHeading()
+    public synchronized double getHeading()
     {
         final String funcName = "getHeading";
 
@@ -314,7 +316,7 @@ public abstract class TrcDriveBase
      *
      * @return X speed.
      */
-    public double getXSpeed()
+    public synchronized double getXSpeed()
     {
         final String funcName = "getXSpeed";
         double speed = xRawSpeed*xScale;
@@ -333,7 +335,7 @@ public abstract class TrcDriveBase
      *
      * @return Y speed.
      */
-    public double getYSpeed()
+    public synchronized double getYSpeed()
     {
         final String funcName = "getYSpeed";
         double speed = yRawSpeed*yScale;
@@ -352,7 +354,7 @@ public abstract class TrcDriveBase
      *
      * @return gyro turn rate.
      */
-    public double getGyroTurnRate()
+    public synchronized double getGyroTurnRate()
     {
         final String funcName = "getGyroTurnRate";
 
@@ -372,7 +374,7 @@ public abstract class TrcDriveBase
      * @param hardware specifies true for resetting hardware position, false for resetting software position.
      * @param resetGyro specifies true to also reset the gyro heading, false otherwise.
      */
-    public void resetOdometry(boolean hardware, boolean resetGyro)
+    public synchronized void resetOdometry(boolean hardware, boolean resetGyro)
     {
         final String funcName = "resetOdometry";
 
@@ -427,7 +429,7 @@ public abstract class TrcDriveBase
      * @param pos specifies the drive base X position.
      * @param speed specifies the drive base X speed.
      */
-    protected void updateXOdometry(double pos, double speed)
+    protected synchronized void updateXOdometry(double pos, double speed)
     {
         final String funcName = "updateXOdometry";
 
@@ -447,7 +449,7 @@ public abstract class TrcDriveBase
      * @param pos specifies the drive base Y position.
      * @param speed specifies the drive base Y speed.
      */
-    protected void updateYOdometry(double pos, double speed)
+    protected synchronized void updateYOdometry(double pos, double speed)
     {
         final String funcName = "updateYOdometry";
 
@@ -466,7 +468,7 @@ public abstract class TrcDriveBase
      *
      * @param pos specifies the drive base rotation position.
      */
-    protected void updateRotationOdometry(double pos)
+    protected synchronized void updateRotationOdometry(double pos)
     {
         final String funcName = "updateRotationOdometry";
 
@@ -661,7 +663,7 @@ public abstract class TrcDriveBase
      * @param stallTime specifies the stall time in seconds to be considered stalled.
      * @return true if the motor is stalled, false otherwise.
      */
-    protected boolean isMotorStalled(int index, double stallTime)
+    protected synchronized boolean isMotorStalled(int index, double stallTime)
     {
         final String funcName = "isMotorStalled";
         double currTime = TrcUtil.getCurrentTime();
@@ -679,7 +681,7 @@ public abstract class TrcDriveBase
     /**
      * This method resets the all stall timers.
      */
-    public void resetStallTimer()
+    public synchronized void resetStallTimer()
     {
         final String funcName = "resetStallTimer";
 
@@ -702,7 +704,7 @@ public abstract class TrcDriveBase
      * @param stallTime specifies the stall time in seconds.
      * @return true if the drive base is stalled, false otherwise.
      */
-    public boolean isStalled(double stallTime)
+    public synchronized boolean isStalled(double stallTime)
     {
         final String funcName = "isStalled";
         boolean stalled = true;
@@ -1015,46 +1017,61 @@ public abstract class TrcDriveBase
 
     /**
      * This method is called periodically to update the drive base odometry (xPos, yPos, rotPos, gyroHeading).
-     * It's also called when the competition mode is about to end to stop the drive base.
      *
      * @param taskType specifies the type of task being run.
      * @param runMode specifies the competition mode that is about to end (e.g. Autonomous, TeleOp, Test).
      */
-    public void driveBaseTask(TrcTaskMgr.TaskType taskType, TrcRobot.RunMode runMode)
+    public synchronized void odometryTask(TrcTaskMgr.TaskType taskType, TrcRobot.RunMode runMode)
     {
-        final String funcName = "driveBaseTask";
+        final String funcName = "odometryTask";
 
         if (debugEnabled)
         {
             dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.TASK, "taskType=%s,runMode=%s", taskType, runMode);
         }
 
-        if (taskType == TaskType.PRECONTINUOUS_TASK)
+        updateOdometry();
+        if (gyro != null)
         {
-            updateOdometry();
-            if (gyro != null)
-            {
-                gyroHeading = gyro.getZHeading().value;
-                gyroTurnRate = gyro.getZRotationRate().value;
-            }
-
-            double currTime = TrcUtil.getCurrentTime();
-            for (int i = 0; i < motors.length; i++)
-            {
-                double pos = motors[i].getPosition();
-                if (pos != prevPositions[i] || motors[i].getPower() == 0.0) stallStartTimes[i] = currTime;
-                prevPositions[i] = pos;
-            }
+            gyroHeading = gyro.getZHeading().value;
+            gyroTurnRate = gyro.getZRotationRate().value;
         }
-        else if (taskType == TaskType.STOP_TASK && runMode != TrcRobot.RunMode.DISABLED_MODE)
+
+        double currTime = TrcUtil.getCurrentTime();
+        for (int i = 0; i < motors.length; i++)
         {
-            stop();
+            double pos = motors[i].getPosition();
+            if (pos != prevPositions[i] || motors[i].getPower() == 0.0) stallStartTimes[i] = currTime;
+            prevPositions[i] = pos;
         }
 
         if (debugEnabled)
         {
             dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.TASK);
         }
-    }   //driveBaseTask
+    }   //odometryTask
+
+    /**
+     * This method is called when the competition mode is about to end to stop the drive base.
+     *
+     * @param taskType specifies the type of task being run.
+     * @param runMode specifies the competition mode that is about to end (e.g. Autonomous, TeleOp, Test).
+     */
+    public void stopTask(TrcTaskMgr.TaskType taskType, TrcRobot.RunMode runMode)
+    {
+        final String funcName = "stopTask";
+
+        if (debugEnabled)
+        {
+            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.TASK, "taskType=%s,runMode=%s", taskType, runMode);
+        }
+
+        stop();
+
+        if (debugEnabled)
+        {
+            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.TASK);
+        }
+    }   //stopTask
 
 }   //class TrcDriveBase

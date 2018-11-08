@@ -635,12 +635,12 @@ public class TrcPidDrive
         if (enabled)
         {
             stopTaskObj.registerTask(TaskType.STOP_TASK);
-            driveTaskObj.registerTask(TaskType.STANDALONE_TASK, 50);
+            driveTaskObj.registerTask(TaskType.PERIODIC_THREAD, 50);
         }
         else
         {
             stopTaskObj.unregisterTask(TaskType.STOP_TASK);
-            driveTaskObj.unregisterTask(TaskType.STANDALONE_TASK);
+            driveTaskObj.unregisterTask(TaskType.PERIODIC_THREAD);
         }
         active = enabled;
 
