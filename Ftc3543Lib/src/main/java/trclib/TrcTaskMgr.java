@@ -326,6 +326,14 @@ public class TrcTaskMgr implements TrcThread.PeriodicTask
         return instance;
     }   //getInstance
 
+    /**
+     * This method creates a TRC task. If the TRC task is registered as a STANDALONE task, it is run on a separately
+     * created thread. Otherwise, it is run on the main robot thread as a cooperative multi-tasking task.
+     *
+     * @param taskName specifies the task name.
+     * @param task specifies the Task interface for this task.
+     * @return created task object.
+     */
     public TaskObject createTask(final String taskName, Task task)
     {
         final String funcName = "createTask";
@@ -347,6 +355,13 @@ public class TrcTaskMgr implements TrcThread.PeriodicTask
         return taskObj;
     }   //createTask
 
+    /**
+     * This method removes the task object from the task list. If the task object is registered as a STANDALONE_TASK,
+     * it will be unregistered so the standalone thread will be terminated.
+     *
+     * @param taskObj specifies the task object to be removed from the list.
+     * @return true if the task object is removed successfully, false otherwise (e.g. no such task in the list).
+     */
     public boolean removeTask(TaskObject taskObj)
     {
         if (taskObj.hasType(TaskType.STANDALONE_TASK))
@@ -369,8 +384,11 @@ public class TrcTaskMgr implements TrcThread.PeriodicTask
     public void executeTaskType(TaskType type, TrcRobot.RunMode mode)
     {
         final String funcName = "executeTaskType";
-
-        for (int i = 0; i < taskList.size(); i++)
+        //
+        // Traverse the list backward because we are removing task objects from the list on STOP_TASK.
+        // This way the list order won't be messed up.
+        //
+        for (int i = taskList.size() - 1; i >= 0; i--)
         {
             TaskObject taskObj = taskList.get(i);
             if (taskObj.hasType(type))
@@ -394,6 +412,7 @@ public class TrcTaskMgr implements TrcThread.PeriodicTask
                             dbgTrace.traceInfo(funcName, "Executing StopTask %s", taskObj.toString());
                         }
                         task.runTask(TaskType.STOP_TASK, mode);
+                        removeTask(taskObj);
                         break;
 
                     case PREPERIODIC_TASK:

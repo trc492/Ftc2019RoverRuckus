@@ -30,7 +30,7 @@ package trclib;
  *
  * @param <T> specifies the data type that the periodic task will be acquiring/processing.
  */
-public class TrcThread<T> implements Runnable
+public class TrcThread<T>
 {
     private static final String moduleName = "TrcThread";
     private static final boolean debugEnabled = false;
@@ -53,18 +53,19 @@ public class TrcThread<T> implements Runnable
     {
         private volatile boolean taskEnabled;
         private volatile boolean oneShotEnabled;
-        private volatile boolean taskInterrupted;
         private T data;
+        private Thread periodicThread = null;
 
         /**
          * Constructor: Create an instance of the object.
          */
-        public TaskState()
+        public TaskState(String instanceName, Runnable runnable)
         {
             taskEnabled = false;
             oneShotEnabled = false;
-            taskInterrupted = false;
             data = null;
+            periodicThread = new Thread(runnable, instanceName);
+            periodicThread.start();
         }   //TaskState
 
         /**
@@ -155,8 +156,7 @@ public class TrcThread<T> implements Runnable
     private PeriodicTask task;
     private Object context;
     private long processingInterval = 0;    // in msec
-    private TaskState taskState = new TaskState();
-    private Thread periodicThread = null;
+    private TaskState taskState = null;
 
     /**
      * Constructor: Create an instance of the object.
@@ -176,8 +176,7 @@ public class TrcThread<T> implements Runnable
         this.instanceName = instanceName;
         this.task = task;
         this.context = context;
-        periodicThread = new Thread(this, instanceName);
-        periodicThread.start();
+        taskState = new TaskState(instanceName, this::run);
     }   //TrcThread
 
     /**
@@ -322,7 +321,6 @@ public class TrcThread<T> implements Runnable
     /**
      * This method runs the periodic processing task.
      */
-    @Override
     public void run()
     {
         final String funcName = "run";
