@@ -341,14 +341,17 @@ public class TrcThread<T>
 
             if (processingInterval > 0)
             {
-                try
+                long sleepTime = processingInterval - (TrcUtil.getCurrentTimeMillis() - startTime);
+                if (sleepTime > 0)
                 {
-                    long sleepTime = processingInterval - (TrcUtil.getCurrentTimeMillis() - startTime);
-                    Thread.sleep(sleepTime);
-                }
-                catch (InterruptedException e)
-                {
-                    break;
+                    try
+                    {
+                        Thread.sleep(sleepTime);
+                    }
+                    catch (InterruptedException e)
+                    {
+                        break;
+                    }
                 }
             }
         }
