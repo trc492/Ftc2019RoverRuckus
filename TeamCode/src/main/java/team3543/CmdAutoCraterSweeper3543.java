@@ -29,13 +29,13 @@ import trclib.TrcRobot;
 import trclib.TrcStateMachine;
 import trclib.TrcTimer;
 
-class CmdAutoCrater3543 implements TrcRobot.RobotCommand
+class CmdAutoCraterSweeper3543 implements TrcRobot.RobotCommand
 {
     private static final boolean debugXPid = true;
     private static final boolean debugYPid = true;
     private static final boolean debugTurnPid = true;
 
-    private static final String moduleName = "CmdAutoCrater3543";
+    private static final String moduleName = "CmdAutoCraterSweeper3543";
 
     private Robot3543 robot;
     private AutoCommon.Alliance alliance;
@@ -51,8 +51,8 @@ class CmdAutoCrater3543 implements TrcRobot.RobotCommand
     private double targetY = 0.0;
     private CmdSweepMineral cmdSweepMineral = null;
 
-    CmdAutoCrater3543(Robot3543 robot, AutoCommon.Alliance alliance, double delay,
-                      boolean startHung, boolean doMineral, boolean doTeamMarker, boolean doTeammateMineral)
+    CmdAutoCraterSweeper3543(Robot3543 robot, AutoCommon.Alliance alliance, double delay,
+                             boolean startHung, boolean doMineral, boolean doTeamMarker, boolean doTeammateMineral)
     {
         robot.tracer.traceInfo(moduleName,
                 "Alliance=%s,Delay=%.0f,startHung=%s,Mineral=%s,TeamMarker=%s,TeammateMineral=%s",
@@ -69,7 +69,7 @@ class CmdAutoCrater3543 implements TrcRobot.RobotCommand
         timer = new TrcTimer(moduleName);
         sm = new TrcStateMachine<>(moduleName);
         sm.start(startHung? State.DO_DELAY: State.GO_TOWARDS_MINERAL);
-    }   //CmdAutoCrater3543
+    }   //CmdAutoCraterSweeper3543
 
     private enum State
     {
@@ -465,4 +465,4 @@ class CmdAutoCrater3543 implements TrcRobot.RobotCommand
         return !sm.isEnabled();
     }   //cmdPeriodic
 
-}   //class CmdAutoCrater3543
+}   //class CmdAutoCraterSweeper3543

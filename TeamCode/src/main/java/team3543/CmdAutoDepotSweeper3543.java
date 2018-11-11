@@ -29,13 +29,13 @@ import trclib.TrcRobot;
 import trclib.TrcStateMachine;
 import trclib.TrcTimer;
 
-class CmdAutoDepot3543 implements TrcRobot.RobotCommand
+class CmdAutoDepotSweeper3543 implements TrcRobot.RobotCommand
 {
     private static final boolean debugXPid = true;
     private static final boolean debugYPid = true;
     private static final boolean debugTurnPid = true;
 
-    private static final String moduleName = "CmdAutoDepot3543";
+    private static final String moduleName = "CmdAutoDepotSweeper3543";
 
     private Robot3543 robot;
     private AutoCommon.Alliance alliance;
@@ -52,8 +52,8 @@ class CmdAutoDepot3543 implements TrcRobot.RobotCommand
 
     private State prevState = null;
 
-    CmdAutoDepot3543(Robot3543 robot, AutoCommon.Alliance alliance, double delay,
-                     boolean startHung, boolean doMineral, boolean doTeamMarker)
+    CmdAutoDepotSweeper3543(Robot3543 robot, AutoCommon.Alliance alliance, double delay,
+                            boolean startHung, boolean doMineral, boolean doTeamMarker)
     {
         robot.tracer.traceInfo(moduleName,
                 "Alliance=%s,Delay=%.0f,Hanging=%s,Mineral=%s,TeamMarker=%s",
@@ -71,7 +71,7 @@ class CmdAutoDepot3543 implements TrcRobot.RobotCommand
         sm.start(startHung? State.DO_DELAY:
                  doMineral? State.GO_TOWARDS_MINERAL:
                  doTeamMarker? State.PLOW_TO_DEPOT: State.DONE);
-    }   //CmdAutoDepot3543
+    }   //CmdAutoDepotSweeper3543
 
     private enum State
     {
@@ -410,4 +410,4 @@ class CmdAutoDepot3543 implements TrcRobot.RobotCommand
         return !sm.isEnabled();
     }   //cmdPeriodic
 
-}   //class CmdAutoDepot3543
+}   //class CmdAutoDepotSweeper3543
