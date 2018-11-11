@@ -23,9 +23,7 @@
 package team3543;
 
 import common.AutoCommon;
-import common.CmdSweepMineral;
-import common.PixyVision;
-import common.RobotInfo;
+import common.TensorFlowVision;
 import trclib.TrcEvent;
 import trclib.TrcRobot;
 import trclib.TrcStateMachine;
@@ -50,7 +48,6 @@ class CmdAutoDepot3543 implements TrcRobot.RobotCommand
     private TrcStateMachine<State> sm;
     private double targetX = 0.0;
     private double targetY = 0.0;
-    private CmdSweepMineral cmdSweepMineral = null;
 
     private int retries = 0;
     private double mineralAngle = 0.0;
@@ -70,11 +67,6 @@ class CmdAutoDepot3543 implements TrcRobot.RobotCommand
         this.doMineral = doMineral;
         this.doTeamMarker = doTeamMarker;
 
-        if (robot.pixyVision != null)
-        {
-            robot.pixyVision.setCameraEnabled(true);
-        }
-
         event = new TrcEvent(moduleName);
         timer = new TrcTimer(moduleName);
         sm = new TrcStateMachine<>(moduleName);
@@ -87,7 +79,7 @@ class CmdAutoDepot3543 implements TrcRobot.RobotCommand
     {
         DO_DELAY,
         LOWER_ROBOT,
-        DO_PIXY_SCAN,
+        SCAN_MINERAL,
         UNHOOK_ROBOT,
         TURN_TO_MINERAL,
         PLOW_TO_DEPOT,
@@ -156,29 +148,25 @@ class CmdAutoDepot3543 implements TrcRobot.RobotCommand
                     // The robot started hanging on the lander, lower it to the ground.
                     //
                     robot.elevator.setPosition(RobotInfo3543.ELEVATOR_HANGING_HEIGHT, event, 0.0);
-                    sm.waitForSingleEvent(event, State.DO_PIXY_SCAN);
+                    sm.waitForSingleEvent(event, State.SCAN_MINERAL);
                     break;
 
-                case DO_PIXY_SCAN:
+                case SCAN_MINERAL:
                     //
-                    // Is the mineral left, mid or right? Scan the, with the pixy.
+                    // Is the mineral left, mid or right? Scan mineral with vision.
                     //
-                    if (robot.pixyVision != null)
+                    if (robot.tensorFlowVision != null)
                     {
-                        //
-                        // CodeReview: Pixy may fail to find the target in which case it will return null.
-                        // You need to handle that! This will cause NullPointerException.
-                        //
-                        PixyVision.TargetInfo targetInfo =
-                                robot.pixyVision == null? null:
-                                        robot.pixyVision.getTargetInfo(RobotInfo.PIXY_GOLD_MINERAL_SIGNATURE);
+                        TensorFlowVision.TargetInfo targetInfo =
+                                robot.tensorFlowVision == null? null:
+                                        robot.tensorFlowVision.getTargetInfo(TensorFlowVision.LABEL_GOLD_MINERAL);
 
                         if (targetInfo != null)
                         {
                             //
                             // Found gold mineral.
                             //
-                            int third = PixyVision.PIXYCAM_WIDTH / 3;
+                            int third = TensorFlowVision.IMAGE_WIDTH / 3;
                             int t2 = third * 2;
                             int xPos = targetInfo.rect.x;
                             if (xPos <= third && xPos >= 0)
@@ -196,9 +184,8 @@ class CmdAutoDepot3543 implements TrcRobot.RobotCommand
                                 // right
                                mineralAngle = 45.0;
                             }
-                            robot.tracer.traceInfo(moduleName, "%s[%d]: found gold mineral (x/y/angle/rect) %s.",
-                                    state, retries,
-                                    targetInfo.xDistance, targetInfo.yDistance, targetInfo.angle, targetInfo.rect);
+                            robot.tracer.traceInfo(moduleName, "%s[%d]: found gold mineral %s.",
+                                    state, retries, targetInfo);
                             sm.setState(State.UNHOOK_ROBOT);
                         }
                         else

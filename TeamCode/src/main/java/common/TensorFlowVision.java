@@ -57,6 +57,8 @@ public class TensorFlowVision
         }
     }   //class TargetInfo
 
+    public static final int IMAGE_WIDTH = 640;      //in pixels
+    public static final int IMAGE_HEIGHT = 480;     //in pixels
     public static final String LABEL_GOLD_MINERAL = "Gold Mineral";
     public static final String LABEL_SILVER_MINERAL = "Silver Mineral";
 

@@ -23,9 +23,7 @@
 package team3543;
 
 import common.AutoCommon;
-import common.CmdSweepMineral;
-import common.PixyVision;
-import common.RobotInfo;
+import common.TensorFlowVision;
 import trclib.TrcEvent;
 import trclib.TrcRobot;
 import trclib.TrcStateMachine;
@@ -51,7 +49,6 @@ public class CmdAutoCrater3543 implements TrcRobot.RobotCommand
     private TrcStateMachine<State> sm;
     private double targetX = 0.0;
     private double targetY = 0.0;
-    private CmdSweepMineral cmdSweepMineral = null;
 
     private int retries = 0;
     private double mineralAngle = 0.0;
@@ -84,7 +81,7 @@ public class CmdAutoCrater3543 implements TrcRobot.RobotCommand
         UNHOOK_ROBOT,
         PLOW_TO_CRATER,
         GO_TOWARDS_MINERAL,
-        DO_PIXY_SCAN,
+        SCAN_MINERAL,
         TURN_TO_MINERAL,
         HIT_MINERAL,
         DRIVE_BACK_TO_START,
@@ -156,26 +153,22 @@ public class CmdAutoCrater3543 implements TrcRobot.RobotCommand
                     sm.waitForSingleEvent(event, State.GO_TOWARDS_MINERAL);
                     break;
 
-                case DO_PIXY_SCAN:
+                case SCAN_MINERAL:
                     //
-                    // Is the mineral left, mid or right? Scan the, with the pixy.
+                    // Is the mineral left, mid or right? Scan mineral with vision.
                     //
-                    if (robot.pixyVision != null)
+                    if (robot.tensorFlowVision != null)
                     {
-                        //
-                        // CodeReview: Pixy may fail to find the target in which case it will return null.
-                        // You need to handle that! This will cause NullPointerException.
-                        //
-                        PixyVision.TargetInfo targetInfo =
-                                robot.pixyVision == null? null:
-                                        robot.pixyVision.getTargetInfo(RobotInfo.PIXY_GOLD_MINERAL_SIGNATURE);
+                        TensorFlowVision.TargetInfo targetInfo =
+                                robot.tensorFlowVision == null? null:
+                                        robot.tensorFlowVision.getTargetInfo(TensorFlowVision.LABEL_GOLD_MINERAL);
 
                         if (targetInfo != null)
                         {
                             //
                             // Found gold mineral.
                             //
-                            int third = PixyVision.PIXYCAM_WIDTH / 3;
+                            int third = TensorFlowVision.IMAGE_WIDTH / 3;
                             int t2 = third * 2;
                             int xPos = targetInfo.rect.x;
                             if (xPos <= third && xPos >= 0)
@@ -196,9 +189,8 @@ public class CmdAutoCrater3543 implements TrcRobot.RobotCommand
                                 mineralAngle = 45.0;
                                 wallTurnAngle = -135.0;
                             }
-                            robot.tracer.traceInfo(moduleName, "%s[%d]: found gold mineral (x/y/angle/rect) %s.",
-                                    state, retries,
-                                    targetInfo.xDistance, targetInfo.yDistance, targetInfo.angle, targetInfo.rect);
+                            robot.tracer.traceInfo(moduleName, "%s[%d]: found gold mineral %s.",
+                                    state, retries, targetInfo);
                             sm.setState(State.UNHOOK_ROBOT);
                         }
                         else
