@@ -79,7 +79,8 @@ public class TensorFlowVision
         if (ClassFactory.getInstance().canCreateTFObjectDetector())
         {
             TFObjectDetector.Parameters tfodParameters =
-                    tfodMonitorViewId == -1? null: new TFObjectDetector.Parameters(tfodMonitorViewId);
+                    tfodMonitorViewId == -1?
+                            new TFObjectDetector.Parameters() : new TFObjectDetector.Parameters(tfodMonitorViewId);
             TFObjectDetector tfod =
                     ClassFactory.getInstance().createTFObjectDetector(tfodParameters, vuforia.getLocalizer());
             tfod.loadModelFromAsset(TFOD_MODEL_ASSET, LABEL_GOLD_MINERAL, LABEL_SILVER_MINERAL);
