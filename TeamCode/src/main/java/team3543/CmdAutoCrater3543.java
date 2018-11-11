@@ -49,7 +49,6 @@ public class CmdAutoCrater3543 implements TrcRobot.RobotCommand
     private TrcStateMachine<State> sm;
     private double targetX = 0.0;
     private double targetY = 0.0;
-
     private int retries = 0;
     private double mineralAngle = 0.0;
     private double wallTurnAngle = 0.0;

@@ -63,6 +63,7 @@ public class TensorFlowVision
     public static final String LABEL_SILVER_MINERAL = "Silver Mineral";
 
     private Robot robot;
+    private FtcVuforia vuforia;
     private TFObjectDetector tfod;
 
     public TensorFlowVision(
@@ -76,7 +77,7 @@ public class TensorFlowVision
         final String TFOD_MODEL_ASSET = "RoverRuckus.tflite";
 
         this.robot = robot;
-        FtcVuforia vuforia = new FtcVuforia(VUFORIA_LICENSE_KEY, -1, cameraDir);
+        vuforia = new FtcVuforia(VUFORIA_LICENSE_KEY, -1, cameraDir);
 
         if (ClassFactory.getInstance().canCreateTFObjectDetector())
         {
@@ -110,6 +111,11 @@ public class TensorFlowVision
         setEnabled(false);
         tfod.shutdown();
     }   //shutdown
+
+    public void setLightEnabled(boolean enabled)
+    {
+        vuforia.setFlashlightEnabled(enabled);
+    }   //setLightEnabled
 
     /**
      * This method gets the rectangle of the last detected target from the camera. If the camera does not have

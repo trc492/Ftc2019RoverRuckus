@@ -23,7 +23,7 @@
 package team3543;
 
 import common.AutoCommon;
-import common.TensorFlowVision;
+import common.CmdDisplaceMineral;
 import trclib.TrcEvent;
 import trclib.TrcRobot;
 import trclib.TrcStateMachine;
@@ -46,13 +46,10 @@ class CmdAutoDepot3543 implements TrcRobot.RobotCommand
     private TrcEvent event;
     private TrcTimer timer;
     private TrcStateMachine<State> sm;
+
     private double targetX = 0.0;
     private double targetY = 0.0;
-
-    private int retries = 0;
-    private double mineralAngle = 0.0;
-
-    private State prevState = null;
+    private TrcRobot.RobotCommand cmdDisplaceMineral = null;
 
     CmdAutoDepot3543(Robot3543 robot, AutoCommon.Alliance alliance, double delay,
                      boolean startHung, boolean doMineral, boolean doTeamMarker)
@@ -70,38 +67,20 @@ class CmdAutoDepot3543 implements TrcRobot.RobotCommand
         event = new TrcEvent(moduleName);
         timer = new TrcTimer(moduleName);
         sm = new TrcStateMachine<>(moduleName);
-        sm.start(startHung? State.DO_DELAY:
-                 doMineral? State.PLOW_TO_MINERAL :
-                 doTeamMarker? State.PLOW_TO_DEPOT: State.DONE);
+        sm.start(startHung? State.DO_DELAY: doMineral? State.DO_MINERAL: State.PLOW_TO_DEPOT);
     }   //CmdAutoDepot3543
 
     private enum State
     {
         DO_DELAY,
         LOWER_ROBOT,
-        SCAN_MINERAL,
         UNHOOK_ROBOT,
-        TURN_TO_MINERAL,
         PLOW_TO_DEPOT,
-        LEFT_MINERAL_TURN_TO_DEPOT,
-        LEFT_MINERAL_DRIVE_TO_DEPOT,
-        LEFT_MINERAL_DROP_MARKER,
-        LEFT_MINERAL_TURN_TO_CRATER,
-        LEFT_MINERAL_DRIVE_TO_CRATER,
-        MID_MINERAL_DRIVE_TO_DEPOT,
-        MID_MINERAL_DROP_MARKER,
-        MID_MINERAL_TURN_TO_CRATER,
-        MID_MINERAL_DRIVE_TO_CRATER,
-        RIGHT_MINERAL_TURN_TO_DEPOT,
-        RIGHT_MINERAL_DRIVE_TO_DEPOT,
-        RIGHT_MINERAL_DROP_MARKER,
-        RIGHT_MINERAL_TURN_TO_CRATER,
-        RIGHT_MINERAL_DRIVE_TO_CRATER,
-        DROP_TEAM_MARKER_ONLY,
-        TURN_TOWARDS_CRATER,
-        PARK_AT_CRATER,
-        PLOW_TO_MINERAL,
-        ALIGN_MINERAL_SWEEPER,
+        DO_MINERAL,
+        DISPLACE_MINERAL,
+        DROP_TEAM_MARKER,
+        TURN_TO_CRATER,
+        DRIVE_TO_CRATER,
         DONE
     }   //enum State
 
@@ -148,237 +127,83 @@ class CmdAutoDepot3543 implements TrcRobot.RobotCommand
                     // The robot started hanging on the lander, lower it to the ground.
                     //
                     robot.elevator.setPosition(RobotInfo3543.ELEVATOR_HANGING_HEIGHT, event, 0.0);
-                    sm.waitForSingleEvent(event, State.SCAN_MINERAL);
+                    sm.waitForSingleEvent(event, State.UNHOOK_ROBOT);
                     break;
-
-                case SCAN_MINERAL:
-                    //
-                    // Is the mineral left, mid or right? Scan mineral with vision.
-                    //
-                    if (robot.tensorFlowVision != null)
-                    {
-                        TensorFlowVision.TargetInfo targetInfo =
-                                robot.tensorFlowVision == null? null:
-                                        robot.tensorFlowVision.getTargetInfo(TensorFlowVision.LABEL_GOLD_MINERAL);
-
-                        if (targetInfo != null)
-                        {
-                            //
-                            // Found gold mineral.
-                            //
-                            int third = TensorFlowVision.IMAGE_WIDTH / 3;
-                            int t2 = third * 2;
-                            int xPos = targetInfo.rect.x;
-                            if (xPos <= third && xPos >= 0)
-                            {
-                                // left
-                                mineralAngle = -45.0;
-                            }
-                            else if (xPos <= t2 && xPos > third)
-                            {
-                                // center
-                                mineralAngle = 0.0;
-                            }
-                            else if (xPos > t2)
-                            {
-                                // right
-                               mineralAngle = 45.0;
-                            }
-                            robot.tracer.traceInfo(moduleName, "%s[%d]: found gold mineral %s.",
-                                    state, retries, targetInfo);
-                            sm.setState(State.UNHOOK_ROBOT);
-                        }
-                        else
-                        {
-                            //
-                            // Don't see gold mineral.
-                            //
-                            retries++;
-                            if (retries < 3)
-                            {
-                                //
-                                // Gold not found, remain in this state and try again.
-                                //
-                                robot.tracer.traceInfo(moduleName, "%s[%d]: gold mineral not found, try again.",
-                                        state, retries);
-                                break;
-                            }
-                            else
-                            {
-                                mineralAngle = 0.0;
-                                sm.setState(State.UNHOOK_ROBOT);
-                            }
-                        }
-                    }
-                    //
-                    // Intentionally falling through.
-                    //
 
                 case UNHOOK_ROBOT:
-                    robot.tracer.traceInfo(moduleName, "Initial heading=%f", robot.driveBase.getHeading());
                     //
                     // The robot is still hooked, need to unhook first.
-                    // THIS NEEDS CHANGING TO MAKE SURE THE ANGLES WORK
                     //
+                    robot.tracer.traceInfo(moduleName, "Initial heading=%f", robot.driveBase.getHeading());
                     targetX = 5.0;
                     targetY = 0.0;
-                    nextState = State.TURN_TO_MINERAL;
+                    nextState = doMineral? State.DO_MINERAL: State.PLOW_TO_DEPOT;
                     robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
                     sm.waitForSingleEvent(event, nextState);
-                    break;
-
-                case TURN_TO_MINERAL:
-                    robot.targetHeading += mineralAngle;
-                    targetX = 0.0;
-                    targetY = 0.0;
-
-                    robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
-                    sm.waitForSingleEvent(event, State.PLOW_TO_MINERAL);
-                    break;
-
-                case PLOW_TO_MINERAL:
-                    //
-                    // Move closer to the mineral so the sweeper can reach them.
-                    //
-                    // NEEDS TUNING LATER
-                    targetX = 0.0;
-                    targetY = 22.0;
-                    robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
-                    if (mineralAngle == -45.0)
-                    {
-                        nextState = State.LEFT_MINERAL_TURN_TO_DEPOT;
-                    }
-                    else if (mineralAngle == 0.0)
-                    {
-                        nextState = State.MID_MINERAL_TURN_TO_CRATER;
-                    }
-                    else//if (mineralAngle == 45.0)
-                    {
-                        nextState = State.RIGHT_MINERAL_TURN_TO_DEPOT;
-                    }
-                    sm.waitForSingleEvent(event, nextState);
-                    break;
-
-                case LEFT_MINERAL_TURN_TO_DEPOT:
-                    targetX = 0.0;
-                    targetY = 0.0;
-                    robot.targetHeading += 90.0;
-                    robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
-                    sm.waitForSingleEvent(event, State.LEFT_MINERAL_DRIVE_TO_DEPOT);
-                    break;
-
-                case LEFT_MINERAL_DRIVE_TO_DEPOT:
-                    targetX = 0.0;
-                    targetY = 36.0;
-                    robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
-                    sm.waitForSingleEvent(event, State.LEFT_MINERAL_DROP_MARKER);
-                    break;
-
-                case LEFT_MINERAL_DROP_MARKER:
-                    robot.teamMarkerDeployer.open();
-                    timer.set(4.0, event);
-                    sm.waitForSingleEvent(event, State.LEFT_MINERAL_TURN_TO_CRATER);
-                    break;
-
-                case LEFT_MINERAL_DRIVE_TO_CRATER:
-                    targetX = 0.0;
-                    targetY = 72.0;
-                    robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
-                    sm.waitForSingleEvent(event, State.DONE);
-                    break;
-
-                case MID_MINERAL_DRIVE_TO_DEPOT:
-                    targetX = 0.0;
-                    targetY = 38.0;
-                    robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
-                    sm.waitForSingleEvent(event, State.MID_MINERAL_DROP_MARKER);
-                    break;
-
-                case MID_MINERAL_DROP_MARKER:
-                    robot.teamMarkerDeployer.open();
-                    timer.set(4.0, event);
-                    sm.waitForSingleEvent(event, State.MID_MINERAL_TURN_TO_CRATER);
-                    break;
-
-                case MID_MINERAL_TURN_TO_CRATER:
-                    targetX = 0.0;
-                    targetY = 0.0;
-                    robot.targetHeading += 45.0;
-                    robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
-                    sm.waitForSingleEvent(event, State.MID_MINERAL_DRIVE_TO_CRATER);
-                    break;
-
-                case MID_MINERAL_DRIVE_TO_CRATER:
-                    targetX = 0.0;
-                    targetY = 72.0;
-                    robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
-                    sm.waitForSingleEvent(event, State.DONE);
-                    break;
-
-                case RIGHT_MINERAL_TURN_TO_DEPOT:
-                    targetX = 0.0;
-                    targetY = 0.0;
-                    robot.targetHeading -= 90.0;
-                    robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
-                    sm.waitForSingleEvent(event, State.RIGHT_MINERAL_DRIVE_TO_DEPOT);
-                    break;
-
-                case RIGHT_MINERAL_DRIVE_TO_DEPOT:
-                    targetX = 0.0;
-                    targetY = 36.0; // Needs tuning later (>24in. always)
-                    robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
-                    sm.waitForSingleEvent(event, State.RIGHT_MINERAL_DROP_MARKER);
-                    break;
-
-                case RIGHT_MINERAL_DROP_MARKER:
-                    robot.teamMarkerDeployer.open();
-                    timer.set(4.0, event);
-                    sm.waitForSingleEvent(event, State.RIGHT_MINERAL_TURN_TO_CRATER);
-                    break;
-
-                case RIGHT_MINERAL_TURN_TO_CRATER:
-                    targetX = 0.0;
-                    targetY = 0.0;
-                    robot.targetHeading -= 90.0;
-                    robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
-                    sm.waitForSingleEvent(event, State.RIGHT_MINERAL_DRIVE_TO_CRATER);
-                    break;
-
-                case RIGHT_MINERAL_DRIVE_TO_CRATER:
-                    targetX = 0.0;
-                    targetY = 72.0;
-                    robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
-                    sm.waitForSingleEvent(event, State.DONE);
                     break;
 
                 case PLOW_TO_DEPOT:
                     //
-                    // Plow through the middle mineral to the depot.
+                    // We are not using vision, so just plow through the middle mineral to the depot.
                     //
+                    robot.elevator.setPosition(RobotInfo3543.ELEVATOR_MIN_HEIGHT);
                     targetX = 0.0;
-                    targetY = 48.0;
+                    targetY = 36.0;
+                    nextState = doTeamMarker? State.DROP_TEAM_MARKER: State.TURN_TO_CRATER;
                     robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
-                    sm.waitForSingleEvent(event, State.DROP_TEAM_MARKER_ONLY);
+                    sm.waitForSingleEvent(event, nextState);
                     break;
 
-                case DROP_TEAM_MARKER_ONLY:
+                case DO_MINERAL:
+                    //
+                    // Set up CmdDisplaceMineral to use vision to displace the gold mineral.
+                    //
+                    robot.elevator.setPosition(RobotInfo3543.ELEVATOR_MIN_HEIGHT);
+                    cmdDisplaceMineral = new CmdDisplaceMineral(robot, true);
+                    sm.setState(State.DISPLACE_MINERAL);
+                    //
+                    // Intentionally falling through.
+                    //
+                case DISPLACE_MINERAL:
+                    //
+                    // Run CmdDisplaceMineral until it's done.
+                    //
+                    traceState = false;
+                    if (cmdDisplaceMineral.cmdPeriodic(elapsedTime))
+                    {
+                        sm.setState(doTeamMarker? State.DROP_TEAM_MARKER: State.TURN_TO_CRATER);
+                    }
+                    else
+                    {
+                        break;
+                    }
+                    //
+                    // Intentionally falling through.
+                    //
+                case DROP_TEAM_MARKER:
                     //
                     // Release team marker by opening the deployer.
                     //
                     robot.teamMarkerDeployer.open();
                     timer.set(4.0, event);
-                    sm.waitForSingleEvent(event, State.TURN_TOWARDS_CRATER);
+                    sm.waitForSingleEvent(event, State.TURN_TO_CRATER);
                     break;
 
-                case TURN_TOWARDS_CRATER:
+                case TURN_TO_CRATER:
+                    //
+                    // Turn towards the crater.
+                    //
                     targetX = 0.0;
                     targetY = 0.0;
                     robot.targetHeading += 45.0;
                     robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
-                    sm.waitForSingleEvent(event, State.PARK_AT_CRATER);
+                    sm.waitForSingleEvent(event, State.DRIVE_TO_CRATER);
                     break;
 
-                case PARK_AT_CRATER:
+                case DRIVE_TO_CRATER:
+                    //
+                    // Go and park at the crater.
+                    //
                     targetX = 0.0;
                     targetY = -72.0;
                     robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
