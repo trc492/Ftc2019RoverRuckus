@@ -96,27 +96,6 @@ public abstract class TrcOpenCvDetector<O> implements TrcVisionTask.VisionProces
     }   //toString
 
     /**
-     * This method is called to terminate the vision task.
-     */
-    public void terminateTask()
-    {
-        if (visionTask != null)
-        {
-            visionTask.terminateTask();
-        }
-    }   //terminateTask
-
-    /**
-     * This method checks if the vision task has been terminated.
-     *
-     * @return true if vision task is terminated, false otherwise.
-     */
-    public boolean isTaskTerminated()
-    {
-        return visionTask != null? visionTask.isTaskTerminated(): true;
-    }   //isTaskTerminated
-
-    /**
      * This method returns the state of the detector.
      *
      * @return true if the detector is enabled, false if disabled.

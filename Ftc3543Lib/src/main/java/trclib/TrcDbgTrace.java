@@ -94,9 +94,7 @@ public class TrcDbgTrace
     private boolean traceEnabled;
     private TraceLevel traceLevel;
     private MsgLevel msgLevel;
-    private String traceLogName = null;
-    private PrintStream traceLog = null;
-    private boolean traceLogEnabled = false;
+    private TrcTraceLogger traceLogger = null;
 
     /**
      * Constructor: Create an instance of the object.
@@ -153,20 +151,20 @@ public class TrcDbgTrace
      */
     public boolean openTraceLog(final String traceLogName)
     {
-        boolean success = true;
+        boolean success = false;
 
-        try
+        if (traceLogger == null)
         {
-            this.traceLogName = traceLogName;
-            traceLog = new PrintStream(new File(traceLogName));
+            try
+            {
+                traceLogger = new TrcTraceLogger(traceLogName);
+                success = true;
+            }
+            catch (FileNotFoundException e)
+            {
+                success = false;
+            }
         }
-        catch (FileNotFoundException e)
-        {
-            this.traceLogName = null;
-            traceLog = null;
-            success = false;
-        }
-        traceLogEnabled = false;
 
         return success;
     }   //openTraceLog
@@ -209,34 +207,9 @@ public class TrcDbgTrace
     {
         final String funcName = "closeTraceLog";
 
-        if (traceLog != null)
+        if (traceLogger != null)
         {
-            if (newName != null)
-            {
-                try
-                {
-                    String path = traceLogName.substring(0, traceLogName.lastIndexOf(File.separatorChar) + 1);
-                    String newFile = path + TrcUtil.getTimestamp() + "!" + newName + ".log";
-                    traceLogEnabled = true;
-                    globalTracer.traceInfo(funcName, "Rename: %s -> %s", traceLogName, newFile);
-                    traceLog.close();
-                    File file = new File(traceLogName);
-                    file.renameTo(new File(newFile));
-                }
-                catch(Exception e)
-                {
-                    // We failed to rename the file, close the log anyway.
-                    traceLog.close();
-                }
-            }
-            else
-            {
-                traceLog.close();
-            }
-
-            traceLog = null;
-            traceLogName = null;
-            traceLogEnabled = false;
+            traceLogger.close(newName);
         }
     }   //closeTraceLog
 
@@ -255,7 +228,7 @@ public class TrcDbgTrace
      */
     public String getTraceLogName()
     {
-        return traceLogName;
+        return traceLogger != null? traceLogger.toString(): null;
     }   //getTraceLogName
 
     /**
@@ -265,7 +238,10 @@ public class TrcDbgTrace
      */
     public void setTraceLogEnabled(boolean enabled)
     {
-        traceLogEnabled = enabled;
+        if (traceLogger != null)
+        {
+            traceLogger.setEnabled(enabled);
+        }
     }   //setTraceLogEnabled
 
     /**
@@ -444,10 +420,9 @@ public class TrcDbgTrace
         {
             String msg = msgPrefix(funcName, level) + String.format(format, args);
             HalDbgLog.msg(level, msg + "\n");
-            if (traceLogEnabled)
+            if (traceLogger != null)
             {
-                traceLog.print(msg + "\r\n");
-                traceLog.flush();
+                traceLogger.logMessage(msg);
             }
         }
     }   //traceMsg

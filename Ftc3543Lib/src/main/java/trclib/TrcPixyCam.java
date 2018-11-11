@@ -105,11 +105,10 @@ public abstract class TrcPixyCam
     private final boolean msbFirst;
     private TrcTaskMgr.TaskObject readerTaskObj;
     private TrcStateMachine<ReaderState> sm;
-    private boolean enabled = false;
+    private boolean taskEnabled = false;
     private ArrayList<ObjectBlock> objects = new ArrayList<>();
     private ObjectBlock[] detectedObjects = null;
     private ObjectBlock currBlock = null;
-    private Object objectLock = new Object();
     private byte[] data = null;
     private int runningChecksum = 0;
 
@@ -149,7 +148,7 @@ public abstract class TrcPixyCam
      *
      * @param enabled specifies true to enable, false to disable.
      */
-    public void setEnabled(boolean enabled)
+    public synchronized void setEnabled(boolean enabled)
     {
         final String funcName = "setEnabled";
 
@@ -168,7 +167,7 @@ public abstract class TrcPixyCam
             readerTaskObj.unregisterTask(TrcTaskMgr.TaskType.PERIODIC_THREAD);
             sm.stop();
         }
-        this.enabled = enabled;
+        this.taskEnabled = enabled;
 
         if (debugEnabled)
         {
@@ -177,21 +176,21 @@ public abstract class TrcPixyCam
     }   //setEnabled
 
     /**
-     * This method checks if the reader task is enabled.
+     * This method checks if the reader task is taskEnabled.
      *
-     * @return true if enabled, false otherwise.
+     * @return true if taskEnabled, false otherwise.
      */
-    public boolean isEnabled()
+    public synchronized boolean isEnabled()
     {
         final String funcName = "isEnabled";
 
         if (debugEnabled)
         {
             dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%s", enabled);
+            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%s", taskEnabled);
         }
 
-        return enabled;
+        return taskEnabled;
     }   //isEnabled
 
     /**
@@ -293,7 +292,7 @@ public abstract class TrcPixyCam
      * @return array of detected object blocks, can be null if no object detected or result of the next frame
      *         not yet available.
      */
-    public ObjectBlock[] getDetectedObjects()
+    public synchronized ObjectBlock[] getDetectedObjects()
     {
         final String funcName = "getDetectedObjects";
         ObjectBlock[] objectBlocks = null;
@@ -303,11 +302,8 @@ public abstract class TrcPixyCam
             dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
         }
 
-        synchronized (objectLock)
-        {
-            objectBlocks = detectedObjects;
-            detectedObjects = null;
-        }
+        objectBlocks = detectedObjects;
+        detectedObjects = null;
 
         if (debugEnabled)
         {
@@ -317,7 +313,7 @@ public abstract class TrcPixyCam
         return objectBlocks;
     }   //getDetectedObjects
 
-    public void readerTask(TrcTaskMgr.TaskType taskType, TrcRobot.RunMode runMode)
+    private synchronized void readerTask(TrcTaskMgr.TaskType taskType, TrcRobot.RunMode runMode)
     {
         final String funcName = "readerTask";
 
@@ -458,18 +454,15 @@ public abstract class TrcPixyCam
                             //
                             if (objects.size() > 0)
                             {
-                                synchronized (objectLock)
+                                ObjectBlock[] array = new ObjectBlock[objects.size()];
+                                detectedObjects = objects.toArray(array);
+                                objects.clear();
+                                if (debugEnabled)
                                 {
-                                    ObjectBlock[] array = new ObjectBlock[objects.size()];
-                                    detectedObjects = objects.toArray(array);
-                                    objects.clear();
-                                    if (debugEnabled)
+                                    for (int i = 0; i < detectedObjects.length; i++)
                                     {
-                                        for (int i = 0; i < detectedObjects.length; i++)
-                                        {
-                                            dbgTrace.traceInfo(funcName, "[%02d] %s",
-                                                    i, detectedObjects[i].toString());
-                                        }
+                                        dbgTrace.traceInfo(funcName, "[%02d] %s",
+                                                i, detectedObjects[i].toString());
                                     }
                                 }
                             }

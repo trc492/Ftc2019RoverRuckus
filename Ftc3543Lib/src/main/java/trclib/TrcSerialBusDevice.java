@@ -31,7 +31,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  * to access the device. It creates a request queue to allow both synchronous and asynchronous requests to be queued
  * for processing. The request queue is processed by a separate thread for asynchronous access.
  */
-public abstract class TrcSerialBusDevice implements Runnable
+public abstract class TrcSerialBusDevice
 {
     protected static final String moduleName = "TrcSerialBusDevice";
     protected static final boolean debugEnabled = false;
@@ -141,10 +141,8 @@ public abstract class TrcSerialBusDevice implements Runnable
 
     private final String instanceName;
     private ConcurrentLinkedQueue<Request> requestQueue;
-    private Thread deviceTask;
-    private volatile long processingInterval = 0;    // in msec
+    private TrcTaskMgr.TaskObject processRequestTaskObj;
     private volatile boolean taskEnabled = false;
-    private volatile boolean taskTerminatedAbnormally = false;
 
     /**
      * Constructor: Creates an instance of the object.
@@ -162,20 +160,8 @@ public abstract class TrcSerialBusDevice implements Runnable
 
         this.instanceName = instanceName;
         requestQueue = new ConcurrentLinkedQueue<>();
-        deviceTask = new Thread(this, instanceName);
-        deviceTask.setUncaughtExceptionHandler((thread, throwable) ->
-        {
-            if (!(throwable.getClass().equals(InterruptedException.class)))
-            {
-                taskTerminatedAbnormally = true;
-                if (debugEnabled)
-                {
-                    dbgTrace.traceWarn(moduleName, "Thread %s for %s had uncaught exception: %s",
-                        thread, instanceName, throwable);
-                }
-            }
-        });
-        deviceTask.start();
+        processRequestTaskObj = TrcTaskMgr.getInstance().createTask(instanceName, this::processRequestTask);
+        processRequestTaskObj.registerTask(TrcTaskMgr.TaskType.PERIODIC_THREAD);
     }   //TrcSerialBusDevice
 
     /**
@@ -189,45 +175,14 @@ public abstract class TrcSerialBusDevice implements Runnable
     }   //toString
 
     /**
-     * This method checks if the device task has been terminated.
-     *
-     * @return true if task has been terminated, false otherwise.
-     */
-    public synchronized boolean isTaskTerminated()
-    {
-        return !deviceTask.isAlive();
-    }   //isTaskTerminated
-
-    /**
-     * This method checks if the device task has been terminated.
-     *
-     * @return true if task has been terminated, false otherwise.
-     */
-    public synchronized boolean isTaskTerminatedAbnormally()
-    {
-        return taskTerminatedAbnormally;
-    }   //isTaskTerminatedAbnormally
-
-    /**
-     * This method is called to terminate the device task.
-     */
-    public synchronized void terminateTask()
-    {
-        if (deviceTask.isAlive())
-        {
-            deviceTask.interrupt();
-        }
-    }   //terminateTask
-
-    /**
      * This method checks if the device task is enabled.
      *
      * @return true if task is enabled, false otherwise.
      */
     public synchronized boolean isTaskEnabled()
     {
-        return deviceTask.isAlive() && taskEnabled;
-    }   //isTaskEnabled
+        return taskEnabled;
+    }   //isEnabled
 
     /**
      * This method enables/disables the device task. If enabling task, the task will be started. If disabling task,
@@ -237,16 +192,21 @@ public abstract class TrcSerialBusDevice implements Runnable
      */
     public synchronized void setTaskEnabled(boolean enabled)
     {
-        if (deviceTask.isAlive())
+        if (enabled)
         {
-            if (!taskEnabled && enabled)
+            if (!taskEnabled)
             {
                 totalTime = 0.0;
                 totalRequests = 0;
             }
-            taskEnabled = enabled;
+            processRequestTaskObj.registerTask(TrcTaskMgr.TaskType.PERIODIC_THREAD);
         }
-    }   //setTaskEnabled
+        else
+        {
+            processRequestTaskObj.unregisterTask(TrcTaskMgr.TaskType.PERIODIC_THREAD);
+        }
+        taskEnabled = enabled;
+    }   //setEnabled
 
     /**
      * This method sets the device task processing interval.
@@ -263,7 +223,7 @@ public abstract class TrcSerialBusDevice implements Runnable
             dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
         }
 
-        processingInterval = interval;
+        processRequestTaskObj.setTaskInterval(interval);
     }   //setProcessInterval
 
     /**
@@ -274,14 +234,15 @@ public abstract class TrcSerialBusDevice implements Runnable
     public synchronized long getProcessingInterval()
     {
         final String funcName = "getProcessingInterval";
+        long interval = processRequestTaskObj.getTaskInterval();
 
         if (debugEnabled)
         {
             dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%d", processingInterval);
+            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%d ms", interval);
         }
 
-        return processingInterval;
+        return interval;
     }   //getProcessingInterval
 
     /**
@@ -290,7 +251,7 @@ public abstract class TrcSerialBusDevice implements Runnable
      * @param tracer specifies the tracer to be used for performance tracing, can be null to disable performance
      *               tracing.
      */
-    public void setPerformanceTracer(TrcDbgTrace tracer)
+    public synchronized void setPerformanceTracer(TrcDbgTrace tracer)
     {
         perfTracer = tracer;
     }   //setPerformanceTracer
@@ -312,9 +273,9 @@ public abstract class TrcSerialBusDevice implements Runnable
             dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "addr=%d,len=%d", address, length);
         }
 
-        if (!deviceTask.isAlive())
+        if (taskEnabled)
         {
-            throw new RuntimeException("Must call setTaskEnabled first.");
+            throw new RuntimeException("Must call setEnabled first.");
         }
 
         TrcEvent event = new TrcEvent(instanceName + "." + funcName + "." + length);
@@ -369,9 +330,9 @@ public abstract class TrcSerialBusDevice implements Runnable
                 address, Arrays.toString(data), length);
         }
 
-        if (!deviceTask.isAlive())
+        if (taskEnabled)
         {
-            throw new RuntimeException("Must call setTaskEnabled first.");
+            throw new RuntimeException("Must call setEnabled first.");
         }
 
         TrcEvent event = new TrcEvent(instanceName + "." + funcName + "." + length);
@@ -449,7 +410,7 @@ public abstract class TrcSerialBusDevice implements Runnable
     public void asyncRead(Object requestTag, int address, int length, TrcEvent event, CompletionHandler handler)
     {
         asyncRead(requestTag, address, length, false, event, handler);
-    }
+    }   //asyncRead
 
     /**
      * This method is doing an asynchronous read from the device with the specified length to read.
@@ -606,121 +567,99 @@ public abstract class TrcSerialBusDevice implements Runnable
         }
     }   //sendWordCommand
 
-    //
-    // Implements Runnable interface.
-    //
-
     /**
-     * This method runs the periodic processing task.
+     * This method runs periodically to process serial I/O requests.
+     *
+     * @param taskType specifies the type of task being run.
+     * @param runMode specifies the current robot run mode.
      */
-    @Override
-    public void run()
+    private synchronized void processRequestTask(TrcTaskMgr.TaskType taskType, TrcRobot.RunMode runMode)
     {
-        final String funcName = "run";
+        final String funcName = "processRequestTask";
 
         if (debugEnabled)
         {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.CALLBK);
+            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.TASK, "taskType=%s,runMode=%s", taskType, runMode);
         }
+        //
+        // Don't remove the request yet. If it is a read request and the handler is rejecting the data, let
+        // the request stays at the head of the queue so it can retry the read request.
+        //
+        Request request = requestQueue.peek();
 
-        while (!Thread.interrupted())
+        if (request != null)
         {
-            long requestStartTime = TrcUtil.getCurrentTimeMillis();
+            double startTime = TrcUtil.getCurrentTime();
+            double elapsedTime;
 
-            if (isTaskEnabled())
+            if (request.readRequest)
             {
-                //
-                // Don't remove the request yet. If it is a read request and the handler is rejecting the data, let
-                // the request stays at the head of the queue so it can retry the read request.
-                //
-                Request request = requestQueue.peek();
-
-                if (request != null)
-                {
-                    double startTime;
-                    double elapsedTime;
-
-                    startTime = TrcUtil.getCurrentTime();
-                    if (request.readRequest)
-                    {
-                        request.buffer = readData(request.address, request.length);
-                        request.error = request.buffer == null;
-                    }
-                    else
-                    {
-                        int length = writeData(request.address, request.buffer, request.length);
-                        request.error = length != request.length;
-                        request.length = length;
-                    }
-                    elapsedTime = TrcUtil.getCurrentTime() - startTime;
-                    totalTime += elapsedTime;
-                    totalRequests++;
-                    if (perfTracer != null)
-                    {
-                        perfTracer.traceInfo(funcName, "Average request time = %.3f msec", totalTime/totalRequests);
-                    }
-
-                    if (request.event != null)
-                    {
-                        request.event.set(true);
-                    }
-
-                    if (request.handler != null)
-                    {
-                        if (request.readRequest)
-                        {
-                            if (!request.handler.readCompletion(
-                                    request.requestTag, request.address, request.buffer, request.error))
-                            {
-                                //
-                                // The handler accepted the data, so remove the request from the head of the queue.
-                                //
-                                request = requestQueue.poll();
-                            }
-                        }
-                        else
-                        {
-                            request.handler.writeCompletion(
-                                request.requestTag, request.address, request.length, request.error);
-                            //
-                            // Write request completed, remove it from head of the queue.
-                            //
-                            request = requestQueue.poll();
-                        }
-                    }
-                    else
-                    {
-                        //
-                        // There is no handler, we are done. Remove the request from the head of the queue.
-                        //
-                        request = requestQueue.poll();
-                    }
-
-                    if (request.readRequest && request.repeat)
-                    {
-                        //
-                        // This is a repeat request, add it back to the tail of the queue.
-                        //
-                        requestQueue.add(request);
-                    }
-                }
-            }
-
-            if (processingInterval > 0)
-            {
-                long sleepTime = processingInterval - (TrcUtil.getCurrentTimeMillis() - requestStartTime);
-                TrcUtil.sleep(sleepTime);
+                request.buffer = readData(request.address, request.length);
+                request.error = request.buffer == null;
             }
             else
             {
-                Thread.yield();
+                int length = writeData(request.address, request.buffer, request.length);
+                request.error = length != request.length;
+                request.length = length;
+            }
+            elapsedTime = TrcUtil.getCurrentTime() - startTime;
+            totalTime += elapsedTime;
+            totalRequests++;
+            if (perfTracer != null)
+            {
+                perfTracer.traceInfo(funcName, "Average request time = %.3f msec", totalTime/totalRequests);
+            }
+
+            if (request.event != null)
+            {
+                request.event.set(true);
+            }
+
+            if (request.handler != null)
+            {
+                if (request.readRequest)
+                {
+                    if (!request.handler.readCompletion(
+                            request.requestTag, request.address, request.buffer, request.error))
+                    {
+                        //
+                        // The handler accepted the data, so remove the request from the head of the queue.
+                        //
+                        request = requestQueue.poll();
+                    }
+                }
+                else
+                {
+                    request.handler.writeCompletion(
+                            request.requestTag, request.address, request.length, request.error);
+                    //
+                    // Write request completed, remove it from head of the queue.
+                    //
+                    request = requestQueue.poll();
+                }
+            }
+            else
+            {
+                //
+                // There is no handler, we are done. Remove the request from the head of the queue.
+                //
+                request = requestQueue.poll();
+            }
+
+            if (request.readRequest && request.repeat)
+            {
+                //
+                // This is a repeat request, add it back to the tail of the queue.
+                //
+                requestQueue.add(request);
             }
         }
 
         if (debugEnabled)
         {
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.CALLBK);
+            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.TASK);
         }
-    }   //run
+    }   //processRequestTask
 
 }   //class TrcSerialBusDevice

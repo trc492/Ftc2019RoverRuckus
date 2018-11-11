@@ -27,9 +27,9 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import trclib.TrcDbgTrace;
 import trclib.TrcRobot;
+import trclib.TrcTimer;
 import trclib.TrcTone;
 import trclib.TrcTaskMgr;
-import trclib.TrcUtil;
 
 /**
  * This class implements a platform dependent sound player that can play a tone with specified waveform, frequency,
@@ -49,12 +49,9 @@ public class FtcAnalogOutTone extends TrcTone
     private static final int MAX_VOLTAGE = 1023;
     private static final Waveform DEF_WAVEFORM = Waveform.TRIANGLE_WAVE;
 
-    private String instanceName;
     private AnalogOutput analogOut;
-    private TrcTaskMgr.TaskObject stopTaskObj;
-    private TrcTaskMgr.TaskObject postContinuousTaskObj;
+    private TrcTimer timer;
     private boolean playing = false;
-    private double expiredTime = 0.0;
 
     /**
      * Constructor: Create and initialize an instance of the object.
@@ -72,12 +69,11 @@ public class FtcAnalogOutTone extends TrcTone
             dbgTrace = new TrcDbgTrace(moduleName + "." + instanceName, tracingEnabled, traceLevel, msgLevel);
         }
 
-        this.instanceName = instanceName;
+        timer = new TrcTimer(instanceName);
         analogOut = hardwareMap.analogOutput.get(instanceName);
-        stopTaskObj = TrcTaskMgr.getInstance().createTask(
+        TrcTaskMgr.TaskObject stopTaskObj = TrcTaskMgr.getInstance().createTask(
                 instanceName + ".stopTask", this::stopTask);
-        postContinuousTaskObj = TrcTaskMgr.getInstance().createTask(
-                instanceName + ".postContinuous", this::postContinuousTask);
+        stopTaskObj.registerTask(TrcTaskMgr.TaskType.STOP_TASK);
     }   //FtcAnalogOutTone
 
     /**
@@ -100,33 +96,6 @@ public class FtcAnalogOutTone extends TrcTone
     {
         this(FtcOpMode.getInstance().hardwareMap, instanceName, DEF_WAVEFORM);
     }   //FtcAnalogOutTone
-
-    /**
-     * This method enables/disables the periodic task that checks the expiration of the playing tone.
-     *
-     * @param enabled specifies true to enable the state machine task, false otherwise.
-     */
-    private void setTaskEnabled(boolean enabled)
-    {
-        final String funcName = "setTaskEnabled";
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "enabled=%s", Boolean.toString(enabled));
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
-        }
-
-        if (enabled)
-        {
-            stopTaskObj.registerTask(TrcTaskMgr.TaskType.STOP_TASK);
-            postContinuousTaskObj.registerTask(TrcTaskMgr.TaskType.POSTCONTINUOUS_TASK);
-        }
-        else
-        {
-            stopTaskObj.unregisterTask(TrcTaskMgr.TaskType.STOP_TASK);
-            postContinuousTaskObj.unregisterTask(TrcTaskMgr.TaskType.POSTCONTINUOUS_TASK);
-        }
-    }   //setTaskEnabled
 
     //
     // Implements TrcTone abstract methods.
@@ -186,9 +155,8 @@ public class FtcAnalogOutTone extends TrcTone
         analogOut.setAnalogOutputMode(outputMode);
         analogOut.setAnalogOutputFrequency((int)frequency);
         analogOut.setAnalogOutputVoltage((int)(MAX_VOLTAGE*volume));
-        expiredTime = TrcUtil.getCurrentTime() + duration;
+        timer.set(duration, this::timerExpired);
         playing = true;
-        setTaskEnabled(true);
 
         if (debugEnabled)
         {
@@ -214,12 +182,11 @@ public class FtcAnalogOutTone extends TrcTone
 
         if (playing)
         {
+            timer.cancel();
             analogOut.setAnalogOutputMode((byte) 0);
             analogOut.setAnalogOutputFrequency(0);
             analogOut.setAnalogOutputVoltage(0);
             playing = false;
-            expiredTime = 0.0;
-            setTaskEnabled(false);
         }
     }   //stop
 
@@ -242,9 +209,15 @@ public class FtcAnalogOutTone extends TrcTone
         return playing;
     }   //isPlaying
 
-    //
-    // Implements TrcTaskMgr.Task interface.
-    //
+    /**
+     * This method is the callback for the expired timer to stop the sound.
+     *
+     * @param context specifies the timer object (not used).
+     */
+    private void timerExpired(Object context)
+    {
+        stop();
+    }   //timerExpired
 
     /**
      * This method contains code that will clean up the task before
@@ -254,32 +227,9 @@ public class FtcAnalogOutTone extends TrcTone
      * @param runMode specifies the competition mode that is about to
      *                end (e.g. Autonomous, TeleOp).
      */
-    public void stopTask(TrcTaskMgr.TaskType taskType, TrcRobot.RunMode runMode)
+    private void stopTask(TrcTaskMgr.TaskType taskType, TrcRobot.RunMode runMode)
     {
         stop();
     }   //stopTask
-
-    /**
-     * This method is called periodically to check if the duration of the sound playing has expired.
-     * If so, it will stop the sound.
-     *
-     * @param taskType specifies the type of task being run.
-     * @param runMode specifies the competition mode that is running.
-     */
-    public void postContinuousTask(TrcTaskMgr.TaskType taskType, TrcRobot.RunMode runMode)
-    {
-        final String funcName = "postContinuousTask";
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.TASK, "runMode=%s", runMode.toString());
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.TASK);
-        }
-
-        if (expiredTime > 0.0 && TrcUtil.getCurrentTime() >= expiredTime)
-        {
-            stop();
-        }
-    }   //postContinuousTask
 
 }   //class FtcAnalogOutTone

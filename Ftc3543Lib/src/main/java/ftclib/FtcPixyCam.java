@@ -107,19 +107,19 @@ public class FtcPixyCam extends TrcPixyCam
     /**
      * This method enables/disables the pixy camera.
      *
-     * @param enabled specifies true to enable pixy camera, false to disable.
+     * @param taskEnabled specifies true to enable pixy camera, false to disable.
      */
-    public void setEnabled(boolean enabled)
+    public void setEnabled(boolean taskEnabled)
     {
         final String funcName = "setEnabled";
 
         if (debugEnabled)
         {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "enanbled=%b", enabled);
+            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "enanbled=%b", taskEnabled);
         }
 
-        i2cDevice.setEnabled(enabled);
-        super.setEnabled(enabled);
+        i2cDevice.setEnabled(taskEnabled);
+        super.setEnabled(taskEnabled);
 
         if (debugEnabled)
         {

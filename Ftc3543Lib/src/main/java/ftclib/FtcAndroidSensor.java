@@ -73,6 +73,11 @@ public class FtcAndroidSensor extends TrcSensor implements SensorEventListener
         }
 
         sensorManager = (SensorManager)context.getSystemService(Context.SENSOR_SERVICE);
+        if (sensorManager == null)
+        {
+            throw new RuntimeException("Failed to get sensor service.");
+        }
+
         sensor = sensorManager.getDefaultSensor(sensorType);
         if (sensor == null)
         {

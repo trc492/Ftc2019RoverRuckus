@@ -62,11 +62,7 @@ public class FtcBNO055Imu
      */
     private class Gyro extends TrcGyro
     {
-        private AngularVelocity turnRateData = null;
-        private long turnRateTagId = -1;
         private double[] eulerAngles = new double[3];
-        private Orientation headingData = null;
-        private long headingTagId = -1;
 
         /**
          * Constructor: Creates an instance of the object.
@@ -113,44 +109,26 @@ public class FtcBNO055Imu
          * @return raw data of the specified type for the x-axis.
          */
         @Override
-        public synchronized SensorData<Double> getRawXData(DataType dataType)
+        public SensorData<Double> getRawXData(DataType dataType)
         {
             final String funcName = "getRawXData";
             double value = 0.0;
-            long currTagId = FtcOpMode.getLoopCounter();
 
             if (dataType == DataType.ROTATION_RATE)
             {
-                if (currTagId != turnRateTagId)
-                {
-                    turnRateData = imu.getAngularVelocity();
-                    turnRateTagId = currTagId;
-                }
-                value = turnRateData.xRotationRate;
+                value = imu.getAngularVelocity().xRotationRate;
             }
             else if (dataType == DataType.HEADING)
             {
-                if (currTagId != headingTagId)
-                {
-                    if (USE_QUATERNION)
-                    {
-                        getEulerAngles(eulerAngles);
-                    }
-                    else
-                    {
-                        headingData = imu.getAngularOrientation(
-                                AxesReference.INTRINSIC, AxesOrder.XYZ, AngleUnit.DEGREES);
-                    }
-                    headingTagId = currTagId;
-                }
-
                 if (USE_QUATERNION)
                 {
+                    getEulerAngles(eulerAngles);
                     value = eulerAngles[0];
                 }
                 else
                 {
-                    value = headingData.firstAngle;
+                    value = imu.getAngularOrientation(
+                            AxesReference.INTRINSIC, AxesOrder.XYZ, AngleUnit.DEGREES).firstAngle;
                 }
             }
             SensorData<Double> data = new SensorData<>(TrcUtil.getCurrentTime(), value);
@@ -172,44 +150,26 @@ public class FtcBNO055Imu
          * @return raw data of the specified type for the y-axis.
          */
         @Override
-        public synchronized SensorData<Double> getRawYData(DataType dataType)
+        public SensorData<Double> getRawYData(DataType dataType)
         {
             final String funcName = "getRawYData";
             double value = 0.0;
-            long currTagId = FtcOpMode.getLoopCounter();
 
             if (dataType == DataType.ROTATION_RATE)
             {
-                if (currTagId != turnRateTagId)
-                {
-                    turnRateData = imu.getAngularVelocity();
-                    turnRateTagId = currTagId;
-                }
-                value = turnRateData.yRotationRate;
+                value = imu.getAngularVelocity().yRotationRate;
             }
             else if (dataType == DataType.HEADING)
             {
-                if (currTagId != headingTagId)
-                {
-                    if (USE_QUATERNION)
-                    {
-                        getEulerAngles(eulerAngles);
-                    }
-                    else
-                    {
-                        headingData = imu.getAngularOrientation(
-                                AxesReference.INTRINSIC, AxesOrder.XYZ, AngleUnit.DEGREES);
-                    }
-                    headingTagId = currTagId;
-                }
-
                 if (USE_QUATERNION)
                 {
+                    getEulerAngles(eulerAngles);
                     value = eulerAngles[1];
                 }
                 else
                 {
-                    value = headingData.secondAngle;
+                    value = imu.getAngularOrientation(
+                            AxesReference.INTRINSIC, AxesOrder.XYZ, AngleUnit.DEGREES).secondAngle;
                 }
             }
             SensorData<Double> data = new SensorData<>(TrcUtil.getCurrentTime(), value);
@@ -231,39 +191,20 @@ public class FtcBNO055Imu
          * @return raw data of the specified type for the z-axis.
          */
         @Override
-        public synchronized SensorData<Double> getRawZData(DataType dataType)
+        public SensorData<Double> getRawZData(DataType dataType)
         {
             final String funcName = "getRawZData";
             double value = 0.0;
-            long currTagId = FtcOpMode.getLoopCounter();
 
             if (dataType == DataType.ROTATION_RATE)
             {
-                if (currTagId != turnRateTagId)
-                {
-                    turnRateData = imu.getAngularVelocity();
-                    turnRateTagId = currTagId;
-                }
-                value = turnRateData.zRotationRate;
+                value = imu.getAngularVelocity().zRotationRate;
             }
             else if (dataType == DataType.HEADING)
             {
-                if (currTagId != headingTagId)
-                {
-                    if (USE_QUATERNION)
-                    {
-                        getEulerAngles(eulerAngles);
-                    }
-                    else
-                    {
-                        headingData = imu.getAngularOrientation(
-                                AxesReference.INTRINSIC, AxesOrder.XYZ, AngleUnit.DEGREES);
-                    }
-                    headingTagId = currTagId;
-                }
-
                 if (USE_QUATERNION)
                 {
+                    getEulerAngles(eulerAngles);
                     value = -eulerAngles[2];
                 }
                 else
@@ -272,7 +213,8 @@ public class FtcBNO055Imu
                     // The Z-axis returns positive heading in the anticlockwise direction, so we must negate it for
                     // our convention.
                     //
-                    value = -headingData.thirdAngle;
+                    value = -imu.getAngularOrientation(
+                            AxesReference.INTRINSIC, AxesOrder.XYZ, AngleUnit.DEGREES).thirdAngle;
                 }
             }
             SensorData<Double> data = new SensorData<>(TrcUtil.getCurrentTime(), value);
@@ -295,13 +237,6 @@ public class FtcBNO055Imu
      */
     public class Accelerometer extends TrcAccelerometer
     {
-        private Acceleration accelData = null;
-        private long accelTagId = -1;
-        private Velocity velData = null;
-        private long velTagId = -1;
-        private Position posData = null;
-        private long posTagId = -1;
-
         /**
          * Constructor: Creates an instance of the object.
          *
@@ -326,38 +261,22 @@ public class FtcBNO055Imu
          * @return raw data of the specified type for the x-axis.
          */
         @Override
-        public synchronized SensorData<Double> getRawXData(DataType dataType)
+        public SensorData<Double> getRawXData(DataType dataType)
         {
             final String funcName = "getRawXData";
             double value = 0.0;
-            long currTagId = FtcOpMode.getLoopCounter();
 
             if (dataType == DataType.ACCELERATION)
             {
-                if (currTagId != accelTagId)
-                {
-                    accelData = imu.getAcceleration();
-                    accelTagId = currTagId;
-                }
-                value = accelData.xAccel;
+                value = imu.getAcceleration().xAccel;
             }
             else if (dataType == DataType.VELOCITY)
             {
-                if (currTagId != velTagId)
-                {
-                    velData = imu.getVelocity();
-                    velTagId = currTagId;
-                }
-                value = velData.xVeloc;
+                value = imu.getVelocity().xVeloc;
             }
             else if (dataType == DataType.DISTANCE)
             {
-                if (currTagId != posTagId)
-                {
-                    posData = imu.getPosition();
-                    posTagId = currTagId;
-                }
-                value = posData.x;
+                value = imu.getPosition().x;
             }
             SensorData<Double> data = new SensorData<>(TrcUtil.getCurrentTime(), value);
 
@@ -378,38 +297,22 @@ public class FtcBNO055Imu
          * @return raw data of the specified type for the y-axis.
          */
         @Override
-        public synchronized SensorData<Double> getRawYData(DataType dataType)
+        public SensorData<Double> getRawYData(DataType dataType)
         {
             final String funcName = "getRawYData";
             double value = 0.0;
-            long currTagId = FtcOpMode.getLoopCounter();
 
             if (dataType == DataType.ACCELERATION)
             {
-                if (currTagId != accelTagId)
-                {
-                    accelData = imu.getAcceleration();
-                    accelTagId = currTagId;
-                }
-                value = accelData.yAccel;
+                value = imu.getAcceleration().yAccel;
             }
             else if (dataType == DataType.VELOCITY)
             {
-                if (currTagId != velTagId)
-                {
-                    velData = imu.getVelocity();
-                    velTagId = currTagId;
-                }
-                value = velData.yVeloc;
+                value = imu.getVelocity().yVeloc;
             }
             else if (dataType == DataType.DISTANCE)
             {
-                if (currTagId != posTagId)
-                {
-                    posData = imu.getPosition();
-                    posTagId = currTagId;
-                }
-                value = posData.y;
+                value = imu.getPosition().y;
             }
             SensorData<Double> data = new SensorData<>(TrcUtil.getCurrentTime(), value);
 
@@ -430,38 +333,22 @@ public class FtcBNO055Imu
          * @return raw data of the specified type for the z-axis.
          */
         @Override
-        public synchronized SensorData<Double> getRawZData(DataType dataType)
+        public SensorData<Double> getRawZData(DataType dataType)
         {
             final String funcName = "getRawZData";
             double value = 0.0;
-            long currTagId = FtcOpMode.getLoopCounter();
 
             if (dataType == DataType.ACCELERATION)
             {
-                if (currTagId != accelTagId)
-                {
-                    accelData = imu.getAcceleration();
-                    accelTagId = currTagId;
-                }
-                value = accelData.zAccel;
+                value = imu.getAcceleration().zAccel;
             }
             else if (dataType == DataType.VELOCITY)
             {
-                if (currTagId != velTagId)
-                {
-                    velData = imu.getVelocity();
-                    velTagId = currTagId;
-                }
-                value = velData.zVeloc;
+                value = imu.getVelocity().zVeloc;
             }
             else if (dataType == DataType.DISTANCE)
             {
-                if (currTagId != posTagId)
-                {
-                    posData = imu.getPosition();
-                    posTagId = currTagId;
-                }
-                value = posData.z;
+                value = imu.getPosition().z;
             }
             SensorData<Double> data = new SensorData<>(TrcUtil.getCurrentTime(), value);
 

@@ -45,7 +45,7 @@ public abstract class TrcMotor implements TrcMotorController
 
     private final String instanceName;
     private final TrcTaskMgr.TaskObject motorSpeedTaskObj;
-    private final TrcTaskMgr.TaskObject motorStopTaskObj;
+    private final TrcTaskMgr.TaskObject motorStopSpeedTaskObj;
     private TrcDigitalTrigger digitalTrigger = null;
     private boolean speedTaskEnabled = false;
     private double speedSensorUnitsPerSec = 0.0;
@@ -69,7 +69,7 @@ public abstract class TrcMotor implements TrcMotorController
         this.instanceName = instanceName;
         TrcTaskMgr taskMgr = TrcTaskMgr.getInstance();
         motorSpeedTaskObj = taskMgr.createTask(instanceName + ".motorSpeedTask", this::motorSpeedTask);
-        motorStopTaskObj = taskMgr.createTask(instanceName + ".motorSpeedTask", this::motorStopTask);
+        motorStopSpeedTaskObj = taskMgr.createTask(instanceName + ".motorSpeedTask", this::motorStopSpeedTask);
     }   //TrcMotor
 
     /**
@@ -99,7 +99,7 @@ public abstract class TrcMotor implements TrcMotorController
         }
 
         digitalTrigger = new TrcDigitalTrigger(instanceName, digitalInput, this::triggerEvent);
-        digitalTrigger.setTaskEnabled(true);
+        digitalTrigger.setEnabled(true);
     }   //resetPositionOnDigitalInput
 
     /**
@@ -109,34 +109,34 @@ public abstract class TrcMotor implements TrcMotorController
      *
      * @param enabled specifies true to enable speed monitor task, disable otherwise.
      */
-    public synchronized void setTaskEnabled(boolean enabled)
+    public synchronized void setSpeedTaskEnabled(boolean enabled)
     {
-        final String funcName = "setTaskEnabled";
+        final String funcName = "setSpeedTaskEnabled";
 
         if (debugEnabled)
         {
             dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "enabled=%s", Boolean.toString(enabled));
         }
 
-        speedTaskEnabled = enabled;
         if (enabled)
         {
             prevTime = TrcUtil.getCurrentTime();
             prevPos = getPosition();
-            motorStopTaskObj.registerTask(TrcTaskMgr.TaskType.STOP_TASK);
-            motorSpeedTaskObj.registerTask(TrcTaskMgr.TaskType.PRECONTINUOUS_TASK);
+            motorSpeedTaskObj.registerTask(TaskType.PERIODIC_THREAD);
+            motorStopSpeedTaskObj.registerTask(TrcTaskMgr.TaskType.STOP_TASK);
         }
         else
         {
-            motorStopTaskObj.unregisterTask(TrcTaskMgr.TaskType.STOP_TASK);
-            motorSpeedTaskObj.unregisterTask(TrcTaskMgr.TaskType.PRECONTINUOUS_TASK);
+            motorSpeedTaskObj.unregisterTask(TaskType.PERIODIC_THREAD);
+            motorStopSpeedTaskObj.unregisterTask(TrcTaskMgr.TaskType.STOP_TASK);
         }
+        speedTaskEnabled = enabled;
 
         if (debugEnabled)
         {
             dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
         }
-    }   //setTaskEnabled
+    }   //setSpeedTaskEnabled
 
     /**
      * This method is called periodically to calculate he speed of the motor.
@@ -171,22 +171,22 @@ public abstract class TrcMotor implements TrcMotorController
      * @param taskType specifies the type of task being run.
      * @param runMode specifies the competition mode that is running.
      */
-    public void motorStopTask(TrcTaskMgr.TaskType taskType, TrcRobot.RunMode runMode)
+    private void motorStopSpeedTask(TrcTaskMgr.TaskType taskType, TrcRobot.RunMode runMode)
     {
-        final String funcName = "motorStopTask";
+        final String funcName = "motorStopSpeedTask";
 
         if (debugEnabled)
         {
             dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.TASK, "taskType=%s,runMode=%s", taskType, runMode);
         }
 
-        setTaskEnabled(false);
+        setSpeedTaskEnabled(false);
 
         if (debugEnabled)
         {
             dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.TASK);
         }
-    }   //motorStopTask
+    }   //motorStopSpeedTask
 
     //
     // Implements the TrcMotorController interface.
@@ -216,7 +216,7 @@ public abstract class TrcMotor implements TrcMotorController
         }
         else
         {
-            throw new UnsupportedOperationException("MotorTask is not enabled.");
+            throw new UnsupportedOperationException("MotorSpeedTask is not enabled.");
         }
     }   //getSpeed
 
@@ -229,7 +229,7 @@ public abstract class TrcMotor implements TrcMotorController
      *
      * @param active specifies true if the digital device state is active, false otherwise.
      */
-    public void triggerEvent(boolean active)
+    private void triggerEvent(boolean active)
     {
         final String funcName = "triggerEvent";
 

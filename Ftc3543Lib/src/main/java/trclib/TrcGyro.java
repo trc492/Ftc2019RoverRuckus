@@ -315,7 +315,7 @@ public abstract class TrcGyro extends TrcSensor<TrcGyro.DataType>
         //
         if (integrator != null)
         {
-            integrator.setTaskEnabled(enabled);
+            integrator.setEnabled(enabled);
         }
 
         //
@@ -323,7 +323,7 @@ public abstract class TrcGyro extends TrcSensor<TrcGyro.DataType>
         //
         if (cardinalConverter != null)
         {
-            cardinalConverter.setTaskEnabled(enabled);
+            cardinalConverter.setEnabled(enabled);
         }
     }   //setEnabled
 

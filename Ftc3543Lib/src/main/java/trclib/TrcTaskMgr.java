@@ -132,6 +132,10 @@ public class TrcTaskMgr implements TrcPeriodicThread.PeriodicTask
          *  This contains code that will run after runContinuous() is called. Typically, you will put code that deals
          *  with actions that requires more frequent processing.
          *
+         * PeriodicThreadTask:
+         *  This contains code that will run on its own thread at the specified task interval. Typically, you will
+         *  put code that may take a long time to execute and could affect the loop time of the main robot thread.
+         *
          * @param taskType specifies the type of task being run. This may be useful for handling multiple task types.
          * @param runMode specifies the competition mode that is about to end (e.g. Autonomous, TeleOp, Test).
          */
@@ -150,7 +154,6 @@ public class TrcTaskMgr implements TrcPeriodicThread.PeriodicTask
         private final String taskName;
         private Task task;
         private TrcPeriodicThread<Object> taskThread = null;
-        private long taskInterval = 0;
         private long[] taskTotalNanoTimes = new long[TaskType.values().length];
         private int[] taskTimeSlotCounts = new int[TaskType.values().length];
 
@@ -205,9 +208,12 @@ public class TrcTaskMgr implements TrcPeriodicThread.PeriodicTask
                 if (type == TaskType.PERIODIC_THREAD)
                 {
                     taskThread = new TrcPeriodicThread<>(taskName, TrcTaskMgr.getInstance(), this);
-                    this.taskInterval = taskInterval;
                     taskThread.setProcessingInterval(taskInterval);
                     taskThread.setTaskEnabled(true);
+                }
+                else
+                {
+                    taskThread = null;
                 }
             }
 
@@ -236,9 +242,8 @@ public class TrcTaskMgr implements TrcPeriodicThread.PeriodicTask
             if (type == TaskType.PERIODIC_THREAD && taskThread != null)
             {
                 taskThread.terminateTask();
-                taskThread = null;
-                taskInterval = 0;
             }
+            taskThread = null;
 
             return taskTypes.remove(type);
         }   //unregisterTask
@@ -292,8 +297,35 @@ public class TrcTaskMgr implements TrcPeriodicThread.PeriodicTask
          */
         public long getTaskInterval()
         {
-            return taskInterval;
+            return taskThread != null? taskThread.getProcessingInterval(): 0;
         }   //getTaskInterval
+
+        /**
+         * This method sets the task interval for TaskType.PERIODIC_THREAD. It has no effect for any other types.
+         *
+         * @param taskInterval specifies the periodic interval for PERIODIC_THREAD, ignore for any other task types.
+         *                     If zero interval is specified, the task will be run in a tight loop.
+         */
+        public void setTaskInterval(long taskInterval)
+        {
+            if (taskThread != null)
+            {
+                taskThread.setProcessingInterval(taskInterval);
+            }
+        }   //setTaskInterval
+
+        /**
+         * This method sets the task data for TaskType.PERIODIC_THREAD. It has no effect for any other types.
+         *
+         * @param data specifies the thread data for PERIODIC_THREAD, ignore for any other task types.
+         */
+        public void setTaskData(Object data)
+        {
+            if (taskThread != null)
+            {
+                taskThread.setData(data);
+            }
+        }   //setTaskData
 
     }   //class TaskObject
 

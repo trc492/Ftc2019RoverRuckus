@@ -88,7 +88,7 @@ public abstract class AutoCommon extends FtcOpMode
     {
         robot.tracer.traceInfo(moduleName, "%s: ***** Starting autonomous *****", new Date());
         robot.startMode(TrcRobot.RunMode.AUTO_MODE);
-        robot.battery.setTaskEnabled(true);
+        robot.battery.setEnabled(true);
         robot.dashboard.clearDisplay();
     }   //startMode
 
@@ -96,7 +96,7 @@ public abstract class AutoCommon extends FtcOpMode
     public void stopMode(TrcRobot.RunMode runMode)
     {
         robot.stopMode(TrcRobot.RunMode.AUTO_MODE);
-        robot.battery.setTaskEnabled(false);
+        robot.battery.setEnabled(false);
         printPerformanceMetrics(robot.tracer);
 
         if (USE_TRACELOG)

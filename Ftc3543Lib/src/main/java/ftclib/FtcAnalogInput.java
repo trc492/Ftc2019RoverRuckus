@@ -45,8 +45,6 @@ public class FtcAnalogInput extends TrcAnalogInput
 
     private AnalogInput sensor;
     private double maxVoltage;
-    private double sensorData;
-    private long dataTagId = -1;
 
     /**
      * Constructor: Creates an instance of the object.
@@ -121,13 +119,7 @@ public class FtcAnalogInput extends TrcAnalogInput
         //
         if (dataType == DataType.INPUT_DATA || dataType == DataType.NORMALIZED_DATA)
         {
-            long currTagId = FtcOpMode.getLoopCounter();
-            if (currTagId != dataTagId)
-            {
-                sensorData = sensor.getVoltage();
-                dataTagId = currTagId;
-            }
-
+            double sensorData = sensor.getVoltage();
             data = new SensorData<>(
                     TrcUtil.getCurrentTime(), dataType == DataType.INPUT_DATA? sensorData: sensorData/maxVoltage);
         }

@@ -173,11 +173,10 @@ public class FtcDcMotor extends TrcMotor
         }
 
         this.maxVelocitySensorUnitsPerSec = maxVelocitySensorUnitsPerSec;
-        setTaskEnabled(true);
+        setSpeedTaskEnabled(true);
         velocityController = new TrcPidController(
                 instanceName + ".velocityController", pidCoefficients, 1.0, this::getNormalizedSpeed);
         velocityController.setAbsoluteSetPoint(true);
-        velocityController.setTarget(0.0);
     }   //enableVelocityMode
 
     /**
@@ -193,7 +192,7 @@ public class FtcDcMotor extends TrcMotor
             dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
         }
 
-        setTaskEnabled(false);
+        setSpeedTaskEnabled(false);
         velocityController = null;
     }   //disableVelocityMode
 
@@ -213,6 +212,7 @@ public class FtcDcMotor extends TrcMotor
             dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
             dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%f", normalizedSpeed);
         }
+
         return normalizedSpeed;
     }   //getNormalizedSpeed
 
@@ -413,7 +413,7 @@ public class FtcDcMotor extends TrcMotor
         // Modern Robotics motor controllers supports resetting encoders by setting the motor controller mode. This
         // is a long operation and has side effect of disabling the motor controller unless you do another setMode
         // to re-enable it. Therefore, resetPosition with hardware set to true is a synchronous call. This should
-        // only be called in robotInit time. For other times, it should call resetPosition with hardware set to false
+        // only be called at robotInit time. For other times, it should call resetPosition with hardware set to false
         // (software reset).
         //
         if (hardware)
@@ -617,7 +617,6 @@ public class FtcDcMotor extends TrcMotor
      * @param taskType specifies the type of task being run.
      * @param runMode specifies the competition mode that is running.
      */
-    @Override
     public synchronized void motorSpeedTask(TrcTaskMgr.TaskType taskType, TrcRobot.RunMode runMode)
     {
         final String funcName = "motorSpeedTask";

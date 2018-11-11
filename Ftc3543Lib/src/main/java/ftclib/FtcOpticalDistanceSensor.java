@@ -50,10 +50,6 @@ public class FtcOpticalDistanceSensor extends TrcSensor<FtcOpticalDistanceSensor
     }   //DataType
 
     public OpticalDistanceSensor sensor;
-    private double rawLightData = 0.0;
-    private long rawLightTagId = -1;
-    private double lightData = 0.0;
-    private long lightTagId = -1;
 
     /**
      * Constructor: Creates an instance of the object.
@@ -121,26 +117,15 @@ public class FtcOpticalDistanceSensor extends TrcSensor<FtcOpticalDistanceSensor
     {
         final String funcName = "getRawData";
         SensorData<Double> data = null;
-        long currTagId = FtcOpMode.getLoopCounter();
 
         switch (dataType)
         {
             case RAW_LIGHT_DETECTED:
-                if (currTagId != rawLightTagId)
-                {
-                    rawLightData = sensor.getRawLightDetected();
-                    rawLightTagId = currTagId;
-                }
-                data = new SensorData<>(TrcUtil.getCurrentTime(), rawLightData);
+                data = new SensorData<>(TrcUtil.getCurrentTime(), sensor.getRawLightDetected());
                 break;
 
             case LIGHT_DETECTED:
-                if (currTagId != lightTagId)
-                {
-                    lightData = sensor.getLightDetected();
-                    lightTagId = currTagId;
-                }
-                data = new SensorData<>(TrcUtil.getCurrentTime(), lightData);
+                data = new SensorData<>(TrcUtil.getCurrentTime(), sensor.getLightDetected());
                 break;
         }
 

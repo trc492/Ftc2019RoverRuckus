@@ -96,7 +96,7 @@ public class TrcPeriodicThread<T>
         public synchronized boolean isTaskEnabled()
         {
             return periodicThread.isAlive() && (taskEnabled || oneShotEnabled);
-        }   //isTaskEnabled
+        }   //isEnabled
 
         /**
          * This method enables/disables the periodic task. If this is called to disable the task, the task will be
@@ -110,7 +110,7 @@ public class TrcPeriodicThread<T>
             {
                 taskEnabled = enabled;
             }
-        }   //setTaskEnabled
+        }   //setEnabled
 
         /**
          * This method returns the last data object. If there is no data since the last call, it will return null.
@@ -218,7 +218,7 @@ public class TrcPeriodicThread<T>
      */
     public void setTaskEnabled(boolean enabled)
     {
-        final String funcName = "setTaskEnabled";
+        final String funcName = "setEnabled";
 
         if (debugEnabled)
         {
@@ -231,7 +231,7 @@ public class TrcPeriodicThread<T>
         {
             dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
         }
-    }   //setTaskEnabled
+    }   //setEnabled
 
     /**
      * This method returns the state of the periodic task.
@@ -240,7 +240,7 @@ public class TrcPeriodicThread<T>
      */
     public boolean isTaskEnabled()
     {
-        final String funcName = "isTaskEnabled";
+        final String funcName = "isEnabled";
         boolean enabled = taskState.isTaskEnabled();
 
         if (debugEnabled)
@@ -250,7 +250,7 @@ public class TrcPeriodicThread<T>
         }
 
         return enabled;
-    }   //isTaskEnabled
+    }   //isEnabled
 
     /**
      * This method sets the periodic task processing interval.

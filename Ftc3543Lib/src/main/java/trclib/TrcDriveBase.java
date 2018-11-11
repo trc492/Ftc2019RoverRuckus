@@ -22,8 +22,6 @@
 
 package trclib;
 
-import trclib.TrcTaskMgr.TaskType;
-
 /**
  * This class implements a platform independent drive base. It is intended to be extended by subclasses that
  * implements different drive base configurations (e.g. SimpleDriveBase, MecanumDriveBase and SwerveDriveBase).
@@ -1021,7 +1019,7 @@ public abstract class TrcDriveBase
      * @param taskType specifies the type of task being run.
      * @param runMode specifies the competition mode that is about to end (e.g. Autonomous, TeleOp, Test).
      */
-    public synchronized void odometryTask(TrcTaskMgr.TaskType taskType, TrcRobot.RunMode runMode)
+    private synchronized void odometryTask(TrcTaskMgr.TaskType taskType, TrcRobot.RunMode runMode)
     {
         final String funcName = "odometryTask";
 
@@ -1057,7 +1055,7 @@ public abstract class TrcDriveBase
      * @param taskType specifies the type of task being run.
      * @param runMode specifies the competition mode that is about to end (e.g. Autonomous, TeleOp, Test).
      */
-    public void stopTask(TrcTaskMgr.TaskType taskType, TrcRobot.RunMode runMode)
+    private void stopTask(TrcTaskMgr.TaskType taskType, TrcRobot.RunMode runMode)
     {
         final String funcName = "stopTask";
 

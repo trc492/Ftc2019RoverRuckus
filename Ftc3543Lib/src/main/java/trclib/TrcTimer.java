@@ -23,8 +23,8 @@
 package trclib;
 
 /**
- * This class implements a timer that will generate an event when the time has expired. This is useful for doing
- * delays in autonomous.
+ * This class implements a timer that will signal an event or make a notification callback when the time has expired.
+ * This is useful for doing delays in autonomous.
  */
 public class TrcTimer
 {
@@ -37,12 +37,13 @@ public class TrcTimer
     private TrcDbgTrace dbgTrace = null;
 
     private final String instanceName;
-    private final TrcTaskMgr.TaskObject timerTaskObj;
-    private double expiredTime;
-    private boolean enabled;
-    private boolean expired;
-    private boolean canceled;
-    private TrcEvent notifyEvent;
+    private final TrcTimerMgr timerMgr;
+    private double expiredTime = 0.0;
+    private boolean expired = false;
+    private boolean canceled = false;
+    private TrcEvent notifyEvent = null;
+    private TrcNotificationReceiver notifyReceiver = null;
+    private double securityKey = -1.0;
 
     /**
      * Constructor: Creates an instance of the timer with the given name.
@@ -59,12 +60,7 @@ public class TrcTimer
         }
 
         this.instanceName = instanceName;
-        timerTaskObj = TrcTaskMgr.getInstance().createTask(instanceName + ".timerTask", this::timerTask);
-        expiredTime = 0.0;
-        enabled = false;
-        expired = false;
-        canceled = false;
-        notifyEvent = null;
+        timerMgr = TrcTimerMgr.getInstance();
     }   //TrcTimer
 
     /**
@@ -79,30 +75,33 @@ public class TrcTimer
 
     /**
      * This methods sets the expire time relative to the current time. When the time expires, it will signal the
-     * given event.
+     * given event if any and call back the notification receiver if any.
      *
      * @param time specifies the expire time in seconds relative to the current time.
      * @param event specifies the event to signal when time has expired.
+     * @param receiver specifies the notification receiver to call when time has expired.
      */
-    public void set(double time, TrcEvent event)
+    public synchronized void set(double time, TrcEvent event, TrcNotificationReceiver receiver)
     {
         final String funcName = "set";
 
         if (debugEnabled)
         {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API,
-                                "time=%f,event=%s", time, event != null? event.toString(): "null");
+            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "time=%f,event=%s,receiver=%s",
+                    time, event != null? event: "null", receiver != null? receiver: "null");
         }
 
+        expiredTime = TrcUtil.getCurrentTime() + time;
         expired = false;
         canceled = false;
-        expiredTime = TrcUtil.getCurrentTime() + time;
+        notifyEvent = event;
+        notifyReceiver = receiver;
         if (event != null)
         {
             event.clear();
         }
-        notifyEvent = event;
-        setTaskEnabled(true);
+        securityKey = Math.random();
+        securityKey += timerMgr.add(this, securityKey);
 
         if (debugEnabled)
         {
@@ -111,11 +110,40 @@ public class TrcTimer
     }   //set
 
     /**
+     * This methods sets the expire time relative to the current time. When the time expires, it will signal the
+     * given event.
+     *
+     * @param time specifies the expire time in seconds relative to the current time.
+     * @param event specifies the event to signal when time has expired.
+     */
+    public void set(double time, TrcEvent event)
+    {
+        set(time, event, null);
+    }   //set
+
+    /**
+     * This methods sets the expire time relative to the current time. When the time expires, it will call back the
+     * notification receiver.
+     *
+     * @param time specifies the expire time in seconds relative to the current time.
+     * @param receiver specifies the notification receiver to call when time has expired.
+     */
+    public void set(double time, TrcNotificationReceiver receiver)
+    {
+        set(time, null, receiver);
+    }   //set
+
+    public synchronized double getExpiredTime()
+    {
+        return expiredTime;
+    }   //getExpiredTime
+
+    /**
      * This method checks if the timer has expired.
      *
      * @return true if the timer has expired, false otherwise.
      */
-    public boolean isExpired()
+    public synchronized boolean isExpired()
     {
         final String funcName = "isExpired";
 
@@ -129,11 +157,48 @@ public class TrcTimer
     }   //isExpired
 
     /**
+     * This method is called by TrcTimerMgr when the timer has expired. DO NOT call this if you are not TrcTimerMgr.
+     */
+    public synchronized void setExpired(double securityKey)
+    {
+        final String funcName = "setExpired";
+
+        if (securityKey == this.securityKey)
+        {
+            if (debugEnabled)
+            {
+                dbgTrace.traceInfo(funcName, "Time expired, notifying %s/%s.",
+                        notifyEvent != null? notifyEvent: "null", notifyReceiver != null? notifyReceiver: "null");
+            }
+
+            this.expiredTime = 0.0;
+            this.expired = true;
+            this.securityKey = -1.0;
+
+            if (notifyEvent != null)
+            {
+                notifyEvent.set(true);
+                notifyEvent = null;
+            }
+
+            if (notifyReceiver != null)
+            {
+                notifyReceiver.notify(this);
+                notifyReceiver = null;
+            }
+        }
+        else
+        {
+            throw new SecurityException("Only TrcTimerMgr is allowed to call this method.");
+        }
+    }   //setExpired
+
+    /**
      * This method checks if the timer was canceled.
      *
      * @return true if the timer was canceled, false otherwise.
      */
-    public boolean isCanceled()
+    public synchronized boolean isCanceled()
     {
         final String funcName = "isCanceled";
 
@@ -149,7 +214,7 @@ public class TrcTimer
     /**
      * This method cancels the timer if it's set but has not expired. If the timer is canceled, the event is signaled.
      */
-    public void cancel()
+    public synchronized void cancel()
     {
         final String funcName = "cancel";
 
@@ -158,13 +223,22 @@ public class TrcTimer
             dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
         }
 
-        if (enabled)
+        timerMgr.remove(this, securityKey);
+        expiredTime = 0.0;
+        expired = false;
+        canceled = true;
+        securityKey = -1.0;
+
+        if (notifyEvent != null)
         {
-            setTaskEnabled(false);
-            expiredTime = 0.0;
-            expired = false;
             notifyEvent.cancel();
             notifyEvent = null;
+        }
+
+        if (notifyReceiver != null)
+        {
+            notifyReceiver.notify(this);
+            notifyReceiver = null;
         }
 
         if (debugEnabled)
@@ -172,76 +246,5 @@ public class TrcTimer
             dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
         }
     }   //cancel
-
-    /**
-     * This private method enables/disables the task that checks for timer expiration.
-     *
-     * @param enabled specifies if the timer task is enabled.
-     */
-    private void setTaskEnabled(boolean enabled)
-    {
-        final String funcName = "setTaskEnabled";
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.FUNC, "enabled=%b", enabled);
-        }
-
-        if (enabled)
-        {
-            timerTaskObj.registerTask(TrcTaskMgr.TaskType.PRECONTINUOUS_TASK);
-        }
-        else
-        {
-            timerTaskObj.unregisterTask(TrcTaskMgr.TaskType.PRECONTINUOUS_TASK);
-        }
-        this.enabled = enabled;
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.FUNC);
-        }
-    }   //setTaskEnabled
-
-    /**
-     * This method runs periodically at the fastest rate and checks if the timer has expired. After the timer expired,
-     * the task is disabled and if there is an event object, it will be signaled.
-     *
-     * @param taskType specifies the type of task being run.
-     * @param runMode specifies the current robot run mode.
-     */
-    public void timerTask(TrcTaskMgr.TaskType taskType, TrcRobot.RunMode runMode)
-    {
-        final String funcName = "timerTask";
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.TASK, "taskType=%s,runMode=%s", taskType, runMode);
-        }
-
-        if (enabled && !expired && TrcUtil.getCurrentTime() >= expiredTime)
-        {
-            setTaskEnabled(false);
-
-            if (debugEnabled)
-            {
-                dbgTrace.traceInfo(funcName, "Time expired, notifying %s.",
-                                   notifyEvent != null? notifyEvent.toString(): "null");
-            }
-
-            if (notifyEvent != null)
-            {
-                notifyEvent.set(true);
-                notifyEvent = null;
-            }
-            expiredTime = 0.0;
-            expired = true;
-        }
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.TASK);
-        }
-    }   //timerTask
 
 }   //class TrcTimer
