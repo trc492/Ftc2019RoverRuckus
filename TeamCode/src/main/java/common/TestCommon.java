@@ -272,14 +272,6 @@ public class TestCommon
                         "Pixy-Gold: ", "x=%.1f,y=%.1f,angle=%.1f %s",
                         targetInfo.xDistance, targetInfo.yDistance, targetInfo.angle, targetInfo.rect);
             }
-
-//            targetInfo = robot.pixyVision.getTargetInfo(RobotInfo.PIXY_SILVER_MINERAL_SIGNATURE);
-//            if (targetInfo != null)
-//            {
-//                robot.dashboard.displayPrintf(12, LABEL_WIDTH,
-//                        "Pixy-Silver: ", "x=%.1f,y=%.1f,angle=%.1f %s",
-//                        targetInfo.xDistance, targetInfo.yDistance, targetInfo.angle, targetInfo.rect);
-//            }
         }
     }   //doSensorsTest
 
@@ -292,13 +284,24 @@ public class TestCommon
             {
                 VectorF translation = robot.vuforiaVision.getLocationTranslation(robotLocation);
                 Orientation orientation = robot.vuforiaVision.getLocationOrientation(robotLocation);
-                robot.dashboard.displayPrintf(13, "Translation: x=%6.2f,y=%6.2f,z=%6.2f",
+                robot.dashboard.displayPrintf(12, "Translation: x=%6.2f,y=%6.2f,z=%6.2f",
                         translation.get(0)/ TrcUtil.MM_PER_INCH,
                         translation.get(1)/TrcUtil.MM_PER_INCH,
                         translation.get(2)/TrcUtil.MM_PER_INCH);
-                robot.dashboard.displayPrintf(14, "Orientation: roll=%6.2f,pitch=%6.2f,heading=%6.2f",
+                robot.dashboard.displayPrintf(13, "Orientation: roll=%6.2f,pitch=%6.2f,heading=%6.2f",
                         orientation.firstAngle, orientation.secondAngle, orientation.thirdAngle);
             }
+        }
+
+        if (robot.tensorFlowVision != null)
+        {
+            TensorFlowVision.TargetInfo targetInfo;
+
+            targetInfo = robot.tensorFlowVision.getTargetInfo(TensorFlowVision.LABEL_GOLD_MINERAL);
+            robot.dashboard.displayPrintf(14, "Gold: %s", targetInfo);
+
+            targetInfo = robot.tensorFlowVision.getTargetInfo(TensorFlowVision.LABEL_SILVER_MINERAL);
+            robot.dashboard.displayPrintf(15, "Silver: %s", targetInfo);
         }
     }   //doVisionTest
 

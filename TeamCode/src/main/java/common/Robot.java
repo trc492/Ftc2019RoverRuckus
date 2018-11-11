@@ -62,6 +62,7 @@ public class Robot implements FtcMenu.MenuButtons
     //
     public VuforiaVision vuforiaVision = null;
     public PixyVision pixyVision = null;
+    public TensorFlowVision tensorFlowVision = null;
     //
     // Sensors.
     //
@@ -157,18 +158,23 @@ public class Robot implements FtcMenu.MenuButtons
         gyro.resetZIntegrator();
         gyro.setEnabled(true);
         targetHeading = 0.0;
+        //
+        // Vision generally will impact performance, so we only enable it if it's needed such as in autonomous.
+        //
+        if (vuforiaVision != null && runMode == TrcRobot.RunMode.AUTO_MODE)
+        {
+            vuforiaVision.setEnabled(true);
+        }
 
-//        if (vuforiaVision != null)
-//        {
-//            vuforiaVision.setEnabled(true);
-//        }
-//        //
-//        // Vision generally will impact performance, so we only enable it if it's needed such as in autonomous.
-//        //
-//        if (pixyVision != null && runMode == TrcRobot.RunMode.AUTO_MODE)
-//        {
-//            pixyVision.setCameraEnabled(true);
-//        }
+        if (pixyVision != null && runMode == TrcRobot.RunMode.AUTO_MODE)
+        {
+            pixyVision.setCameraEnabled(true);
+        }
+
+        if (tensorFlowVision != null && runMode == TrcRobot.RunMode.AUTO_MODE)
+        {
+            tensorFlowVision.setEnabled(true);
+        }
         //
         // Reset all X, Y and heading values.
         //
@@ -188,15 +194,21 @@ public class Robot implements FtcMenu.MenuButtons
             textToSpeech.shutdown();
         }
 
-//        if (vuforiaVision != null)
-//        {
-//            vuforiaVision.setEnabled(false);
-//        }
-//
-//        if (pixyVision != null)
-//        {
-//            pixyVision.setCameraEnabled(false);
-//        }
+        if (vuforiaVision != null)
+        {
+            vuforiaVision.setEnabled(false);
+        }
+
+        if (pixyVision != null)
+        {
+            pixyVision.setCameraEnabled(false);
+        }
+
+        if (tensorFlowVision != null)
+        {
+            tensorFlowVision.setEnabled(false);
+            tensorFlowVision.shutdown();
+        }
     }   //stopMode
 
     public void traceStateInfo(double elapsedTime, String stateName, double xDistance, double yDistance, double heading)

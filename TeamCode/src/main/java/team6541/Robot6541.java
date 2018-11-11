@@ -31,6 +31,7 @@ import common.PixyVision;
 import common.Robot;
 import common.RobotInfo;
 import common.TeamMarkerDeployer;
+import common.TensorFlowVision;
 import common.VuforiaVision;
 import ftclib.FtcDcMotor;
 import trclib.TrcPidController;
@@ -48,6 +49,7 @@ public class Robot6541 extends Robot
 {
     public static final boolean USE_VUFORIA = false;
     public static final boolean USE_PIXY = false;
+    public static final boolean USE_TENSORFLOW = true;
 
     static final String ROBOT_NAME = "Robot6541";
     //
@@ -67,9 +69,9 @@ public class Robot6541 extends Robot
         //
         if (USE_VUFORIA)
         {
-            final VuforiaLocalizer.CameraDirection CAMERA_DIR = BACK;
             final int cameraViewId = opMode.hardwareMap.appContext.getResources().getIdentifier(
                     "cameraMonitorViewId", "id", opMode.hardwareMap.appContext.getPackageName());
+            final VuforiaLocalizer.CameraDirection CAMERA_DIR = BACK;
             /*
              * Create a transformation matrix describing where the phone is on the robot.
              *
@@ -113,6 +115,14 @@ public class Robot6541 extends Robot
         {
             pixyVision = new PixyVision("pixy", this,
                     PixyVision.Orientation.NORMAL_LANDSCAPE, 80);
+        }
+
+        if (USE_TENSORFLOW)
+        {
+            int tfodMonitorViewId = opMode.hardwareMap.appContext.getResources().getIdentifier(
+                    "tfodMonitorViewId", "id", opMode.hardwareMap.appContext.getPackageName());
+            final VuforiaLocalizer.CameraDirection CAMERA_DIR = BACK;
+            tensorFlowVision = new TensorFlowVision(this, tfodMonitorViewId, CAMERA_DIR);
         }
         //
         // Initialize DriveBase.
