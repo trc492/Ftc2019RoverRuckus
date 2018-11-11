@@ -23,7 +23,6 @@
 package common;
 
 import android.speech.tts.TextToSpeech;
-import android.widget.TextView;
 
 import org.firstinspires.ftc.robotcontroller.internal.FtcRobotControllerActivity;
 import org.firstinspires.ftc.robotcore.external.matrices.OpenGLMatrix;
@@ -54,7 +53,7 @@ public class Robot implements FtcMenu.MenuButtons
     public FtcOpMode opMode;
     public HalDashboard dashboard;
     public TrcDbgTrace tracer;
-    public FtcRobotBattery battery = null;
+    public FtcRobotBattery battery;
     public FtcAndroidTone androidTone;
     public TextToSpeech textToSpeech = null;
     //
@@ -99,7 +98,7 @@ public class Robot implements FtcMenu.MenuButtons
         dashboard = HalDashboard.getInstance();
         tracer = FtcOpMode.getGlobalTracer();
         dashboard.setTextView(
-                (TextView)((FtcRobotControllerActivity)opMode.hardwareMap.appContext).findViewById(R.id.textOpMode));
+                ((FtcRobotControllerActivity)opMode.hardwareMap.appContext).findViewById(R.id.textOpMode));
         battery = new FtcRobotBattery();
         androidTone = new FtcAndroidTone("AndroidTone");
 
