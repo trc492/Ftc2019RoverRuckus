@@ -49,7 +49,7 @@ public class Robot3543 extends Robot
 {
     public static final boolean USE_VUFORIA = false;
     public static final boolean USE_PIXY = false;
-    public static final boolean USE_TENSORFLOW = true;
+    public static final boolean USE_TENSORFLOW = false;
 
     static final String ROBOT_NAME = "Robot3543";
     //
@@ -122,7 +122,7 @@ public class Robot3543 extends Robot
             int tfodMonitorViewId = opMode.hardwareMap.appContext.getResources().getIdentifier(
                     "tfodMonitorViewId", "id", opMode.hardwareMap.appContext.getPackageName());
             final VuforiaLocalizer.CameraDirection CAMERA_DIR = BACK;
-            tensorFlowVision = new TensorFlowVision(this, tfodMonitorViewId, CAMERA_DIR);
+            tensorFlowVision = new TensorFlowVision(tfodMonitorViewId, CAMERA_DIR, tracer);
         }
         //
         // Initialize DriveBase.

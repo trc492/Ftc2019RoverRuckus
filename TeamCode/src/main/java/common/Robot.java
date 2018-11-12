@@ -205,7 +205,6 @@ public class Robot implements FtcMenu.MenuButtons
 
         if (tensorFlowVision != null)
         {
-            tensorFlowVision.setEnabled(false);
             tensorFlowVision.shutdown();
         }
     }   //stopMode

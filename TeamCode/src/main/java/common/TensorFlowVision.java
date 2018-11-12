@@ -32,6 +32,7 @@ import org.opencv.core.Rect;
 import java.util.List;
 
 import ftclib.FtcVuforia;
+import trclib.TrcDbgTrace;
 
 public class TensorFlowVision
 {
@@ -42,32 +43,36 @@ public class TensorFlowVision
         public String label;
         public Rect rect;
         public double angle;
+        public double confidence;
+        public int imageWidth;
+        public int imageHeight;
 
-        public TargetInfo(String label, Rect rect, double angle)
+        public TargetInfo(String label, Rect rect, double angle, double confidence, int imageWidth, int imageHeight)
         {
             this.label = label;
             this.rect = rect;
             this.angle = angle;
+            this.confidence = confidence;
+            this.imageWidth = imageWidth;
+            this.imageHeight = imageHeight;
         }   //TargetInfo
 
         public String toString()
         {
-            return String.format("%s: Rect[%d,%d,%d,%d], angle=%.1f",
-                    label, rect.x, rect.y, rect.width, rect.height, angle);
+            return String.format("%s: Rect[%d,%d,%d,%d], angle=%.1f, confidence=%.3f, image(%d,%d)",
+                    label, rect.x, rect.y, rect.width, rect.height, angle, confidence, imageWidth, imageHeight);
         }
     }   //class TargetInfo
 
-    public static final int IMAGE_WIDTH = 640;      //in pixels
-    public static final int IMAGE_HEIGHT = 480;     //in pixels
     public static final String LABEL_GOLD_MINERAL = "Gold Mineral";
     public static final String LABEL_SILVER_MINERAL = "Silver Mineral";
 
-    private Robot robot;
+    private TrcDbgTrace tracer;
     private FtcVuforia vuforia;
     private TFObjectDetector tfod;
 
     public TensorFlowVision(
-            Robot robot, int tfodMonitorViewId, VuforiaLocalizer.CameraDirection cameraDir)
+            int tfodMonitorViewId, VuforiaLocalizer.CameraDirection cameraDir, TrcDbgTrace tracer)
     {
         final String VUFORIA_LICENSE_KEY =
                 "ATu19Kj/////AAAAGcw4SDCVwEBSiKcUtdmQd2aOugrxo/OgeBJUt7XwMSi3e0KSZaylbsTnWp8EBxyA5o/00JFJVDY1OxJ" +
@@ -76,7 +81,7 @@ public class TensorFlowVision
                 "pdfNKNOii3A80eXyTVDfPGfzTwVa4eNBY/SgmoIdBbMPb3hfZBOz7GVoVHHQWbCNbzm31p1OY+zqPPWMfzzpyiJ4mA9bLTQ";
         final String TFOD_MODEL_ASSET = "RoverRuckus.tflite";
 
-        this.robot = robot;
+        this.tracer = tracer;
         vuforia = new FtcVuforia(VUFORIA_LICENSE_KEY, -1, cameraDir);
 
         if (ClassFactory.getInstance().canCreateTFObjectDetector())
@@ -84,7 +89,7 @@ public class TensorFlowVision
             TFObjectDetector.Parameters tfodParameters =
                     tfodMonitorViewId == -1?
                             new TFObjectDetector.Parameters() : new TFObjectDetector.Parameters(tfodMonitorViewId);
-            TFObjectDetector tfod =
+            tfod =
                     ClassFactory.getInstance().createTFObjectDetector(tfodParameters, vuforia.getLocalizer());
             tfod.loadModelFromAsset(TFOD_MODEL_ASSET, LABEL_GOLD_MINERAL, LABEL_SILVER_MINERAL);
         }
@@ -163,13 +168,15 @@ public class TensorFlowVision
         {
             targetInfo = new TargetInfo(
                     targetObject.getLabel(),
-                    new Rect((int)targetObject.getLeft(), (int)targetObject.getTop(),
-                             (int)targetObject.getWidth(), (int)targetObject.getHeight()),
-                    targetObject.estimateAngleToObject(AngleUnit.DEGREES));
+                    new Rect((int)targetObject.getTop(), (int)targetObject.getRight(),
+                             (int)targetObject.getHeight(), (int)targetObject.getWidth()),
+                    targetObject.estimateAngleToObject(AngleUnit.DEGREES),
+                    targetObject.getConfidence(),
+                    targetObject.getImageHeight(), targetObject.getImageWidth());
 
             if (debugEnabled)
             {
-                robot.tracer.traceInfo(funcName, "###TargetInfo###: %s", targetInfo);
+                tracer.traceInfo(funcName, "###TargetInfo###: %s", targetInfo);
             }
         }
 
