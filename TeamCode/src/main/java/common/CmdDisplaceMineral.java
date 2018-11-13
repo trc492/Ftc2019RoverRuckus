@@ -43,13 +43,13 @@ public class CmdDisplaceMineral implements TrcRobot.RobotCommand
     private double targetY = 0.0;
     private double mineralAngle = 0.0;
     private int retries = 0;
-    private double startHeading = 0.0;
     private double startPos = 0.0;
 
     /**
      * Constructor: Create an instance of the object.
      *
      * @param robot specifies the robot object.
+     * @param startAtDepot specifies true if starting position is at the depot side, false if at the crater side.
      */
     public CmdDisplaceMineral(Robot robot, boolean startAtDepot)
     {
@@ -58,7 +58,7 @@ public class CmdDisplaceMineral implements TrcRobot.RobotCommand
         event = new TrcEvent(moduleName);
         sm = new TrcStateMachine<>(moduleName);
         sm.start(State.SCAN_MINERAL);
-    }   //CmdSweepMineral
+    }   //CmdDisplaceMineral
 
     enum State
     {
@@ -67,15 +67,15 @@ public class CmdDisplaceMineral implements TrcRobot.RobotCommand
         DISPLACE_MINERAL,
         BACK_TO_START_POSITION,
         TURN_TO_DEPOT,
-        PLOW_TO_DEPOT,
+        DRIVE_TO_DEPOT,
         DONE
-    }
+    }   //enum State
 
     /**
      * This method performs the task of scanning for gold mineral and displacing it. It assumes it is starting in
      * front of the middle mineral and will use vision to determine which mineral is gold. It will then turn to
-     * the gold mineral and drive forward to displace it. It will also keep track of the robot ending position and
-     * provide methods for the client to retrieve this position.
+     * the gold mineral and drive forward to displace it. It also keeps track of the mineral angle and provide
+     * a method to access it in case the caller may want the info.
      *
      * @param elapsedTime specifies the elapsed time of the period in seconds.
      * @return true if the task is completed, false otherwise.
@@ -111,7 +111,7 @@ public class CmdDisplaceMineral implements TrcRobot.RobotCommand
                             //
                             // Found gold mineral.
                             //
-                            int leftThird = TensorFlowVision.IMAGE_WIDTH/3;
+                            int leftThird = targetInfo.imageWidth/3;
                             int rightThird = leftThird*2;
                             int mineralX = targetInfo.rect.x + targetInfo.rect.width/2;
 
@@ -178,7 +178,9 @@ public class CmdDisplaceMineral implements TrcRobot.RobotCommand
                     // Intentionally falling through.
                     //
                 case TURN_TO_MINERAL:
-                    startHeading = robot.targetHeading;
+                    //
+                    // Turn to the gold mineral (hopefully).
+                    //
                     targetX = 0.0;
                     targetY = 0.0;
                     robot.targetHeading = mineralAngle;
@@ -187,41 +189,73 @@ public class CmdDisplaceMineral implements TrcRobot.RobotCommand
                     break;
 
                 case DISPLACE_MINERAL:
+                    //
+                    // Drive forward to displace the mineral.
+                    //
                     startPos = robot.driveBase.getYPosition();
                     targetX = 0.0;
-                    targetY = mineralAngle == 0.0? 24.0: 36.0;
-                    nextState = startAtDepot && mineralAngle == 0.0? State.PLOW_TO_DEPOT: State.BACK_TO_START_POSITION;
+                    if (startAtDepot)
+                    {
+                        //
+                        // We are starting on the depot side. It means we will end inside the depot.
+                        //
+                        targetY = mineralAngle == 0.0? 68.0: 48.0;
+                        nextState = mineralAngle == 0.0? State.DONE: State.TURN_TO_DEPOT;
+                    }
+                    else
+                    {
+                        //
+                        // We are starting on the crater side. It means we will end at our starting position.
+                        //
+                        targetY = mineralAngle == 0.0? 12.0: 18.0;
+                        nextState = State.BACK_TO_START_POSITION;
+                    }
                     robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
                     sm.waitForSingleEvent(event, nextState);
                     break;
 
                 case BACK_TO_START_POSITION:
+                    //
+                    // We are starting on the crater side so we will go back to our starting position.
+                    // By subtracting our current Y position from the start position recorded, we cancel
+                    // out any PID drive error that may have been accumulated.
+                    //
                     targetX = 0.0;
                     targetY = startPos - robot.driveBase.getYPosition();
-                    nextState = startAtDepot? State.TURN_TO_DEPOT: State.DONE;
                     robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
-                    sm.waitForSingleEvent(event, nextState);
+                    sm.waitForSingleEvent(event, State.DONE);
                     break;
 
                 case TURN_TO_DEPOT:
+                    //
+                    // We are starting on the depot side and have displaced either the left or the right mineral.
+                    // We need to turn towards the depot.
+                    //
                     targetX = targetY = 0.0;
-                    robot.targetHeading = startHeading;
+                    robot.targetHeading += mineralAngle == -45.0? 90.0: -90.0;
                     robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
-                    sm.waitForSingleEvent(event, State.PLOW_TO_DEPOT);
+                    sm.waitForSingleEvent(event, State.DRIVE_TO_DEPOT);
                     break;
 
-                case PLOW_TO_DEPOT:
+                case DRIVE_TO_DEPOT:
+                    //
+                    // Drive forward to the depot and we are done.
+                    //
                     targetX = 0.0;
-                    targetY = mineralAngle == 0.0? 24.0: 36.0;
+                    targetY = 48.0;
                     robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
                     sm.waitForSingleEvent(event, State.DONE);
                     break;
 
                 default:
                 case DONE:
+                    //
+                    // We are done.
+                    //
                     sm.stop();
                     break;
             }
+
             robot.traceStateInfo(elapsedTime, state.toString(), targetX, targetY, robot.targetHeading);
         }
 
@@ -255,6 +289,11 @@ public class CmdDisplaceMineral implements TrcRobot.RobotCommand
         return !sm.isEnabled();
     }   //cmdPeriodic
 
+    /**
+     * This method returns the mineral angle it has determined probably by vision.
+     *
+     * @return mineral angle from the starting position.
+     */
     public double getMineralAngle()
     {
         return mineralAngle;

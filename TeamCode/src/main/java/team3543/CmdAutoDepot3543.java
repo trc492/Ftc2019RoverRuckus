@@ -120,7 +120,7 @@ class CmdAutoDepot3543 implements TrcRobot.RobotCommand
                         sm.setState(State.LOWER_ROBOT);
                     }
                     //
-                    // Intentional falling through.
+                    // Intentionally falling through.
                     //
                 case LOWER_ROBOT:
                     //
@@ -195,7 +195,7 @@ class CmdAutoDepot3543 implements TrcRobot.RobotCommand
                     //
                     targetX = 0.0;
                     targetY = 0.0;
-                    robot.targetHeading += 45.0;
+                    robot.targetHeading = 45.0;
                     robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
                     sm.waitForSingleEvent(event, State.DRIVE_TO_CRATER);
                     break;

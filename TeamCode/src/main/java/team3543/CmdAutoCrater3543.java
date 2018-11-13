@@ -23,7 +23,7 @@
 package team3543;
 
 import common.AutoCommon;
-import common.TensorFlowVision;
+import common.CmdDisplaceMineral;
 import trclib.TrcEvent;
 import trclib.TrcRobot;
 import trclib.TrcStateMachine;
@@ -49,9 +49,7 @@ public class CmdAutoCrater3543 implements TrcRobot.RobotCommand
     private TrcStateMachine<State> sm;
     private double targetX = 0.0;
     private double targetY = 0.0;
-    private int retries = 0;
-    private double mineralAngle = 0.0;
-    private double wallTurnAngle = 0.0;
+    private TrcRobot.RobotCommand cmdDisplaceMineral = null;
 
     CmdAutoCrater3543(Robot3543 robot, AutoCommon.Alliance alliance, double delay,
                       boolean startHung, boolean doMineral, boolean doTeamMarker, boolean doTeammateMineral)
@@ -70,7 +68,7 @@ public class CmdAutoCrater3543 implements TrcRobot.RobotCommand
         event = new TrcEvent(moduleName);
         timer = new TrcTimer(moduleName);
         sm = new TrcStateMachine<>(moduleName);
-        sm.start(startHung? State.DO_DELAY: State.GO_TOWARDS_MINERAL);
+        sm.start(startHung? State.DO_DELAY: doMineral? State.DO_MINERAL: State.TURN_TO_WALL);
     }   //CmdAutoCrater3543
 
     private enum State
@@ -78,19 +76,15 @@ public class CmdAutoCrater3543 implements TrcRobot.RobotCommand
         DO_DELAY,
         LOWER_ROBOT,
         UNHOOK_ROBOT,
-        PLOW_TO_CRATER,
-        GO_TOWARDS_MINERAL,
-        SCAN_MINERAL,
-        TURN_TO_MINERAL,
-        HIT_MINERAL,
-        DRIVE_BACK_TO_START,
+        DO_MINERAL,
+        DISPLACE_MINERAL,
         TURN_TO_WALL,
         DRIVE_TO_WALL,
         TURN_TO_DEPOT,
         DRIVE_TO_DEPOT,
         DROP_TEAM_MARKER,
-        TURN_TO_CRATER,
         DRIVE_TO_CRATER,
+        DRIVE_FROM_MID_WALL_TO_CRATER,
         DONE
     }   //enum State
 
@@ -130,7 +124,7 @@ public class CmdAutoCrater3543 implements TrcRobot.RobotCommand
                         sm.setState(State.LOWER_ROBOT);
                     }
                     //
-                    // Intentional falling through.
+                    // Intentionally falling through.
                     //
                 case LOWER_ROBOT:
                     //
@@ -141,114 +135,60 @@ public class CmdAutoCrater3543 implements TrcRobot.RobotCommand
                     break;
 
                 case UNHOOK_ROBOT:
-                    robot.tracer.traceInfo(moduleName, "Initial heading=%f", robot.driveBase.getHeading());
                     //
                     // The robot is still hooked, need to unhook first.
                     //
+                    robot.tracer.traceInfo(moduleName, "Initial heading=%f", robot.driveBase.getHeading());
                     targetX = 5.0;
                     targetY = 0.0;
-                    nextState = doMineral? State.GO_TOWARDS_MINERAL: State.PLOW_TO_CRATER;
+                    nextState = doMineral? State.DO_MINERAL: State.TURN_TO_WALL;
                     robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
-                    sm.waitForSingleEvent(event, State.GO_TOWARDS_MINERAL);
+                    sm.waitForSingleEvent(event, nextState);
                     break;
 
-                case SCAN_MINERAL:
-                    //
-                    // Is the mineral left, mid or right? Scan mineral with vision.
-                    //
-                    if (robot.tensorFlowVision != null)
-                    {
-                        TensorFlowVision.TargetInfo targetInfo =
-                                robot.tensorFlowVision == null? null:
-                                        robot.tensorFlowVision.getTargetInfo(TensorFlowVision.LABEL_GOLD_MINERAL);
 
-                        if (targetInfo != null)
-                        {
-                            //
-                            // Found gold mineral.
-                            //
-                            int third = TensorFlowVision.IMAGE_WIDTH / 3;
-                            int t2 = third * 2;
-                            int xPos = targetInfo.rect.x;
-                            if (xPos <= third && xPos >= 0)
-                            {
-                                // left
-                                mineralAngle = -45.0;
-                                wallTurnAngle = -45.0;
-                            }
-                            else if (xPos <= t2 && xPos > third)
-                            {
-                                // center
-                                mineralAngle = 0.0;
-                                wallTurnAngle = -90.0;
-                            }
-                            else if (xPos > t2)
-                            {
-                                // right
-                                mineralAngle = 45.0;
-                                wallTurnAngle = -135.0;
-                            }
-                            robot.tracer.traceInfo(moduleName, "%s[%d]: found gold mineral %s.",
-                                    state, retries, targetInfo);
-                            sm.setState(State.UNHOOK_ROBOT);
-                        }
-                        else
-                        {
-                            //
-                            // Don't see gold mineral.
-                            //
-                            retries++;
-                            if (retries < 3)
-                            {
-                                //
-                                // Gold not found, remain in this state and try again.
-                                //
-                                robot.tracer.traceInfo(moduleName, "%s[%d]: gold mineral not found, try again.",
-                                        state, retries);
-                                break;
-                            }
-                            else
-                            {
-                                mineralAngle = 0.0;
-                                sm.setState(State.UNHOOK_ROBOT);
-                            }
-                        }
+                case DO_MINERAL:
+                    //
+                    // Set up CmdDisplaceMineral to use vision to displace the gold mineral.
+                    //
+                    robot.elevator.setPosition(RobotInfo3543.ELEVATOR_MIN_HEIGHT);
+                    cmdDisplaceMineral = new CmdDisplaceMineral(robot, false);
+                    sm.setState(State.DISPLACE_MINERAL);
+                    //
+                    // Intentionally falling through.
+                    //
+                case DISPLACE_MINERAL:
+                    //
+                    // Run CmdDisplaceMineral until it's done.
+                    //
+                    traceState = false;
+                    if (cmdDisplaceMineral.cmdPeriodic(elapsedTime))
+                    {
+                        sm.setState(State.TURN_TO_WALL);
+                    }
+                    else
+                    {
+                        break;
                     }
                     //
                     // Intentionally falling through.
                     //
-
-                case TURN_TO_MINERAL:
-                    targetX = 0.0;
-                    targetY = 0.0;
-                    robot.targetHeading += mineralAngle;
-                    robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
-                    sm.waitForSingleEvent(event, State.HIT_MINERAL);
-                    break;
-
-                case HIT_MINERAL:
-                    targetX = 0.0;
-                    targetY = 22.0;
-                    robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
-                    sm.waitForSingleEvent(event, State.HIT_MINERAL);
-                    break;
-
-                case DRIVE_BACK_TO_START:
-                    targetX = 0.0;
-                    targetY = -22.0;
-                    robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
-                    sm.waitForSingleEvent(event, State.TURN_TO_WALL);
-                    break;
-
                 case TURN_TO_WALL:
+                    //
+                    // We are at the starting position, let's turn towards mid-wall.
+                    //
+                    robot.elevator.setPosition(RobotInfo3543.ELEVATOR_MIN_HEIGHT);
                     targetX = 0.0;
                     targetY = 0.0;
-                    robot.targetHeading += wallTurnAngle;
+                    robot.targetHeading = -90.0;
                     robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
                     sm.waitForSingleEvent(event, State.DRIVE_TO_WALL);
                     break;
 
                 case DRIVE_TO_WALL:
+                    //
+                    // Drive to mid-wall.
+                    //
                     targetX = 0.0;
                     targetY = 54.0;
                     robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
@@ -256,14 +196,21 @@ public class CmdAutoCrater3543 implements TrcRobot.RobotCommand
                     break;
 
                 case TURN_TO_DEPOT:
+                    //
+                    // Turn parallel to the wall and facing the depot.
+                    //
                     targetX = 0.0;
                     targetY = 0.0;
                     robot.targetHeading -= 45.0;
+                    nextState = doTeamMarker? State.DRIVE_TO_DEPOT: State.DRIVE_FROM_MID_WALL_TO_CRATER;
                     robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
-                    sm.waitForSingleEvent(event, State.DRIVE_TO_DEPOT);
+                    sm.waitForSingleEvent(event, nextState);
                     break;
 
                 case DRIVE_TO_DEPOT:
+                    //
+                    // Go to the depot to drop off team marker.
+                    //
                     targetX = 0.0;
                     targetY = 36.0;
                     robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
@@ -280,8 +227,21 @@ public class CmdAutoCrater3543 implements TrcRobot.RobotCommand
                     break;
 
                 case DRIVE_TO_CRATER:
+                    //
+                    // Go to the crater and park there.
+                    //
                     targetX = 0.0;
-                    targetY = -80.0;
+                    targetY = -72.0;
+                    robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
+                    sm.waitForSingleEvent(event, State.DONE);
+                    break;
+
+                case DRIVE_FROM_MID_WALL_TO_CRATER:
+                    //
+                    // Go to the crater and park there.
+                    //
+                    targetX = 0.0;
+                    targetY = -36.0;
                     robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
                     sm.waitForSingleEvent(event, State.DONE);
                     break;
