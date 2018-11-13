@@ -114,7 +114,7 @@ public class FtcI2cDevice extends TrcSerialBusDevice
      * @param newAddress specifies the new I2C address.
      * @param addressIs7Bit specifies true if the I2C address is a 7-bit address, false if it is 8-bit.
      */
-    protected void setI2cAddress(int newAddress, boolean addressIs7Bit)
+    protected synchronized void setI2cAddress(int newAddress, boolean addressIs7Bit)
     {
         final String funcName = "setI2cAddress";
 
@@ -194,7 +194,7 @@ public class FtcI2cDevice extends TrcSerialBusDevice
      * @param memLength specifies the length of the memory block to read.
      * @return ID of the new reader created.
      */
-    public int addReader(String readerName, int memStart, int memLength)
+    public synchronized int addReader(String readerName, int memStart, int memLength)
     {
         final String funcName = "addReader";
         int readerId = readers.size();

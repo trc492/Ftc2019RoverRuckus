@@ -148,12 +148,12 @@ public class TrcCardinalConverter<D>
         if (!this.enabled && enabled)
         {
             reset();
-            converterTaskObj.registerTask(TrcTaskMgr.TaskType.PERIODIC_THREAD);
+            converterTaskObj.registerTask(TrcTaskMgr.TaskType.PRECONTINUOUS_TASK);  //TODO: should use INPUT_TASK
         }
         else if (this.enabled && !enabled)
         {
             reset();
-            converterTaskObj.unregisterTask(TrcTaskMgr.TaskType.PERIODIC_THREAD);
+            converterTaskObj.unregisterTask(TrcTaskMgr.TaskType.PRECONTINUOUS_TASK);
         }
         this.enabled = enabled;
 

@@ -101,11 +101,11 @@ public class TrcDigitalTrigger
         if (enabled)
         {
             prevState = null;
-            triggerTaskObj.registerTask(TrcTaskMgr.TaskType.PERIODIC_THREAD);
+            triggerTaskObj.registerTask(TrcTaskMgr.TaskType.PRECONTINUOUS_TASK);    //TODO: should use INPUT_TASK
         }
         else
         {
-            triggerTaskObj.unregisterTask(TrcTaskMgr.TaskType.PERIODIC_THREAD);
+            triggerTaskObj.unregisterTask(TrcTaskMgr.TaskType.PRECONTINUOUS_TASK);
         }
 
         if (debugEnabled)

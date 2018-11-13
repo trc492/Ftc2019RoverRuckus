@@ -74,7 +74,6 @@ public class TrcPidDrive
         CURVE
     }   //enum TurnMode
 
-    private static final long TASK_INTERVAL = 20;           //in msec
     private static final double DEF_BEEP_FREQUENCY = 880.0; //in Hz
     private static final double DEF_BEEP_DURATION = 0.2;    //in seconds
 
@@ -635,13 +634,13 @@ public class TrcPidDrive
 
         if (enabled)
         {
+            driveTaskObj.registerTask(TaskType.OUTPUT_TASK);
             stopTaskObj.registerTask(TaskType.STOP_TASK);
-            driveTaskObj.registerTask(TaskType.PERIODIC_THREAD, TASK_INTERVAL);
         }
         else
         {
+            driveTaskObj.unregisterTask(TaskType.OUTPUT_TASK);
             stopTaskObj.unregisterTask(TaskType.STOP_TASK);
-            driveTaskObj.unregisterTask(TaskType.PERIODIC_THREAD);
         }
         active = enabled;
 

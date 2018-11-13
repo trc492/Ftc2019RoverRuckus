@@ -38,7 +38,6 @@ public class TrcMaxbotixSonarArray
     private static final TrcDbgTrace.MsgLevel msgLevel = TrcDbgTrace.MsgLevel.INFO;
     private TrcDbgTrace dbgTrace = null;
 
-    private static final long RANGING_TASK_INTERVAL = 10;           //in msec
     private static final double RANGING_START_PULSE_WIDTH = 0.02;   //in seconds
     private static final double RANGING_PERIOD = 0.05;              //in seconds
 
@@ -234,13 +233,13 @@ public class TrcMaxbotixSonarArray
 
         if (enabled)
         {
-            rangingTaskObj.registerTask(TrcTaskMgr.TaskType.PERIODIC_THREAD, RANGING_TASK_INTERVAL);
+            rangingTaskObj.registerTask(TrcTaskMgr.TaskType.PRECONTINUOUS_TASK);    //TODO: should use INPUT_TASK
             sm.start(State.PULL_RX_HIGH);
         }
         else
         {
             sm.stop();
-            rangingTaskObj.unregisterTask(TrcTaskMgr.TaskType.PERIODIC_THREAD);
+            rangingTaskObj.unregisterTask(TrcTaskMgr.TaskType.PRECONTINUOUS_TASK);
         }
 
         if (debugEnabled)

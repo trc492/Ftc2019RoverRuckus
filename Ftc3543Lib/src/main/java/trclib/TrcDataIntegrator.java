@@ -135,11 +135,11 @@ public class TrcDataIntegrator<D>
         if (enabled)
         {
             reset();
-            integratorTaskObj.registerTask(TrcTaskMgr.TaskType.PERIODIC_THREAD);
+            integratorTaskObj.registerTask(TrcTaskMgr.TaskType.PRECONTINUOUS_TASK); //TODO: should use INPUT_TASK
         }
         else
         {
-            integratorTaskObj.unregisterTask(TrcTaskMgr.TaskType.PERIODIC_THREAD);
+            integratorTaskObj.unregisterTask(TrcTaskMgr.TaskType.PRECONTINUOUS_TASK);
         }
 
         if (debugEnabled)

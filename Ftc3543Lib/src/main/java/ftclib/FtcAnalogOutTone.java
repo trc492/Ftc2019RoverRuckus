@@ -69,8 +69,8 @@ public class FtcAnalogOutTone extends TrcTone
             dbgTrace = new TrcDbgTrace(moduleName + "." + instanceName, tracingEnabled, traceLevel, msgLevel);
         }
 
-        timer = new TrcTimer(instanceName);
         analogOut = hardwareMap.analogOutput.get(instanceName);
+        timer = new TrcTimer(instanceName);
         TrcTaskMgr.TaskObject stopTaskObj = TrcTaskMgr.getInstance().createTask(
                 instanceName + ".stopTask", this::stopTask);
         stopTaskObj.registerTask(TrcTaskMgr.TaskType.STOP_TASK);
@@ -110,7 +110,7 @@ public class FtcAnalogOutTone extends TrcTone
      * @param volume specifies the volume in the range 0.0 to 1.0.
      */
     @Override
-    public void playTone(Waveform waveform, double frequency, double duration, double volume)
+    public synchronized void playTone(Waveform waveform, double frequency, double duration, double volume)
     {
         final String funcName = "playTone";
 
@@ -170,7 +170,7 @@ public class FtcAnalogOutTone extends TrcTone
      * This method stops the playing of the sound in progress.
      */
     @Override
-    public void stop()
+    public synchronized void stop()
     {
         final String funcName = "stop";
 
@@ -196,7 +196,7 @@ public class FtcAnalogOutTone extends TrcTone
      * @return true if the sound is still playing, false otherwise.
      */
     @Override
-    public boolean isPlaying()
+    public synchronized boolean isPlaying()
     {
         final String funcName = "isPlaying";
 

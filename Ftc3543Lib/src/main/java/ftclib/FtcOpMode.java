@@ -89,10 +89,6 @@ public abstract class FtcOpMode extends LinearOpMode implements TrcRobot.RobotMo
         }
 
         instance = this;
-        //
-        // Create task manager. There is only one global instance of task manager.
-        //
-        taskMgr = new TrcTaskMgr();
     }   //FtcOpMode
 
     /**
@@ -234,6 +230,10 @@ public abstract class FtcOpMode extends LinearOpMode implements TrcRobot.RobotMo
     public void runOpMode()
     {
         final String funcName = "runOpMode";
+        //
+        // Create task manager if not already. There is only one global instance of task manager.
+        //
+        taskMgr = TrcTaskMgr.getInstance();
         //
         // Create dashboard here. If any earlier, telemetry may not exist yet.
         //
@@ -404,6 +404,7 @@ public abstract class FtcOpMode extends LinearOpMode implements TrcRobot.RobotMo
             dbgTrace.traceInfo(funcName, "Running Stop Mode Tasks ...");
         }
         taskMgr.executeTaskType(TrcTaskMgr.TaskType.STOP_TASK, runMode);
+        taskMgr.shutdown();
     }   //runOpMode
 
     /**

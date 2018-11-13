@@ -169,11 +169,11 @@ public class TrcAnalogTrigger<D>
         {
             zone = -1;
             value = 0.0;
-            triggerTaskObj.registerTask(TrcTaskMgr.TaskType.PERIODIC_THREAD);
+            triggerTaskObj.registerTask(TrcTaskMgr.TaskType.PRECONTINUOUS_TASK);    //TODO: should use INPUT_TASK
         }
         else
         {
-            triggerTaskObj.unregisterTask(TrcTaskMgr.TaskType.PERIODIC_THREAD);
+            triggerTaskObj.unregisterTask(TrcTaskMgr.TaskType.PRECONTINUOUS_TASK);
         }
 
         if (debugEnabled)
@@ -190,7 +190,7 @@ public class TrcAnalogTrigger<D>
     public synchronized boolean isEnabled()
     {
         return enabled;
-    }   //isEnabled
+    }   //isActive
 
     /**
      * This method returns the current zone it is in.

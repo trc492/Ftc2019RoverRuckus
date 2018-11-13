@@ -103,7 +103,7 @@ public class FtcMRRangeSensor extends TrcSensor<FtcMRRangeSensor.DataType>
     /**
      * This method calibrates the sensor.
      */
-    public void calibrate()
+    public synchronized void calibrate()
     {
         calibrate(DataType.DISTANCE_INCH);
     }   //calibrate
@@ -120,7 +120,7 @@ public class FtcMRRangeSensor extends TrcSensor<FtcMRRangeSensor.DataType>
      * @return raw sensor data of the specified index and type.
      */
     @Override
-    public SensorData<Double> getRawData(int index, DataType dataType)
+    public synchronized SensorData<Double> getRawData(int index, DataType dataType)
     {
         final String funcName = "getRawData";
         SensorData<Double> data = null;

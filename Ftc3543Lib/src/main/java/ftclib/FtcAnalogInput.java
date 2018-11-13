@@ -92,7 +92,7 @@ public class FtcAnalogInput extends TrcAnalogInput
     /**
      * This method calibrates the sensor.
      */
-    public void calibrate()
+    public synchronized void calibrate()
     {
         calibrate(DataType.INPUT_DATA);
     }   //calibrate
@@ -109,7 +109,7 @@ public class FtcAnalogInput extends TrcAnalogInput
      * @return raw sensor data of the specified type.
      */
     @Override
-    public SensorData<Double> getRawData(int index, DataType dataType)
+    public synchronized SensorData<Double> getRawData(int index, DataType dataType)
     {
         final String funcName = "getRawData";
         SensorData<Double> data;

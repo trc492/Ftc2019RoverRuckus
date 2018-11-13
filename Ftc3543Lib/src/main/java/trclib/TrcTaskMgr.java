@@ -29,7 +29,7 @@ import java.util.HashSet;
  * This class provides methods for the callers to register/unregister cooperative multi-tasking tasks. It manages
  * these tasks and will work with the cooperative multi-tasking scheduler to run these tasks.
  */
-public class TrcTaskMgr implements TrcPeriodicThread.PeriodicTask
+public class TrcTaskMgr
 {
     private static final String moduleName = "TrcTaskMgr";
     private static final boolean debugEnabled = false;
@@ -37,8 +37,10 @@ public class TrcTaskMgr implements TrcPeriodicThread.PeriodicTask
     private static final boolean useGlobalTracer = false;
     private static final TrcDbgTrace.TraceLevel traceLevel = TrcDbgTrace.TraceLevel.API;
     private static final TrcDbgTrace.MsgLevel msgLevel = TrcDbgTrace.MsgLevel.INFO;
-    private TrcDbgTrace dbgTrace = null;
+    private static TrcDbgTrace dbgTrace = null;
 
+    private static final long INPUT_THREAD_INTERVAL = 20;       // in msec
+    private static final long OUTPUT_THREAD_INTERVAL = 20;      // in msec
     private static final long taskNanoTimeThreshold = 10000000; // 10 msec
 
     /**
@@ -57,31 +59,45 @@ public class TrcTaskMgr implements TrcPeriodicThread.PeriodicTask
         STOP_TASK(1),
 
         /**
-         * PREPERIODIC_TASK is called periodically at a rate about 50Hz before runPeriodic().
+         * PREPERIODIC_TASK is called periodically at a rate about 50Hz before runPeriodic() on the main robot thread.
          */
         PREPERIODIC_TASK(2),
 
         /**
-         * POSTPERIODIC_TASK is called periodically at a rate about 50Hz after runPeriodic().
+         * POSTPERIODIC_TASK is called periodically at a rate about 50Hz after runPeriodic() on the main robot thread.
          */
         POSTPERIODIC_TASK(3),
 
         /**
          * PRECONTINUOUS_TASK is called periodically at a rate as fast as the scheduler is able to loop and is run
-         * before runContinuous() typically 10 msec interval.
+         * before runContinuous() on the main robot thread.
          */
         PRECONTINUOUS_TASK(4),
 
         /**
          * POSTCONTINUOUS_TASK is called periodically at a rate as fast as the schedule is able to loop and is run
-         * after runContinuous() typically 10 msec interval.
+         * after runContinuous() on the main robot thread.
          */
         POSTCONTINUOUS_TASK(5),
 
         /**
-         * PERIODIC_THREAD is a task with its own thread. It is called periodically at the specified interval.
+         * INPUT_TASK is called periodically at a rate about 50Hz on its own thread. Typically, it runs code that
+         * reads sensor input.
          */
-        PERIODIC_THREAD(6);
+        INPUT_TASK(6),
+
+        /**
+         * OUTPUT_TASK is called periodically at a rate about 50Hz on its own thread. Typically, it runs code that
+         * updates the state of actuators.
+         */
+        OUTPUT_TASK(7),
+
+        /**
+         * STANDALONE_TASK is called periodically at the specified interval on its own thread. Typically, code that
+         * may block for a long time requires its own thread so that it doesn't degrade the performance of the other
+         * threads.
+         */
+        STANDALONE_TASK(8);
 
         public int value;
 
@@ -93,7 +109,7 @@ public class TrcTaskMgr implements TrcPeriodicThread.PeriodicTask
     }   //enum TaskType
 
     /**
-     * Any class that is registering as a cooperative multi-tasking task must implement this interface.
+     * Any class that is registering a task must implement this interface.
      */
     public interface Task
     {
@@ -101,40 +117,48 @@ public class TrcTaskMgr implements TrcPeriodicThread.PeriodicTask
          * This method is called at the appropriate time this task is registered for.
          *
          * StartTask:
-         *  This contains code that will initialize the task before a competition mode is about to start.
-         *  Typically, if the task is a robot subsystem, you may put last minute mode specific initialization code
-         *  here. Most of the time, you don't need to register StartTask because all initialization is done in
-         *  initRobot(). But sometimes, you may want to delay a certain initialization until right before competition
-         *  starts. For example, you may want to reset the gyro heading right before competition starts to prevent
-         *  drifting.
+         *  This contains code that initializes the task before a competition mode is about to start and is run on
+         *  the main robot thread. Typically, if the task is a robot subsystem, you may put last minute mode specific
+         *  initialization code here. Most of the time, you don't need to register StartTask because all initialization
+         *  is done in initRobot(). But sometimes, you may want to delay a certain initialization until right before
+         *  competition starts. For example, you may want to reset the gyro heading right before competition starts to
+         *  prevent drifting.
          *
          * StopTask:
-         *  This contains code that will clean up the task before a competition mode is about to end. Typically,
-         *  if the task is a robot subsystem, you may put code to stop the robot here. Most of the time, you don't
-         *  need to register StopTask because the system will cut power to all the motors after a competition mode
-         *  has ended.
+         *  This contains code that cleans up the task before a competition mode is about to end and is run on the main
+         *  robot thread. Typically, if the task is a robot subsystem, you may put code to stop the robot here. Most of
+         *  the time, you don't need to register StopTask because the system will cut power to all the motors after a
+         *  competition mode has ended.
          *
          * PrePeriodicTask:
-         *  This contains code that will run before runPeriodic() is called. Typically, you will put code that deals
-         *  with any input or sensor readings here so that the code in runPeriodic() will be able to make use of the
-         *  input/sensor readings produced by the code here.
+         *  This contains code that runs before runPeriodic() is called on the main robot thread. Typically, you will
+         *  put code that deals with any input or sensor readings here that runPeriodic() may depend on.
          *
          * PostPeriodicTask:
-         *  This contains code that will run after runPeriodic() is called. Typically, you will put code that deals
-         *  with actions such as programming the motors here.
+         *  This contains code that runs after runPeriodic() is called on the main robot thread. Typically, you will
+         *  put code that deals with actions such as programming the motors here that may depend on the result produced
+         *  by runPeriodic().
          *
          * PreContinuousTask:
-         *  This contains code that will run before runContinuous() is called. Typically, you will put code that deals
-         *  with any input or sensor readings that requires more frequent processing here such as integrating the gyro
-         *  rotation rate to heading.
+         *  This contains code that runs before runContinuous() is called on the main robot thread. Typically, you will
+         *  put code that deals with any input or sensor readings that requires more frequent processing here such as
+         *  integrating the gyro rotation rate to heading.
          *
          * PostContinuousTask:
-         *  This contains code that will run after runContinuous() is called. Typically, you will put code that deals
-         *  with actions that requires more frequent processing.
+         *  This contains code that runs after runContinuous() is called on the main robot thread. Typically, you will
+         *  put code that deals with actions that requires more frequent processing.
          *
-         * PeriodicThreadTask:
+         * InputTask:
+         *  This contains code that runs periodically on the input thread. Typically, you will put code that deals with
+         *  any input or sensor readings that may otherwise degrade the performance of the main robot thread.
+         *
+         * OutputTask:
+         *  This contains code that runs periodically on the output thread. Typically, you will put code that deals
+         *  with actions that may otherwise degrade the performance of the main robot thread.
+         *
+         * StandaloneTask:
          *  This contains code that will run on its own thread at the specified task interval. Typically, you will
-         *  put code that may take a long time to execute and could affect the loop time of the main robot thread.
+         *  put code that may take a long time to execute and could affect the performance of the main robot thread.
          *
          * @param taskType specifies the type of task being run. This may be useful for handling multiple task types.
          * @param runMode specifies the competition mode that is about to end (e.g. Autonomous, TeleOp, Test).
@@ -150,12 +174,12 @@ public class TrcTaskMgr implements TrcPeriodicThread.PeriodicTask
      */
     public static class TaskObject
     {
-        private HashSet<TaskType> taskTypes;
         private final String taskName;
-        private Task task;
-        private TrcPeriodicThread<Object> taskThread = null;
+        private final Task task;
+        private HashSet<TaskType> taskTypes;
         private long[] taskTotalNanoTimes = new long[TaskType.values().length];
         private int[] taskTimeSlotCounts = new int[TaskType.values().length];
+        private TrcPeriodicThread<Object> taskThread = null;
 
         /**
          * Constructor: Creates an instance of the task object with the given name
@@ -166,9 +190,9 @@ public class TrcTaskMgr implements TrcPeriodicThread.PeriodicTask
          */
         private TaskObject(final String taskName, Task task)
         {
-            taskTypes = new HashSet<>();
             this.taskName = taskName;
             this.task = task;
+            taskTypes = new HashSet<>();
             for (int i = 0; i < TaskType.values().length; i++)
             {
                 taskTotalNanoTimes[i] = 0;
@@ -190,13 +214,13 @@ public class TrcTaskMgr implements TrcPeriodicThread.PeriodicTask
          * This method adds the given task type to the task object.
          *
          * @param type specifies the task type.
-         * @param taskInterval specifies the periodic interval for PERIODIC_THREAD, ignore for any other task types.
+         * @param taskInterval specifies the periodic interval for STANDALONE_TASK, ignore for any other task types.
          *                     If zero interval is specified, the task will be run in a tight loop.
          * @return true if successful, false if the task with that task type is already registered in the task list.
          */
-        public boolean registerTask(TaskType type, long taskInterval)
+        public synchronized boolean registerTask(TaskType type, long taskInterval)
         {
-            if (type == TaskType.PERIODIC_THREAD && taskInterval < 0)
+            if (type == TaskType.STANDALONE_TASK && taskInterval < 0)
             {
                 throw new IllegalArgumentException("taskInterval must be greater than or equal to 0.");
             }
@@ -205,15 +229,31 @@ public class TrcTaskMgr implements TrcPeriodicThread.PeriodicTask
 
             if (added)
             {
-                if (type == TaskType.PERIODIC_THREAD)
+                if (type == TaskType.STANDALONE_TASK)
                 {
-                    taskThread = new TrcPeriodicThread<>(taskName, TrcTaskMgr.getInstance(), this);
+                    taskThread = new TrcPeriodicThread<>(taskName, this::standaloneTask, this);
                     taskThread.setProcessingInterval(taskInterval);
                     taskThread.setTaskEnabled(true);
                 }
                 else
                 {
                     taskThread = null;
+                    if (type == TaskType.INPUT_TASK)
+                    {
+                        //
+                        // There is only one global input thread. All INPUT_TASKs run on this thread.
+                        // The input thread is created on first registration, so create it if not already.
+                        //
+                        TrcTaskMgr.getInstance().startInputThread();
+                    }
+                    else if (type == TaskType.OUTPUT_TASK)
+                    {
+                        //
+                        // There is only one global output thread. All OUTPUT_TASKs run on this thread.
+                        // The output thread is created on first registration, so create it if not already.
+                        //
+                        TrcTaskMgr.getInstance().startOutputThread();
+                    }
                 }
             }
 
@@ -237,9 +277,9 @@ public class TrcTaskMgr implements TrcPeriodicThread.PeriodicTask
          * @param type specifies the task type.
          * @return true if successful, false if the task with that type is not found the task list.
          */
-        public boolean unregisterTask(TaskType type)
+        public synchronized boolean unregisterTask(TaskType type)
         {
-            if (type == TaskType.PERIODIC_THREAD && taskThread != null)
+            if (type == TaskType.STANDALONE_TASK && taskThread != null)
             {
                 taskThread.terminateTask();
             }
@@ -249,64 +289,43 @@ public class TrcTaskMgr implements TrcPeriodicThread.PeriodicTask
         }   //unregisterTask
 
         /**
-         * This method checks if the given task is associated with this task object.
-         *
-         * @param taskObj specifies the task object to be checked against.
-         * @return true if it is the same task, false otherwise.
-         */
-        public boolean isSame(TaskObject taskObj)
-        {
-            return taskObj == this;
-        }   //isSame
-
-        /**
          * This method checks if the given task type is registered with this task object.
          *
          * @param type specifies the task type to be checked against.
          * @return true if this task is registered as the given type, false otherwise.
          */
-        public boolean hasType(TaskType type)
+        private synchronized boolean hasType(TaskType type)
         {
             return taskTypes.contains(type);
         }   //hasType
-
-        /**
-         * This method checks if this task object has no registered task type.
-         *
-         * @return true if this task has no task type, false otherwise.
-         */
-        public boolean hasNoType()
-        {
-            return taskTypes.isEmpty();
-        }   //hasNoType
 
         /**
          * This method returns the class object that was associated with this task object.
          *
          * @return class object associated with the task.
          */
-        public Task getTask()
+        private Task getTask()
         {
             return task;
         }   //getTask
 
         /**
-         * This method returns the task interval for TaskType.PERIODIC_THREAD.
+         * This method returns the task interval for TaskType.STANDALONE_TASK.
          *
-         * @return task interval in msec. If there is no PERIODIC_THREAD type in the task object, zero is returned.
+         * @return task interval in msec. If there is no STANDALONE_TASK type in the task object, zero is returned.
          */
-        public long getTaskInterval()
+        public synchronized long getTaskInterval()
         {
             return taskThread != null? taskThread.getProcessingInterval(): 0;
         }   //getTaskInterval
 
         /**
-         * This method sets the task interval for TaskType.PERIODIC_THREAD. It has no effect for any other types.
+         * This method sets the task interval for TaskType.STANDALONE_TASK. It has no effect for any other types.
          *
-         * @param taskInterval specifies the periodic interval for PERIODIC_THREAD, ignore for any other task types.
+         * @param taskInterval specifies the periodic interval for STANDALONE_TASK, ignore for any other task types.
          *                     If zero interval is specified, the task will be run in a tight loop.
          */
-        public void setTaskInterval(long taskInterval)
+        public synchronized void setTaskInterval(long taskInterval)
         {
             if (taskThread != null)
             {
@@ -315,11 +334,11 @@ public class TrcTaskMgr implements TrcPeriodicThread.PeriodicTask
         }   //setTaskInterval
 
         /**
-         * This method sets the task data for TaskType.PERIODIC_THREAD. It has no effect for any other types.
+         * This method sets the task data for TaskType.STANDALONE_TASK. It has no effect for any other types.
          *
-         * @param data specifies the thread data for PERIODIC_THREAD, ignore for any other task types.
+         * @param data specifies the thread data for STANDALONE_TASK, ignore for any other task types.
          */
-        public void setTaskData(Object data)
+        public synchronized void setTaskData(Object data)
         {
             if (taskThread != null)
             {
@@ -327,16 +346,52 @@ public class TrcTaskMgr implements TrcPeriodicThread.PeriodicTask
             }
         }   //setTaskData
 
+        /**
+         * This method runs the periodic standalone task.
+         *
+         * @param context specifies the context (task object).
+         */
+        private synchronized void standaloneTask(Object context)
+        {
+            final String funcName = "standaloneTask";
+            TaskObject taskObj = (TaskObject)context;
+
+            if (debugEnabled)
+            {
+                dbgTrace.traceInfo(funcName, "Executing StandaloneTask %s", taskObj);
+            }
+
+            long startNanoTime = TrcUtil.getCurrentTimeNanos();
+
+            taskObj.getTask().runTask(TaskType.STANDALONE_TASK, TrcRobot.getRunMode());
+
+            long elapsedTime = TrcUtil.getCurrentTimeNanos() - startNanoTime;
+            taskObj.taskTotalNanoTimes[TaskType.STANDALONE_TASK.value] += elapsedTime;
+            taskObj.taskTimeSlotCounts[TaskType.STANDALONE_TASK.value]++;
+
+            if (debugEnabled)
+            {
+                if (elapsedTime > taskObj.getTaskInterval())
+                {
+                    dbgTrace.traceWarn(funcName, "%s.%s takes too long (%.3f)",
+                            taskObj.taskName, TaskType.STANDALONE_TASK, elapsedTime/1000000000.0);
+                }
+            }
+        }   //standaloneTask
+
     }   //class TaskObject
 
     private static TrcTaskMgr instance = null;
     private ArrayList<TaskObject> taskList = new ArrayList<>();
+    private TrcPeriodicThread<Object> inputThread = null;
+    private TrcPeriodicThread<Object> outputThread = null;
 
     /**
-     * Constructor: Creates an instance of the task manager. Typically, there is only one global instance of
-     * task manager. Any class that needs to call task manager can call its static method getInstance().
+     * Constructor: Creates the global instance of task manager. There can only be one global instance of
+     * task manager and is created on the first call to getInstance(). Any subsequent calls to getInstance()
+     * will get the same global instance.
      */
-    public TrcTaskMgr()
+    private TrcTaskMgr()
     {
         if (debugEnabled)
         {
@@ -344,19 +399,62 @@ public class TrcTaskMgr implements TrcPeriodicThread.PeriodicTask
                 TrcDbgTrace.getGlobalTracer():
                 new TrcDbgTrace(moduleName, tracingEnabled, traceLevel, msgLevel);
         }
-
-        instance = this;
     }   //TrcTaskMgr
 
     /**
-     * This method returns the global instance of TrcTaskMgr.
+     * This method returns the global instance of TrcTaskMgr. If Task Manager does not exist yet, one is created.
      *
      * @return global instance of TrcTaskMgr.
      */
     public static TrcTaskMgr getInstance()
     {
+        if (instance == null)
+        {
+            instance = new TrcTaskMgr();
+        }
+
         return instance;
     }   //getInstance
+
+    /**
+     * This method is called by registerTask for INPUT_TASK to create the input thread if not already.
+     */
+    private void startInputThread()
+    {
+        if (inputThread == null)
+        {
+            inputThread = startThread(moduleName + ".inputThread", this::inputTask, INPUT_THREAD_INTERVAL);
+        }
+    }   //startInputThread
+
+    /**
+     * This method is called by registerTask for OUTPUT_TASK to create the output thread if not already.
+     */
+    private void startOutputThread()
+    {
+        if (outputThread == null)
+        {
+            outputThread = startThread(moduleName + ".outputThread", this::outputTask, OUTPUT_THREAD_INTERVAL);
+        }
+    }   //startOutputThread
+
+    /**
+     * This method starts a periodic thread for processing tasks.
+     *
+     * @param instanceName specifies the instance name of the thread.
+     * @param task specifies the task run by the thread.
+     * @param interval specifies the processing interval of the task.
+     * @return the created thread.
+     */
+    private TrcPeriodicThread<Object> startThread(
+            String instanceName, TrcPeriodicThread.PeriodicTask task, long interval)
+    {
+        TrcPeriodicThread<Object> thread = new TrcPeriodicThread<>(instanceName, task, null);
+        thread.setProcessingInterval(interval);
+        thread.setTaskEnabled(true);
+
+        return thread;
+    }   //startThread
 
     /**
      * This method creates a TRC task. If the TRC task is registered as a STANDALONE task, it is run on a separately
@@ -388,27 +486,60 @@ public class TrcTaskMgr implements TrcPeriodicThread.PeriodicTask
     }   //createTask
 
     /**
-     * This method removes the task object from the task list. If the task object is registered as a PERIODIC_THREAD,
+     * This method removes the task object from the task list. If the task object is registered as a STANDALONE_TASK,
      * it will be unregistered so the standalone thread will be terminated.
      *
      * @param taskObj specifies the task object to be removed from the list.
      * @return true if the task object is removed successfully, false otherwise (e.g. no such task in the list).
      */
-    public boolean removeTask(TaskObject taskObj)
+    private boolean removeTask(TaskObject taskObj)
     {
-        if (taskObj.hasType(TaskType.PERIODIC_THREAD))
+        if (taskObj.hasType(TaskType.STANDALONE_TASK))
         {
             //
-            // Task contains the type PERIODIC_THREAD, unregister it so that the task thread will terminate.
+            // Task contains the type STANDALONE_TASK, unregister it so that the task thread will terminate.
             //
-            taskObj.unregisterTask(TaskType.PERIODIC_THREAD);
+            taskObj.unregisterTask(TaskType.STANDALONE_TASK);
         }
 
         return taskList.remove(taskObj);
     }   //removeTask
 
     /**
-     * This method enumerates the task list and calls all the tasks that matches the given task type.
+     * This method removes all tasks from the task list and terminate associated threads if any.
+     */
+    private void removeAllTask()
+    {
+        for (int i = taskList.size() - 1; i >= 0; i--)
+        {
+            removeTask(taskList.get(i));
+        }
+    }   //removeAllTask
+
+    /**
+     * This method is called at the end of the robot program (FtcOpMode in FTC or FrcRobotBase in FRC) to shut down
+     * Task Manager and terminate all threads if any.
+     */
+    public void shutdown()
+    {
+        if (inputThread != null)
+        {
+            inputThread.terminateTask();
+            inputThread = null;
+        }
+
+        if (outputThread != null)
+        {
+            outputThread.terminateTask();
+            outputThread = null;
+        }
+
+        removeAllTask();
+    }   //shutdown
+
+    /**
+     * This method is called by the main robot thread to enumerate the task list and calls all the tasks that matches
+     * the given task type.
      *
      * @param type specifies the task type to be executed.
      * @param mode specifies the robot run mode.
@@ -420,7 +551,7 @@ public class TrcTaskMgr implements TrcPeriodicThread.PeriodicTask
         // Traverse the list backward because we are removing task objects from the list on STOP_TASK.
         // This way the list order won't be messed up.
         //
-        for (int i = taskList.size() - 1; i >= 0; i--)
+        for (int i = 0; i < taskList.size(); i++)
         {
             TaskObject taskObj = taskList.get(i);
             if (taskObj.hasType(type))
@@ -433,7 +564,7 @@ public class TrcTaskMgr implements TrcPeriodicThread.PeriodicTask
                     case START_TASK:
                         if (debugEnabled)
                         {
-                            dbgTrace.traceInfo(funcName, "Executing StartTask %s", taskObj.toString());
+                            dbgTrace.traceInfo(funcName, "Executing StartTask %s", taskObj);
                         }
                         task.runTask(TaskType.START_TASK, mode);
                         break;
@@ -441,16 +572,15 @@ public class TrcTaskMgr implements TrcPeriodicThread.PeriodicTask
                     case STOP_TASK:
                         if (debugEnabled)
                         {
-                            dbgTrace.traceInfo(funcName, "Executing StopTask %s", taskObj.toString());
+                            dbgTrace.traceInfo(funcName, "Executing StopTask %s", taskObj);
                         }
                         task.runTask(TaskType.STOP_TASK, mode);
-                        removeTask(taskObj);
                         break;
 
                     case PREPERIODIC_TASK:
                         if (debugEnabled)
                         {
-                            dbgTrace.traceInfo(funcName, "Executing PrePeriodicTask %s", taskObj.toString());
+                            dbgTrace.traceInfo(funcName, "Executing PrePeriodicTask %s", taskObj);
                         }
                         task.runTask(TaskType.PREPERIODIC_TASK, mode);
                         break;
@@ -458,7 +588,7 @@ public class TrcTaskMgr implements TrcPeriodicThread.PeriodicTask
                     case POSTPERIODIC_TASK:
                         if (debugEnabled)
                         {
-                            dbgTrace.traceInfo(funcName, "Executing PostPeriodicTask %s", taskObj.toString());
+                            dbgTrace.traceInfo(funcName, "Executing PostPeriodicTask %s", taskObj);
                         }
                         task.runTask(TaskType.POSTPERIODIC_TASK, mode);
                         break;
@@ -466,7 +596,7 @@ public class TrcTaskMgr implements TrcPeriodicThread.PeriodicTask
                     case PRECONTINUOUS_TASK:
                         if (debugEnabled)
                         {
-                            dbgTrace.traceInfo(funcName, "Executing PreContinuousTask %s", taskObj.toString());
+                            dbgTrace.traceInfo(funcName, "Executing PreContinuousTask %s", taskObj);
                         }
                         task.runTask(TaskType.PRECONTINUOUS_TASK, mode);
                         break;
@@ -474,9 +604,25 @@ public class TrcTaskMgr implements TrcPeriodicThread.PeriodicTask
                     case POSTCONTINUOUS_TASK:
                         if (debugEnabled)
                         {
-                            dbgTrace.traceInfo(funcName, "Executing PostContinuousTask %s", taskObj.toString());
+                            dbgTrace.traceInfo(funcName, "Executing PostContinuousTask %s", taskObj);
                         }
                         task.runTask(TaskType.POSTCONTINUOUS_TASK, mode);
+                        break;
+
+                    case INPUT_TASK:
+                        if (debugEnabled)
+                        {
+                            dbgTrace.traceInfo(funcName, "Executing InputTask %s", taskObj);
+                        }
+                        task.runTask(TaskType.INPUT_TASK, mode);
+                        break;
+
+                    case OUTPUT_TASK:
+                        if (debugEnabled)
+                        {
+                            dbgTrace.traceInfo(funcName, "Executing OutputTask %s", taskObj);
+                        }
+                        task.runTask(TaskType.OUTPUT_TASK, mode);
                         break;
 
                     default:
@@ -500,6 +646,26 @@ public class TrcTaskMgr implements TrcPeriodicThread.PeriodicTask
     }   //executeTaskType
 
     /**
+     * This method runs the periodic input task.
+     *
+     * @param context specifies the context (not used).
+     */
+    private synchronized void inputTask(Object context)
+    {
+        executeTaskType(TaskType.INPUT_TASK, TrcRobot.getRunMode());
+    }   //inputTask
+
+    /**
+     * This method runs the periodic output task.
+     *
+     * @param context specifies the context (not used).
+     */
+    private synchronized void outputTask(Object context)
+    {
+        executeTaskType(TaskType.OUTPUT_TASK, TrcRobot.getRunMode());
+    }   //outputTask
+
+    /**
      * This method prints the performance metrics of all tasks with the given tracer.
      *
      * @param tracer specifies the tracer to be used for printing the task performance metrics.
@@ -510,8 +676,13 @@ public class TrcTaskMgr implements TrcPeriodicThread.PeriodicTask
         {
             tracer.traceInfo(
                     "TaskPerformance",
-                    "%16s: PrePeriodic=%.6f, PostPeriodic=%.6f, PreContinuous=%.6f, PostContinous=%.6f",
+                    "%16s: Start=%.6f, Stop=%.6f, PrePeriodic=%.6f, PostPeriodic=%.6f, " +
+                    "PreContinuous=%.6f, PostContinous=%.6f, Standalone=%.6f, Input=%.6f, Output=%.6f",
                     taskObj.taskName,
+                    (double)taskObj.taskTotalNanoTimes[TaskType.START_TASK.value]/
+                            taskObj.taskTimeSlotCounts[TaskType.START_TASK.value]/1000000000,
+                    (double)taskObj.taskTotalNanoTimes[TaskType.STOP_TASK.value]/
+                            taskObj.taskTimeSlotCounts[TaskType.STOP_TASK.value]/1000000000,
                     (double)taskObj.taskTotalNanoTimes[TaskType.PREPERIODIC_TASK.value]/
                             taskObj.taskTimeSlotCounts[TaskType.PREPERIODIC_TASK.value]/1000000000,
                     (double)taskObj.taskTotalNanoTimes[TaskType.POSTPERIODIC_TASK.value]/
@@ -519,46 +690,14 @@ public class TrcTaskMgr implements TrcPeriodicThread.PeriodicTask
                     (double)taskObj.taskTotalNanoTimes[TaskType.PRECONTINUOUS_TASK.value]/
                             taskObj.taskTimeSlotCounts[TaskType.PRECONTINUOUS_TASK.value]/1000000000,
                     (double)taskObj.taskTotalNanoTimes[TaskType.POSTCONTINUOUS_TASK.value]/
-                            taskObj.taskTimeSlotCounts[TaskType.POSTCONTINUOUS_TASK.value]/1000000000);
+                            taskObj.taskTimeSlotCounts[TaskType.POSTCONTINUOUS_TASK.value]/1000000000,
+                    (double)taskObj.taskTotalNanoTimes[TaskType.STANDALONE_TASK.value]/
+                            taskObj.taskTimeSlotCounts[TaskType.STANDALONE_TASK.value]/1000000000,
+                    (double)taskObj.taskTotalNanoTimes[TaskType.INPUT_TASK.value]/
+                            taskObj.taskTimeSlotCounts[TaskType.INPUT_TASK.value]/1000000000,
+                    (double)taskObj.taskTotalNanoTimes[TaskType.OUTPUT_TASK.value]/
+                            taskObj.taskTimeSlotCounts[TaskType.OUTPUT_TASK.value]/1000000000);
         }
     }   //printTaskPerformanceMetrics
-
-    //
-    // Implements TrcPeriodicThread.PeriodicTask interface.
-    //
-
-    /**
-     * This method runs the vision processing task.
-     *
-     * @param context specifies the context (task object).
-     */
-    @Override
-    public void runPeriodic(Object context)
-    {
-        final String funcName = "runPeriodic";
-        TaskObject taskObj = (TaskObject)context;
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceInfo(funcName, "Executing StandaloneTask %s", taskObj.toString());
-        }
-
-        long startNanoTime = TrcUtil.getCurrentTimeNanos();
-
-        taskObj.getTask().runTask(TaskType.PERIODIC_THREAD, TrcRobot.getRunMode());
-
-        long elapsedTime = TrcUtil.getCurrentTimeNanos() - startNanoTime;
-        taskObj.taskTotalNanoTimes[TaskType.PERIODIC_THREAD.value] += elapsedTime;
-        taskObj.taskTimeSlotCounts[TaskType.PERIODIC_THREAD.value]++;
-
-        if (debugEnabled)
-        {
-            if (elapsedTime > taskObj.getTaskInterval())
-            {
-                dbgTrace.traceWarn(funcName, "%s.%s takes too long (%.3f)",
-                        taskObj.taskName, TaskType.PERIODIC_THREAD, elapsedTime/1000000000.0);
-            }
-        }
-    }   //runPeriodic
 
 }   //class TaskMgr

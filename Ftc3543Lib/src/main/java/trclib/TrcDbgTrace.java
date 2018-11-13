@@ -151,14 +151,13 @@ public class TrcDbgTrace
      */
     public boolean openTraceLog(final String traceLogName)
     {
-        boolean success = false;
+        boolean success = true;
 
         if (traceLogger == null)
         {
             try
             {
                 traceLogger = new TrcTraceLogger(traceLogName);
-                success = true;
             }
             catch (FileNotFoundException e)
             {

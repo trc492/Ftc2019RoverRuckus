@@ -91,7 +91,7 @@ public class FtcMRGyro extends TrcGyro
     /**
      * This method calibrates the sensor.
      */
-    public void calibrate()
+    public synchronized void calibrate()
     {
         final String funcName = "calibrate";
 
@@ -138,7 +138,7 @@ public class FtcMRGyro extends TrcGyro
      * This method overrides the TrcGyro class and calls its own.
      */
     @Override
-    public void resetZIntegrator()
+    public synchronized void resetZIntegrator()
     {
         final String funcName = "resetZIntegrator";
 
@@ -162,7 +162,7 @@ public class FtcMRGyro extends TrcGyro
      * @return raw data of the specified type for the x-axis.
      */
     @Override
-    public SensorData<Double> getRawXData(DataType dataType)
+    public synchronized SensorData<Double> getRawXData(DataType dataType)
     {
         final String funcName = "getRawXData";
         SensorData<Double> data;
@@ -195,7 +195,7 @@ public class FtcMRGyro extends TrcGyro
      * @return raw data of the specified type for the y-axis.
      */
     @Override
-    public SensorData<Double> getRawYData(DataType dataType)
+    public synchronized SensorData<Double> getRawYData(DataType dataType)
     {
         final String funcName = "getRawYData";
         SensorData<Double> data;
@@ -228,7 +228,7 @@ public class FtcMRGyro extends TrcGyro
      * @return raw data of the specified type for the z-axis.
      */
     @Override
-    public SensorData<Double> getRawZData(DataType dataType)
+    public synchronized SensorData<Double> getRawZData(DataType dataType)
     {
         final String funcName = "getRawZData";
         double value = 0.0;

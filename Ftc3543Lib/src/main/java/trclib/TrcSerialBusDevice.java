@@ -161,7 +161,7 @@ public abstract class TrcSerialBusDevice
         this.instanceName = instanceName;
         requestQueue = new ConcurrentLinkedQueue<>();
         processRequestTaskObj = TrcTaskMgr.getInstance().createTask(instanceName, this::processRequestTask);
-        processRequestTaskObj.registerTask(TrcTaskMgr.TaskType.PERIODIC_THREAD);
+        processRequestTaskObj.registerTask(TrcTaskMgr.TaskType.PRECONTINUOUS_TASK); //TODO: should use STANDALONE_TASK
     }   //TrcSerialBusDevice
 
     /**
@@ -182,7 +182,7 @@ public abstract class TrcSerialBusDevice
     public synchronized boolean isTaskEnabled()
     {
         return taskEnabled;
-    }   //isEnabled
+    }   //isTaskEnabled
 
     /**
      * This method enables/disables the device task. If enabling task, the task will be started. If disabling task,
@@ -199,14 +199,14 @@ public abstract class TrcSerialBusDevice
                 totalTime = 0.0;
                 totalRequests = 0;
             }
-            processRequestTaskObj.registerTask(TrcTaskMgr.TaskType.PERIODIC_THREAD);
+            processRequestTaskObj.registerTask(TrcTaskMgr.TaskType.PRECONTINUOUS_TASK); //TODO: should use STANDALONE_TASK
         }
         else
         {
-            processRequestTaskObj.unregisterTask(TrcTaskMgr.TaskType.PERIODIC_THREAD);
+            processRequestTaskObj.unregisterTask(TrcTaskMgr.TaskType.PRECONTINUOUS_TASK);
         }
         taskEnabled = enabled;
-    }   //setEnabled
+    }   //setTaskEnabled
 
     /**
      * This method sets the device task processing interval.

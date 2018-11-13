@@ -79,7 +79,7 @@ public class FtcDigitalInput extends TrcDigitalInput
      *
      * @param inverted specifies true to invert the digital input, false otherwise.
      */
-    public void setInverted(boolean inverted)
+    public synchronized void setInverted(boolean inverted)
     {
         this.inverted = inverted;
     }   //setInverted
@@ -94,7 +94,7 @@ public class FtcDigitalInput extends TrcDigitalInput
      * @return true if the digital input sensor is active, false otherwise.
      */
     @Override
-    public boolean isActive()
+    public synchronized boolean isActive()
     {
         final String funcName = "isActive";
         boolean state = digitalInput.getState() ^ inverted;

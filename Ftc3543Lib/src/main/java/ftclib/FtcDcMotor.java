@@ -160,7 +160,7 @@ public class FtcDcMotor extends TrcMotor
      * @param pidCoefficients specifies the PID coefficients to use to compute a desired torque value for the motor.
      *                        E.g. these coefficients go from velocity error percent to desired stall torque percent.
      */
-    public void enableVelocityMode(
+    public synchronized void enableVelocityMode(
             double maxVelocitySensorUnitsPerSec, @NonNull TrcPidController.PidCoefficients pidCoefficients)
     {
         final String funcName = "enableVelocityMode";
@@ -182,7 +182,7 @@ public class FtcDcMotor extends TrcMotor
     /**
      * This method disables velocity mode returning it to power mode.
      */
-    public void disableVelocityMode()
+    public synchronized void disableVelocityMode()
     {
         final String funcName = "disableVelocityMode";
 
@@ -202,7 +202,7 @@ public class FtcDcMotor extends TrcMotor
      *
      * @return normalized motor speed.
      */
-    private double getNormalizedSpeed()
+    private synchronized double getNormalizedSpeed()
     {
         final String funcName = "getNormalizedSpeed";
         double normalizedSpeed = getSpeed()/maxVelocitySensorUnitsPerSec;
@@ -302,7 +302,7 @@ public class FtcDcMotor extends TrcMotor
      *
      * @param inverted specifies true to invert position sensor direction, false otherwise.
      */
-    public void setPositionSensorInverted(boolean inverted)
+    public synchronized void setPositionSensorInverted(boolean inverted)
     {
         final String funcName = "setPositionSensorInverted";
 
@@ -447,7 +447,7 @@ public class FtcDcMotor extends TrcMotor
      * @param value specifies the percentage power or velocity (range -1.0 to 1.0) to be set.
      */
     @Override
-    public void set(double value)
+    public synchronized void set(double value)
     {
         final String funcName = "set";
 
@@ -558,7 +558,7 @@ public class FtcDcMotor extends TrcMotor
      * @param lowerLimitEnabled specifies true to enable lower soft limit switch, false otherwise.
      * @param upperLimitEnabled specifies true to enable upper soft limit switch, false otherwise.
      */
-    public void setSoftLimitEnabled(boolean lowerLimitEnabled, boolean upperLimitEnabled)
+    public synchronized void setSoftLimitEnabled(boolean lowerLimitEnabled, boolean upperLimitEnabled)
     {
         final String funcName = "setSoftLimitEnabled";
 
@@ -578,7 +578,7 @@ public class FtcDcMotor extends TrcMotor
      *
      * @param position specifies the position of the lower limit.
      */
-    public void setSoftLowerLimit(double position)
+    public synchronized void setSoftLowerLimit(double position)
     {
         final String funcName = "setSoftLowerLimit";
 
@@ -596,7 +596,7 @@ public class FtcDcMotor extends TrcMotor
      *
      * @param position specifies the position of the upper limit.
      */
-    public void setSoftUpperLimit(double position)
+    public synchronized void setSoftUpperLimit(double position)
     {
         final String funcName = "setSoftUpperLimit";
 

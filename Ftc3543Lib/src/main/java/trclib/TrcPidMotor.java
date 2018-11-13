@@ -62,7 +62,6 @@ public class TrcPidMotor
 
     }   //interface PowerCompensation
 
-    private static final long TASK_INTERVAL = 20;                   //in msec
     private static final double MIN_MOTOR_POWER = -1.0;
     private static final double MAX_MOTOR_POWER = 1.0;
 
@@ -77,6 +76,7 @@ public class TrcPidMotor
     private final double calPower;
     private final PowerCompensation powerCompensation;
     private final TrcTaskMgr.TaskObject pidMotorTaskObj;
+    private final TrcTaskMgr.TaskObject stopMotorTaskObj;
     private boolean active = false;
     private double syncGain = 0.0;
     private double positionScale = 1.0;
@@ -146,7 +146,9 @@ public class TrcPidMotor
         this.pidCtrl = pidCtrl;
         this.calPower = -Math.abs(calPower);
         this.powerCompensation = powerCompensation;
-        pidMotorTaskObj = TrcTaskMgr.getInstance().createTask(instanceName + ".pidMotorTask", this::pidMotorTask);
+        TrcTaskMgr taskMgr = TrcTaskMgr.getInstance();
+        pidMotorTaskObj = taskMgr.createTask(instanceName + ".pidMotorTask", this::pidMotorTask);
+        stopMotorTaskObj = taskMgr.createTask(instanceName + ".stopMotorTask", this::stopMotorTask);
     }   //TrcPidMotor
 
     /**
@@ -315,7 +317,7 @@ public class TrcPidMotor
         if (debugEnabled)
         {
             dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%s", Boolean.toString(active));
+            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%s", active);
         }
 
         return active;
@@ -539,7 +541,7 @@ public class TrcPidMotor
             expiredTime += TrcUtil.getCurrentTime();
         }
         //
-        // Set the PID motor task active.
+        // Set the PID motor task enabled.
         //
         setTaskEnabled(true);
 
@@ -944,13 +946,13 @@ public class TrcPidMotor
 
         if (enabled)
         {
-            pidMotorTaskObj.registerTask(TrcTaskMgr.TaskType.STOP_TASK);
-            pidMotorTaskObj.registerTask(TrcTaskMgr.TaskType.POSTCONTINUOUS_TASK);
+            pidMotorTaskObj.registerTask(TrcTaskMgr.TaskType.OUTPUT_TASK);
+            stopMotorTaskObj.registerTask(TrcTaskMgr.TaskType.STOP_TASK);
         }
         else
         {
-            pidMotorTaskObj.unregisterTask(TrcTaskMgr.TaskType.STOP_TASK);
-            pidMotorTaskObj.unregisterTask(TrcTaskMgr.TaskType.POSTCONTINUOUS_TASK);
+            pidMotorTaskObj.unregisterTask(TrcTaskMgr.TaskType.OUTPUT_TASK);
+            stopMotorTaskObj.unregisterTask(TrcTaskMgr.TaskType.STOP_TASK);
         }
         this.active = enabled;
 

@@ -235,11 +235,8 @@ public class FtcI2cAdaFruitColorSensor extends FtcI2cDevice
      *
      * @return device status.
      */
-    public int getStatus()
+    public synchronized int getStatus()
     {
-        //
-        // We only update the cache if we are in a different time slice loop as before.
-        //
         byte[] regData = getData(readerId);
 
         int deviceStatus = TrcUtil.bytesToInt(regData[REG_STATUS - READ_START]);
@@ -272,7 +269,7 @@ public class FtcI2cAdaFruitColorSensor extends FtcI2cDevice
      *
      * @return clear value.
      */
-    public TrcSensor.SensorData<Integer> getClearValue()
+    public synchronized TrcSensor.SensorData<Integer> getClearValue()
     {
         final String funcName = "getClearValue";
         getStatus();
@@ -293,7 +290,7 @@ public class FtcI2cAdaFruitColorSensor extends FtcI2cDevice
      *
      * @return red value.
      */
-    public TrcSensor.SensorData<Integer> getRedValue()
+    public synchronized TrcSensor.SensorData<Integer> getRedValue()
     {
         final String funcName = "getRedValue";
         getStatus();
@@ -314,7 +311,7 @@ public class FtcI2cAdaFruitColorSensor extends FtcI2cDevice
      *
      * @return green value.
      */
-    public TrcSensor.SensorData<Integer> getGreenValue()
+    public synchronized TrcSensor.SensorData<Integer> getGreenValue()
     {
         final String funcName = "getGreenValue";
         getStatus();
@@ -335,7 +332,7 @@ public class FtcI2cAdaFruitColorSensor extends FtcI2cDevice
      *
      * @return blue value.
      */
-    public TrcSensor.SensorData<Integer> getBlueValue()
+    public synchronized TrcSensor.SensorData<Integer> getBlueValue()
     {
         final String funcName = "getBlueValue";
         getStatus();

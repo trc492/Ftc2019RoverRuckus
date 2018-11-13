@@ -58,7 +58,11 @@ public class TrcTimerMgr
         timerList = new ArrayList<>();
         securityKeyMap = new HashMap<>();
         timerTaskObj = TrcTaskMgr.getInstance().createTask(moduleName + ".timerTask", this::timerTask);
-        timerTaskObj.registerTask(TrcTaskMgr.TaskType.PERIODIC_THREAD);
+        //
+        // Timer manager needs its own thread running as fast as it can to process all the timers. This ensures faster
+        // timeout response.
+        //
+        timerTaskObj.registerTask(TrcTaskMgr.TaskType.STANDALONE_TASK);
     }   //TrcTimerMgr
 
     /**

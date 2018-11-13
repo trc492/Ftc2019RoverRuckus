@@ -93,7 +93,7 @@ public class FtcHiTechnicGyro extends TrcGyro
     /**
      * This method calibrates the sensor.
      */
-    public void calibrate()
+    public synchronized void calibrate()
     {
         calibrate(DataType.ROTATION_RATE);
     }   //calibrate
@@ -149,7 +149,7 @@ public class FtcHiTechnicGyro extends TrcGyro
      * @return raw data of the specified type for the z-axis.
      */
     @Override
-    public SensorData<Double> getRawZData(DataType dataType)
+    public synchronized SensorData<Double> getRawZData(DataType dataType)
     {
         final String funcName = "getRawZData";
         SensorData<Double> data;

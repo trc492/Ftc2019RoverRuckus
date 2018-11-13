@@ -25,10 +25,12 @@ package trclib;
 /**
  * This class implements a platform independent periodic task by using a separate thread. When enabled, the thread
  * periodically calls the runPeriodic method. Generally, this class is used by TrcTaskMgr to create a standalone
- * thread that runs the periodic task when PERIODIC_THREAD is registered. By doing so, the standalone task doesn't
+ * thread that runs the periodic task when STANDALONE_TASK is registered. By doing so, the standalone task doesn't
  * slow down the main robot thread even if it is performing something that may block for long period of time.
  * In rare occasions, this class can also be used by a sensor that requires long period of time to acquire its
- * data but arguably, one could just call TrcTaskMgr to create a PERIODIC_THREAD instead.
+ * data but arguably, one could just call TrcTaskMgr to create a STANDALONE_TASK instead. In other words, this
+ * class is mainly used by TrcTaskMgr, there is really no reason for others to use this class. One should always
+ * use TrcTaskMgr to create a STANDALONE_TASK.
  *
  * @param <T> specifies the data type that the periodic task will be acquiring/processing.
  */
@@ -96,7 +98,7 @@ public class TrcPeriodicThread<T>
         public synchronized boolean isTaskEnabled()
         {
             return periodicThread.isAlive() && (taskEnabled || oneShotEnabled);
-        }   //isEnabled
+        }   //isTaskEnabled
 
         /**
          * This method enables/disables the periodic task. If this is called to disable the task, the task will be
@@ -110,7 +112,7 @@ public class TrcPeriodicThread<T>
             {
                 taskEnabled = enabled;
             }
-        }   //setEnabled
+        }   //setTaskEnabled
 
         /**
          * This method returns the last data object. If there is no data since the last call, it will return null.
@@ -154,6 +156,7 @@ public class TrcPeriodicThread<T>
 
     }   //class TaskState
 
+    private static int numActiveThreads = 0;
     private final String instanceName;
     private PeriodicTask task;
     private Object context;
@@ -192,6 +195,16 @@ public class TrcPeriodicThread<T>
     }   //toString
 
     /**
+     * This method returns the number of active threads.
+     *
+     * @return number of active threads.
+     */
+    public static int getNumActiveThreads()
+    {
+        return numActiveThreads;
+    }   //getNumActiveThreads
+
+    /**
      * This method is called to terminate the periodic task. Once this is called, no other method in this class
      * should be called except for isTaskTerminated().
      */
@@ -218,11 +231,11 @@ public class TrcPeriodicThread<T>
      */
     public void setTaskEnabled(boolean enabled)
     {
-        final String funcName = "setEnabled";
+        final String funcName = "setTaskEnabled";
 
         if (debugEnabled)
         {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "enabled=%s", Boolean.toString(enabled));
+            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "enabled=%s", enabled);
         }
 
         taskState.setTaskEnabled(enabled);
@@ -231,7 +244,7 @@ public class TrcPeriodicThread<T>
         {
             dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
         }
-    }   //setEnabled
+    }   //setTaskEnabled
 
     /**
      * This method returns the state of the periodic task.
@@ -240,17 +253,17 @@ public class TrcPeriodicThread<T>
      */
     public boolean isTaskEnabled()
     {
-        final String funcName = "isEnabled";
+        final String funcName = "isTaskEnabled";
         boolean enabled = taskState.isTaskEnabled();
 
         if (debugEnabled)
         {
             dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%s", Boolean.toString(enabled));
+            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%s", enabled);
         }
 
         return enabled;
-    }   //isEnabled
+    }   //isTaskEnabled
 
     /**
      * This method sets the periodic task processing interval.
@@ -326,10 +339,14 @@ public class TrcPeriodicThread<T>
     public void run()
     {
         final String funcName = "run";
+        long totalThreadNanoTime = 0;
+        int loopCount = 0;
 
+        numActiveThreads++;
         if (debugEnabled)
         {
             dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.CALLBK);
+            dbgTrace.traceInfo(moduleName, "Starting thread %d: %s", numActiveThreads, instanceName);
         }
 
         while (!Thread.interrupted() && !taskState.isTaskTerminated())
@@ -338,12 +355,19 @@ public class TrcPeriodicThread<T>
 
             if (taskState.isTaskEnabled())
             {
+                long loopStartNanoTime = TrcUtil.getCurrentTimeNanos();
                 task.runPeriodic(context);
+                totalThreadNanoTime += TrcUtil.getCurrentTimeNanos() - loopStartNanoTime;
+                loopCount++;
             }
 
             if (processingInterval > 0)
             {
                 long sleepTime = processingInterval - (TrcUtil.getCurrentTimeMillis() - startTime);
+                //
+                // If the processing time does not use up the processingInterval time, make the thread sleep the
+                // remaining time left.
+                //
                 if (sleepTime > 0)
                 {
                     try
@@ -361,7 +385,10 @@ public class TrcPeriodicThread<T>
         if (debugEnabled)
         {
             dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.CALLBK);
+            dbgTrace.traceInfo(moduleName, "Exiting thread %d: %s (AvgLoopTime=%.6f)",
+                    numActiveThreads, instanceName, totalThreadNanoTime/1000000000.0/loopCount);
         }
+        numActiveThreads--;
     }   //run
 
 }   //class TrcPeriodicThread

@@ -225,13 +225,13 @@ public abstract class TrcI2cDevice
 
         if (enabled)
         {
-            i2cDeviceTaskObj.registerTask(TrcTaskMgr.TaskType.PERIODIC_THREAD);
+            i2cDeviceTaskObj.registerTask(TrcTaskMgr.TaskType.PRECONTINUOUS_TASK);  //TODO: should use STANDALONE_TASK
             portCommandSM.start(PortCommandState.START);
         }
         else
         {
             portCommandSM.stop();
-            i2cDeviceTaskObj.unregisterTask(TrcTaskMgr.TaskType.PERIODIC_THREAD);
+            i2cDeviceTaskObj.unregisterTask(TrcTaskMgr.TaskType.PRECONTINUOUS_TASK);
         }
 
         if (debugEnabled)

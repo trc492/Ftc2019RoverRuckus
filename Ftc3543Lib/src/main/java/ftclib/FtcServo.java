@@ -148,13 +148,13 @@ public class FtcServo extends TrcServo
     {
         if (enabled)
         {
-            servoTaskObj.registerTask(TrcTaskMgr.TaskType.POSTCONTINUOUS_TASK);
+            servoTaskObj.registerTask(TrcTaskMgr.TaskType.POSTCONTINUOUS_TASK); //TODO: should use OUTPUT_TASK
         }
         else
         {
             servoTaskObj.unregisterTask(TrcTaskMgr.TaskType.POSTCONTINUOUS_TASK);
         }
-    }   //setEnabled
+    }   //setTaskEnabled
 
     /**
      * This method sets the servo position but will cut power to the servo when done. Since servo motors can't really

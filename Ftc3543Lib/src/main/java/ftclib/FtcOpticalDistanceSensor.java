@@ -96,7 +96,7 @@ public class FtcOpticalDistanceSensor extends TrcSensor<FtcOpticalDistanceSensor
     /**
      * This method calibrates the sensor.
      */
-    public void calibrate()
+    public synchronized void calibrate()
     {
         calibrate(DataType.RAW_LIGHT_DETECTED);
     }   //calibrate
@@ -113,7 +113,7 @@ public class FtcOpticalDistanceSensor extends TrcSensor<FtcOpticalDistanceSensor
      * @return raw sensor data of the specified type.
      */
     @Override
-    public SensorData<Double> getRawData(int index, DataType dataType)
+    public synchronized SensorData<Double> getRawData(int index, DataType dataType)
     {
         final String funcName = "getRawData";
         SensorData<Double> data = null;

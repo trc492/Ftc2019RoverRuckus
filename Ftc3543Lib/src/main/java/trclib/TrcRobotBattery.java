@@ -57,12 +57,10 @@ public abstract class TrcRobotBattery
      */
     public abstract double getPower();
 
-    private static final long DEF_SAMPLE_INTERVAL = 20;
     private boolean voltageSupported;
     private boolean currentSupported;
     private boolean powerSupported;
     private final TrcTaskMgr.TaskObject robotBatteryTaskObj;
-    private long sampleInterval;
     private double lowestVoltage = 0.0;
     private double highestVoltage = 0.0;
     private double lowestCurrent = 0.0;
@@ -78,10 +76,9 @@ public abstract class TrcRobotBattery
      * @param voltageSupported specifies true if getVoltage is supported, false otherwise.
      * @param currentSupported specifies true if getCurrent is supported, false otherwise.
      * @param powerSupported specifies true if getPower is supported, false otherwise.
-     * @param sampleInterval specifies the battery sampling interval in milliseconds.
      */
     public TrcRobotBattery(
-            boolean voltageSupported, boolean currentSupported, boolean powerSupported, long sampleInterval)
+            boolean voltageSupported, boolean currentSupported, boolean powerSupported)
     {
         if (debugEnabled)
         {
@@ -93,22 +90,9 @@ public abstract class TrcRobotBattery
         this.voltageSupported = voltageSupported;
         this.currentSupported = currentSupported;
         this.powerSupported = powerSupported;
-        this.sampleInterval = sampleInterval;
 
         robotBatteryTaskObj = TrcTaskMgr.getInstance().createTask(
             moduleName + ".robotBatteryTask", this::robotBatteryTask);
-    }   //TrcRobotBattery
-
-    /**
-     * Constructor: create an instance of the object.
-     *
-     * @param voltageSupported specifies true if getVoltage is supported, false otherwise.
-     * @param currentSupported specifies true if getCurrent is supported, false otherwise.
-     * @param powerSupported specifies true if getPower is supported, false otherwise.
-     */
-    public TrcRobotBattery(boolean voltageSupported, boolean currentSupported, boolean powerSupported)
-    {
-        this(voltageSupported, currentSupported, powerSupported, DEF_SAMPLE_INTERVAL);
     }   //TrcRobotBattery
 
     /**
@@ -166,11 +150,11 @@ public abstract class TrcRobotBattery
 
             totalEnergy = 0.0;
             lastTimestamp = TrcUtil.getCurrentTime();
-            robotBatteryTaskObj.registerTask(TrcTaskMgr.TaskType.PERIODIC_THREAD, sampleInterval);
+            robotBatteryTaskObj.registerTask(TrcTaskMgr.TaskType.PRECONTINUOUS_TASK);   //TODO: should use INPUT_TASK
         }
         else
         {
-            robotBatteryTaskObj.unregisterTask(TrcTaskMgr.TaskType.PERIODIC_THREAD);
+            robotBatteryTaskObj.unregisterTask(TrcTaskMgr.TaskType.PRECONTINUOUS_TASK);
         }
 
         if (debugEnabled)

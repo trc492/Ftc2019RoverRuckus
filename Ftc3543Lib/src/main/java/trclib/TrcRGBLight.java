@@ -205,7 +205,7 @@ public abstract class TrcRGBLight
      */
     private void setTaskEnabled(boolean enabled)
     {
-        final String funcName = "setEnabled";
+        final String funcName = "setTaskEnabled";
 
         if (debugEnabled)
         {
@@ -214,18 +214,18 @@ public abstract class TrcRGBLight
 
         if (enabled)
         {
-            rgbLightTaskObj.registerTask(TaskType.PERIODIC_THREAD);
+            rgbLightTaskObj.registerTask(TaskType.POSTCONTINUOUS_TASK);     //TODO: should use OUTPUT_TASK
         }
         else
         {
-            rgbLightTaskObj.unregisterTask(TaskType.PERIODIC_THREAD);
+            rgbLightTaskObj.unregisterTask(TaskType.POSTCONTINUOUS_TASK);
         }
 
         if (debugEnabled)
         {
             dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.FUNC);
         }
-    }   //setEnabled
+    }   //setTaskEnabled
 
     /**
      * This method returns the current color value of the light.

@@ -87,7 +87,7 @@ public class TrcSongPlayer
      */
     private void setTaskEnabled(boolean enabled)
     {
-        final String funcName = "setEnabled";
+        final String funcName = "setTaskEnabled";
 
         if (debugEnabled)
         {
@@ -96,12 +96,12 @@ public class TrcSongPlayer
 
         if (enabled)
         {
-            playerTaskObj.registerTask(TaskType.PERIODIC_THREAD);
+            playerTaskObj.registerTask(TaskType.POSTCONTINUOUS_TASK);   //TODO: should use OUTPUT_TASK
             stopTaskObj.registerTask(TrcTaskMgr.TaskType.STOP_TASK);
         }
         else
         {
-            playerTaskObj.unregisterTask(TaskType.PERIODIC_THREAD);
+            playerTaskObj.unregisterTask(TaskType.POSTCONTINUOUS_TASK);
             stopTaskObj.unregisterTask(TrcTaskMgr.TaskType.STOP_TASK);
         }
 
@@ -109,7 +109,7 @@ public class TrcSongPlayer
         {
             dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.FUNC);
         }
-    }   //setEnabled
+    }   //setTaskEnabled
 
     /**
      * This method stops the sound and disables the player task.

@@ -105,7 +105,7 @@ public abstract class TrcPixyCam
     private final boolean msbFirst;
     private TrcTaskMgr.TaskObject readerTaskObj;
     private TrcStateMachine<ReaderState> sm;
-    private boolean taskEnabled = false;
+    private boolean enabled = false;
     private ArrayList<ObjectBlock> objects = new ArrayList<>();
     private ObjectBlock[] detectedObjects = null;
     private ObjectBlock currBlock = null;
@@ -160,14 +160,14 @@ public abstract class TrcPixyCam
         if (enabled)
         {
             sm.start(ReaderState.SYNC);
-            readerTaskObj.registerTask(TrcTaskMgr.TaskType.PERIODIC_THREAD);
+            readerTaskObj.registerTask(TrcTaskMgr.TaskType.PRECONTINUOUS_TASK); //TODO: should use STANDALONE_TASK
         }
         else
         {
-            readerTaskObj.unregisterTask(TrcTaskMgr.TaskType.PERIODIC_THREAD);
+            readerTaskObj.unregisterTask(TrcTaskMgr.TaskType.PRECONTINUOUS_TASK);
             sm.stop();
         }
-        this.taskEnabled = enabled;
+        this.enabled = enabled;
 
         if (debugEnabled)
         {
@@ -176,9 +176,9 @@ public abstract class TrcPixyCam
     }   //setEnabled
 
     /**
-     * This method checks if the reader task is taskEnabled.
+     * This method checks if the reader task is enabled.
      *
-     * @return true if taskEnabled, false otherwise.
+     * @return true if enabled, false otherwise.
      */
     public synchronized boolean isEnabled()
     {
@@ -187,10 +187,10 @@ public abstract class TrcPixyCam
         if (debugEnabled)
         {
             dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%s", taskEnabled);
+            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%s", enabled);
         }
 
-        return taskEnabled;
+        return enabled;
     }   //isEnabled
 
     /**

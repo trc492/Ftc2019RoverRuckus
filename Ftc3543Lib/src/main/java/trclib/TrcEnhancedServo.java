@@ -44,7 +44,6 @@ public class TrcEnhancedServo
     private static final TrcDbgTrace.MsgLevel msgLevel = TrcDbgTrace.MsgLevel.INFO;
     private TrcDbgTrace dbgTrace = null;
 
-    private static final long DEF_STEPPING_INTERVAL = 50;   //in msec
     private static final double SERVO_CONTINUOUS_STOP = 0.5;
     private static final double SERVO_CONTINUOUS_FWD_MAX = 1.0;
     private static final double SERVO_CONTINUOUS_REV_MAX = 0.0;
@@ -235,25 +234,14 @@ public class TrcEnhancedServo
     }   //toString
 
     /**
-     * This method sets how often the stepping task will run that determines how smooth the servo will turn in
-     * stepping mode.
-     *
-     * @param interval specifies the stepping interval in msec.
-     */
-    public synchronized void setSteppingInterval(long interval)
-    {
-        steppingServoTaskObj.setTaskInterval(interval);
-    }   //setSteppingInterval
-
-    /**
      * This method enables/disables the enhanced servo task for performing step rate speed control or zero
      * calibration.
      *
      * @param enabled specifies true to enable task, false to disable.
      */
-    private synchronized void setEnabled(boolean enabled)
+    private synchronized void setTaskEnabled(boolean enabled)
     {
-        final String funcName = "setEnabled";
+        final String funcName = "setTaskEnabled";
 
         if (debugEnabled)
         {
@@ -262,12 +250,12 @@ public class TrcEnhancedServo
 
         if (enabled)
         {
-            steppingServoTaskObj.registerTask(TaskType.PERIODIC_THREAD, DEF_STEPPING_INTERVAL);
+            steppingServoTaskObj.registerTask(TaskType.POSTCONTINUOUS_TASK);    //TODO: should use OUTPUT_TASK
             stopServoTaskObj.registerTask(TrcTaskMgr.TaskType.STOP_TASK);
         }
         else
         {
-            steppingServoTaskObj.unregisterTask(TaskType.PERIODIC_THREAD);
+            steppingServoTaskObj.unregisterTask(TaskType.POSTCONTINUOUS_TASK);
             stopServoTaskObj.unregisterTask(TrcTaskMgr.TaskType.STOP_TASK);
             calibrating = false;
         }
@@ -277,7 +265,7 @@ public class TrcEnhancedServo
         {
             dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.FUNC);
         }
-    }   //setEnabled
+    }   //setTaskEnabled
 
     /**
      * This method checks if the task is enabled.
@@ -353,7 +341,7 @@ public class TrcEnhancedServo
         }
         else
         {
-            setEnabled(false);
+            setTaskEnabled(false);
         }
 
         if (debugEnabled)
@@ -437,7 +425,7 @@ public class TrcEnhancedServo
             this.currStepRate = Math.abs(stepRate);
             this.prevTime = TrcUtil.getCurrentTime();
             this.currPosition = servo1.getPosition();
-            setEnabled(true);
+            setTaskEnabled(true);
         }
 
         if (debugEnabled)
