@@ -20,7 +20,7 @@
  * SOFTWARE.
  */
 
-package team3543;
+package team6541;
 
 import common.AutoCommon;
 import common.CmdDisplaceMineral;
@@ -29,15 +29,15 @@ import trclib.TrcRobot;
 import trclib.TrcStateMachine;
 import trclib.TrcTimer;
 
-public class CmdAutoCrater3543 implements TrcRobot.RobotCommand
+public class CmdAutoCrater6541 implements TrcRobot.RobotCommand
 {
     private static final boolean debugXPid = true;
     private static final boolean debugYPid = true;
     private static final boolean debugTurnPid = true;
 
-    private static final String moduleName = "CmdAutoCrater3543";
+    private static final String moduleName = "CmdAutoCrater6541";
 
-    private Robot3543 robot;
+    private Robot6541 robot;
     private AutoCommon.Alliance alliance;
     private double delay;
     private boolean doMineral;
@@ -51,7 +51,7 @@ public class CmdAutoCrater3543 implements TrcRobot.RobotCommand
     private double targetY = 0.0;
     private TrcRobot.RobotCommand cmdDisplaceMineral = null;
 
-    CmdAutoCrater3543(Robot3543 robot, AutoCommon.Alliance alliance, double delay,
+    CmdAutoCrater6541(Robot6541 robot, AutoCommon.Alliance alliance, double delay,
                       boolean startHung, boolean doMineral, boolean doTeamMarker, boolean doTeammateMineral)
     {
         robot.tracer.traceInfo(moduleName,
@@ -69,7 +69,7 @@ public class CmdAutoCrater3543 implements TrcRobot.RobotCommand
         timer = new TrcTimer(moduleName);
         sm = new TrcStateMachine<>(moduleName);
         sm.start(startHung? State.DO_DELAY: doMineral? State.DO_MINERAL: State.TURN_TO_WALL);
-    }   //CmdAutoCrater3543
+    }   //CmdAutoCrater6541
 
     private enum State
     {
@@ -130,7 +130,7 @@ public class CmdAutoCrater3543 implements TrcRobot.RobotCommand
                     //
                     // The robot started hanging on the lander, lower it to the ground.
                     //
-                    robot.elevator.setPosition(RobotInfo3543.ELEVATOR_HANGING_HEIGHT, event, 0.0);
+                    robot.elevator.setPosition(RobotInfo6541.ELEVATOR_HANGING_HEIGHT, event, 0.0);
                     sm.waitForSingleEvent(event, State.UNHOOK_ROBOT);
                     break;
 
@@ -139,10 +139,9 @@ public class CmdAutoCrater3543 implements TrcRobot.RobotCommand
                     // The robot is still hooked, need to unhook first.
                     //
                     robot.tracer.traceInfo(moduleName, "Initial heading=%f", robot.driveBase.getHeading());
-                    targetX = 5.0;
-                    targetY = 0.0;
+                    robot.elevator.openHook();
+                    timer.set(1.5, event);
                     nextState = doMineral? State.DO_MINERAL: State.TURN_TO_WALL;
-                    robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
                     sm.waitForSingleEvent(event, nextState);
                     break;
 
@@ -150,7 +149,7 @@ public class CmdAutoCrater3543 implements TrcRobot.RobotCommand
                     //
                     // Set up CmdDisplaceMineral to use vision to displace the gold mineral.
                     //
-                    robot.elevator.setPosition(RobotInfo3543.ELEVATOR_MIN_HEIGHT);
+                    robot.elevator.setPosition(RobotInfo6541.ELEVATOR_MIN_HEIGHT);
                     cmdDisplaceMineral = new CmdDisplaceMineral(robot, false);
                     sm.setState(State.DISPLACE_MINERAL);
                     //
@@ -176,7 +175,7 @@ public class CmdAutoCrater3543 implements TrcRobot.RobotCommand
                     //
                     // We are at the starting position, let's turn towards mid-wall.
                     //
-                    robot.elevator.setPosition(RobotInfo3543.ELEVATOR_MIN_HEIGHT);
+                    robot.elevator.setPosition(RobotInfo6541.ELEVATOR_MIN_HEIGHT);
                     targetX = 0.0;
                     targetY = 0.0;
                     robot.targetHeading = -90.0;
@@ -290,4 +289,4 @@ public class CmdAutoCrater3543 implements TrcRobot.RobotCommand
         return !sm.isEnabled();
     }   //cmdPeriodic
 
-}   //class CmdAutoCrater3543
+}   //class CmdAutoCrater6541
