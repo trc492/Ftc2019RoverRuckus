@@ -22,8 +22,9 @@
 
 package trclib;
 
-import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * This class provides methods for the callers to register/unregister cooperative multi-tasking tasks. It manages
@@ -351,7 +352,7 @@ public class TrcTaskMgr
          *
          * @param context specifies the context (task object).
          */
-        private synchronized void standaloneTask(Object context)
+        private void standaloneTask(Object context)
         {
             final String funcName = "standaloneTask";
             TaskObject taskObj = (TaskObject)context;
@@ -366,8 +367,7 @@ public class TrcTaskMgr
             taskObj.getTask().runTask(TaskType.STANDALONE_TASK, TrcRobot.getRunMode());
 
             long elapsedTime = TrcUtil.getCurrentTimeNanos() - startNanoTime;
-            taskObj.taskTotalNanoTimes[TaskType.STANDALONE_TASK.value] += elapsedTime;
-            taskObj.taskTimeSlotCounts[TaskType.STANDALONE_TASK.value]++;
+            recordElapsedTimeNanos(TaskType.STANDALONE_TASK, elapsedTime);
 
             if (debugEnabled)
             {
@@ -379,10 +379,23 @@ public class TrcTaskMgr
             }
         }   //standaloneTask
 
+        synchronized void recordElapsedTimeNanos(final TaskType type, final long elapsedTimeNanos) {
+            taskTotalNanoTimes[type.value] += elapsedTimeNanos;
+            taskTimeSlotCounts[type.value]++;
+        } //recordElapsedTimeNanos
+
+        synchronized long getTotalElapsedTimeNanos(final TaskType type) {
+            return taskTotalNanoTimes[type.value];
+        } //getTotalElapsedTimeNanos
+
+        synchronized long getTimeSlotCount(final TaskType type) {
+            return taskTimeSlotCounts[type.value];
+        } //getTimeSlotCount
+
     }   //class TaskObject
 
     private static TrcTaskMgr instance = null;
-    private ArrayList<TaskObject> taskList = new ArrayList<>();
+    private List<TaskObject> taskList = new CopyOnWriteArrayList<>();
     private TrcPeriodicThread<Object> inputThread = null;
     private TrcPeriodicThread<Object> outputThread = null;
 
@@ -630,8 +643,7 @@ public class TrcTaskMgr
                 }
 
                 long elapsedTime = TrcUtil.getCurrentTimeNanos() - startNanoTime;
-                taskObj.taskTotalNanoTimes[type.value] += elapsedTime;
-                taskObj.taskTimeSlotCounts[type.value]++;
+                taskObj.recordElapsedTimeNanos(type, elapsedTime);
 
                 if (debugEnabled)
                 {
@@ -679,24 +691,24 @@ public class TrcTaskMgr
                     "%16s: Start=%.6f, Stop=%.6f, PrePeriodic=%.6f, PostPeriodic=%.6f, " +
                     "PreContinuous=%.6f, PostContinous=%.6f, Standalone=%.6f, Input=%.6f, Output=%.6f",
                     taskObj.taskName,
-                    (double)taskObj.taskTotalNanoTimes[TaskType.START_TASK.value]/
-                            taskObj.taskTimeSlotCounts[TaskType.START_TASK.value]/1000000000,
-                    (double)taskObj.taskTotalNanoTimes[TaskType.STOP_TASK.value]/
-                            taskObj.taskTimeSlotCounts[TaskType.STOP_TASK.value]/1000000000,
-                    (double)taskObj.taskTotalNanoTimes[TaskType.PREPERIODIC_TASK.value]/
-                            taskObj.taskTimeSlotCounts[TaskType.PREPERIODIC_TASK.value]/1000000000,
-                    (double)taskObj.taskTotalNanoTimes[TaskType.POSTPERIODIC_TASK.value]/
-                            taskObj.taskTimeSlotCounts[TaskType.POSTPERIODIC_TASK.value]/1000000000,
-                    (double)taskObj.taskTotalNanoTimes[TaskType.PRECONTINUOUS_TASK.value]/
-                            taskObj.taskTimeSlotCounts[TaskType.PRECONTINUOUS_TASK.value]/1000000000,
-                    (double)taskObj.taskTotalNanoTimes[TaskType.POSTCONTINUOUS_TASK.value]/
-                            taskObj.taskTimeSlotCounts[TaskType.POSTCONTINUOUS_TASK.value]/1000000000,
-                    (double)taskObj.taskTotalNanoTimes[TaskType.STANDALONE_TASK.value]/
-                            taskObj.taskTimeSlotCounts[TaskType.STANDALONE_TASK.value]/1000000000,
-                    (double)taskObj.taskTotalNanoTimes[TaskType.INPUT_TASK.value]/
-                            taskObj.taskTimeSlotCounts[TaskType.INPUT_TASK.value]/1000000000,
-                    (double)taskObj.taskTotalNanoTimes[TaskType.OUTPUT_TASK.value]/
-                            taskObj.taskTimeSlotCounts[TaskType.OUTPUT_TASK.value]/1000000000);
+                    (double) taskObj.getTotalElapsedTimeNanos(TaskType.START_TASK) /
+                            taskObj.getTimeSlotCount(TaskType.START_TASK) / 1000000000,
+                    (double) taskObj.getTotalElapsedTimeNanos(TaskType.STOP_TASK) /
+                            taskObj.getTimeSlotCount(TaskType.STOP_TASK) / 1000000000,
+                    (double) taskObj.getTotalElapsedTimeNanos(TaskType.PREPERIODIC_TASK) /
+                            taskObj.getTimeSlotCount(TaskType.PREPERIODIC_TASK) / 1000000000,
+                    (double) taskObj.getTotalElapsedTimeNanos(TaskType.POSTPERIODIC_TASK) /
+                            taskObj.getTimeSlotCount(TaskType.POSTPERIODIC_TASK) / 1000000000,
+                    (double) taskObj.getTotalElapsedTimeNanos(TaskType.PRECONTINUOUS_TASK) /
+                            taskObj.getTimeSlotCount(TaskType.PRECONTINUOUS_TASK) / 1000000000,
+                    (double) taskObj.getTotalElapsedTimeNanos(TaskType.POSTCONTINUOUS_TASK) /
+                            taskObj.getTimeSlotCount(TaskType.POSTCONTINUOUS_TASK) / 1000000000,
+                    (double) taskObj.getTotalElapsedTimeNanos(TaskType.STANDALONE_TASK) /
+                            taskObj.getTimeSlotCount(TaskType.STANDALONE_TASK) / 1000000000,
+                    (double) taskObj.getTotalElapsedTimeNanos(TaskType.INPUT_TASK) /
+                            taskObj.getTimeSlotCount(TaskType.INPUT_TASK) / 1000000000,
+                    (double) taskObj.getTotalElapsedTimeNanos(TaskType.OUTPUT_TASK) /
+                            taskObj.getTimeSlotCount(TaskType.OUTPUT_TASK) / 1000000000);
         }
     }   //printTaskPerformanceMetrics
 
