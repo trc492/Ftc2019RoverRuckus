@@ -169,7 +169,10 @@ public class TrcTraceLogger
                 double elapsedTime = TrcUtil.getCurrentTime() - startTime;
                 totalTime += elapsedTime;
                 totalMessages++;
-                if (perfTracer != null)
+                //
+                // Make sure we don't recursively log the performance message itself.
+                //
+                if (perfTracer != null && !msg.startsWith(perfTracer.toString() + "." + funcName))
                 {
                     perfTracer.traceInfo(funcName, "Average message log time = %.3f msec",
                             totalTime/totalMessages);
