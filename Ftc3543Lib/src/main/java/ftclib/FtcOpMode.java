@@ -392,6 +392,11 @@ public abstract class FtcOpMode extends LinearOpMode implements TrcRobot.RobotMo
 
             startNanoTime = TrcUtil.getCurrentTimeNanos();
         }
+        //
+        // runOpMode could be "interrupted" soon, so the taskmgr.shutdown() call below may not run.
+        // Explicitly terminating all taskmgr threads while we still can.
+        //
+        taskMgr.terminateAllThreads();
 
         if (debugEnabled)
         {
@@ -404,6 +409,7 @@ public abstract class FtcOpMode extends LinearOpMode implements TrcRobot.RobotMo
             dbgTrace.traceInfo(funcName, "Running Stop Mode Tasks ...");
         }
         taskMgr.executeTaskType(TrcTaskMgr.TaskType.STOP_TASK, runMode);
+
         taskMgr.shutdown();
     }   //runOpMode
 

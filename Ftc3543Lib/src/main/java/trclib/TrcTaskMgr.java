@@ -40,9 +40,9 @@ public class TrcTaskMgr
     private static final TrcDbgTrace.MsgLevel msgLevel = TrcDbgTrace.MsgLevel.INFO;
     private static TrcDbgTrace dbgTrace = null;
 
-    private static final long INPUT_THREAD_INTERVAL = 20;       // in msec
-    private static final long OUTPUT_THREAD_INTERVAL = 20;      // in msec
-    private static final long defTaskTimeThreshold = 20000000;  // 20 msec
+    private static final long INPUT_THREAD_INTERVAL = 50;       // in msec
+    private static final long OUTPUT_THREAD_INTERVAL = 50;      // in msec
+    private static final long defTaskTimeThreshold = 50000000;  // 50 msec
 
     /**
      * These are the task type TrcTaskMgr supports:
@@ -511,41 +511,11 @@ public class TrcTaskMgr
     }   //createTask
 
     /**
-     * This method removes the task object from the task list. If the task object is registered as a STANDALONE_TASK,
-     * it will be unregistered so the standalone thread will be terminated.
-     *
-     * @param taskObj specifies the task object to be removed from the list.
-     * @return true if the task object is removed successfully, false otherwise (e.g. no such task in the list).
+     * This method is mainly for FtcOpMode to call at the end of the opMode loop because runOpMode could be terminated
+     * before shutdown can be called especially if stopMode code is doing logging I/O (e.g. printPerformanceMetrics).
+     * This provides an earlier chance for us to stop all task threads before it's too late.
      */
-    private boolean removeTask(TaskObject taskObj)
-    {
-        if (taskObj.hasType(TaskType.STANDALONE_TASK))
-        {
-            //
-            // Task contains the type STANDALONE_TASK, unregister it so that the task thread will terminate.
-            //
-            taskObj.unregisterTask(TaskType.STANDALONE_TASK);
-        }
-
-        return taskList.remove(taskObj);
-    }   //removeTask
-
-    /**
-     * This method removes all tasks from the task list and terminate associated threads if any.
-     */
-    private void removeAllTask()
-    {
-        for (int i = taskList.size() - 1; i >= 0; i--)
-        {
-            removeTask(taskList.get(i));
-        }
-    }   //removeAllTask
-
-    /**
-     * This method is called at the end of the robot program (FtcOpMode in FTC or FrcRobotBase in FRC) to shut down
-     * Task Manager and terminate all threads if any.
-     */
-    public void shutdown()
+    public void terminateAllThreads()
     {
         if (inputThread != null)
         {
@@ -559,7 +529,26 @@ public class TrcTaskMgr
             outputThread = null;
         }
 
-        removeAllTask();
+        for (TaskObject taskObj: taskList)
+        {
+            if (taskObj.hasType(TaskType.STANDALONE_TASK))
+            {
+                //
+                // Task contains the type STANDALONE_TASK, unregister it so that the task thread will terminate.
+                //
+                taskObj.unregisterTask(TaskType.STANDALONE_TASK);
+            }
+        }
+    }   //terminateAllThreads
+
+    /**
+     * This method is called at the end of the robot program (FtcOpMode in FTC or FrcRobotBase in FRC) to terminate
+     * all threads if any and remove all task from the task list.
+     */
+    public void shutdown()
+    {
+        terminateAllThreads();
+        taskList.clear();
     }   //shutdown
 
     /**

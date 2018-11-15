@@ -946,12 +946,12 @@ public class TrcPidMotor
 
         if (enabled)
         {
-            pidMotorTaskObj.registerTask(TrcTaskMgr.TaskType.OUTPUT_TASK);
+            pidMotorTaskObj.registerTask(TrcTaskMgr.TaskType.POSTCONTINUOUS_TASK);//OUTPUT_TASK);
             stopMotorTaskObj.registerTask(TrcTaskMgr.TaskType.STOP_TASK);
         }
         else
         {
-            pidMotorTaskObj.unregisterTask(TrcTaskMgr.TaskType.OUTPUT_TASK);
+            pidMotorTaskObj.unregisterTask(TrcTaskMgr.TaskType.POSTCONTINUOUS_TASK);//OUTPUT_TASK);
             stopMotorTaskObj.unregisterTask(TrcTaskMgr.TaskType.STOP_TASK);
         }
         this.active = enabled;

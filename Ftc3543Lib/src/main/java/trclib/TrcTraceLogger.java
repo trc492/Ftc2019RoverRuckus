@@ -52,7 +52,7 @@ public class TrcTraceLogger
 
         TrcTaskMgr.TaskObject loggerTaskObj = TrcTaskMgr.getInstance().createTask(
                 "loggerTask." + traceLogName, this::loggerTask);
-        loggerTaskObj.registerTask(TrcTaskMgr.TaskType.STANDALONE_TASK);
+        loggerTaskObj.registerTask(TrcTaskMgr.TaskType.POSTCONTINUOUS_TASK);//STANDALONE_TASK);
     }   //TrcTraceLogger
 
     /**
