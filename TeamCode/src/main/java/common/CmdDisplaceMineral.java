@@ -114,6 +114,7 @@ public class CmdDisplaceMineral implements TrcRobot.RobotCommand
                             int leftThird = targetInfo.imageWidth/3;
                             int rightThird = leftThird*2;
                             int mineralX = targetInfo.rect.x + targetInfo.rect.width/2;
+                            String sentence;
 
                             if (mineralX < leftThird)
                             {
@@ -121,6 +122,7 @@ public class CmdDisplaceMineral implements TrcRobot.RobotCommand
                                 // Gold is the left mineral.
                                 //
                                 mineralAngle = -45.0;
+                                sentence = "Gold mineral is on the left.";
                             }
                             else if (mineralX < rightThird)
                             {
@@ -128,6 +130,7 @@ public class CmdDisplaceMineral implements TrcRobot.RobotCommand
                                 // Gold is the right mineral.
                                 //
                                 mineralAngle = 0.0;
+                                sentence = "Gold mineral is in the middle.";
                             }
                             else
                             {
@@ -135,10 +138,12 @@ public class CmdDisplaceMineral implements TrcRobot.RobotCommand
                                 // Gold is the right mineral.
                                 //
                                 mineralAngle = 45.0;
+                                sentence = "Gold mineral is on the right.";
                             }
 
-                            robot.tracer.traceInfo(moduleName, "%s[%d]: found (%s).",
-                                    state, retries, targetInfo);
+                            robot.speak(sentence);
+                            robot.tracer.traceInfo(moduleName, "%s[%d]: %s (%s).",
+                                    state, retries, sentence, targetInfo);
                             sm.setState(State.TURN_TO_MINERAL);
                         }
                         else
@@ -161,6 +166,7 @@ public class CmdDisplaceMineral implements TrcRobot.RobotCommand
                                 //
                                 // We tried but can't find it, so assume the middle is gold and hope for the best.
                                 //
+                                robot.speak("Gold mineral is not found.");
                                 mineralAngle = 0.0;
                                 sm.setState(State.TURN_TO_MINERAL);
                             }
@@ -181,6 +187,7 @@ public class CmdDisplaceMineral implements TrcRobot.RobotCommand
                     //
                     // Turn to the gold mineral (hopefully).
                     //
+                    robot.tensorFlowVision.shutdown();
                     targetX = 0.0;
                     targetY = 0.0;
                     robot.targetHeading = mineralAngle;

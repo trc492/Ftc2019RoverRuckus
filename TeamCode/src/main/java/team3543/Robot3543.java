@@ -49,7 +49,7 @@ public class Robot3543 extends Robot
 {
     public static final boolean USE_VUFORIA = false;
     public static final boolean USE_PIXY = false;
-    public static final boolean USE_TENSORFLOW = false;
+    public static final boolean USE_TENSORFLOW = true;
 
     static final String ROBOT_NAME = "Robot3543";
     //
