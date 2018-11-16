@@ -63,12 +63,15 @@ public class TrcPeriodicThread<T>
         /**
          * Constructor: Create an instance of the object.
          */
-        public TaskState(String instanceName, Runnable runnable)
+        public TaskState(String instanceName, Runnable runnable, int taskPriority)
         {
             taskEnabled = false;
             oneShotEnabled = false;
             data = null;
             periodicThread = new Thread(runnable, instanceName);
+            System.out.printf("*** TrcDebug ***: tid=%d, group=%s, defPriority=%d\n",
+                    periodicThread.getId(), periodicThread.getThreadGroup(), periodicThread.getPriority());
+            periodicThread.setPriority(taskPriority);
             periodicThread.start();
         }   //TaskState
 
@@ -169,7 +172,7 @@ public class TrcPeriodicThread<T>
      * @param instanceName specifies the instance name.
      * @param task specifies the periodic task the thread is to execute.
      */
-    public TrcPeriodicThread(final String instanceName, PeriodicTask task, Object context)
+    public TrcPeriodicThread(final String instanceName, PeriodicTask task, Object context, int taskPriority)
     {
         if (debugEnabled)
         {
@@ -181,7 +184,7 @@ public class TrcPeriodicThread<T>
         this.instanceName = instanceName;
         this.task = task;
         this.context = context;
-        taskState = new TaskState(instanceName, this::run);
+        taskState = new TaskState(instanceName, this::run, taskPriority);
     }   //TrcPeriodicThread
 
     /**

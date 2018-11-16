@@ -474,7 +474,7 @@ public class TrcTaskMgr
     private TrcPeriodicThread<Object> startThread(
             String instanceName, TrcPeriodicThread.PeriodicTask task, long interval)
     {
-        TrcPeriodicThread<Object> thread = new TrcPeriodicThread<>(instanceName, task, null);
+        TrcPeriodicThread<Object> thread = new TrcPeriodicThread<>(instanceName, task, null, Thread.MAX_PRIORITY);
         thread.setProcessingInterval(interval);
         thread.setTaskEnabled(true);
 

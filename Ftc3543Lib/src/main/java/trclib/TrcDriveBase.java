@@ -118,7 +118,7 @@ public abstract class TrcDriveBase
         TrcTaskMgr.TaskObject odometryTaskObj = taskMgr.createTask(
                 moduleName + ".odometryTask", this::odometryTask);
         TrcTaskMgr.TaskObject stopTaskObj = taskMgr.createTask(moduleName + ".stopTask", this::stopTask);
-        odometryTaskObj.registerTask(TrcTaskMgr.TaskType.PRECONTINUOUS_TASK);//INPUT_TASK);
+        odometryTaskObj.registerTask(TrcTaskMgr.TaskType.INPUT_TASK);
         stopTaskObj.registerTask(TrcTaskMgr.TaskType.STOP_TASK);
     }   //TrcDriveBase
 
