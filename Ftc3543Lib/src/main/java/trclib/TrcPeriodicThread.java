@@ -380,6 +380,14 @@ public class TrcPeriodicThread<T>
                     }
                 }
             }
+            else
+            {
+                //
+                // If the thead does not have a processing interval, we should at least yield to prevent going into
+                // a tight loop possibly doing nothing.
+                //
+                Thread.yield();
+            }
         }
 
         if (debugEnabled)

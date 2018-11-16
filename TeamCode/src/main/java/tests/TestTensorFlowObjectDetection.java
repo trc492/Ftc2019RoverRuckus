@@ -55,6 +55,8 @@ import java.util.List;
 @TeleOp(name = "Test: TensorFlow Test", group = "Test")
 //@Disabled
 public class TestTensorFlowObjectDetection extends LinearOpMode {
+    private static final boolean USE_TENSORFLOW = true;
+
     private static final String TFOD_MODEL_ASSET = "RoverRuckus.tflite";
     private static final String LABEL_GOLD_MINERAL = "Gold Mineral";
     private static final String LABEL_SILVER_MINERAL = "Silver Mineral";
@@ -81,29 +83,35 @@ public class TestTensorFlowObjectDetection extends LinearOpMode {
      * {@link #vuforia} is the variable we will use to store our instance of the Vuforia
      * localization engine.
      */
-    private VuforiaLocalizer vuforia;
+    private VuforiaLocalizer vuforia = null;
 
     /**
      * {@link #tfod} is the variable we will use to store our instance of the Tensor Flow Object
      * Detection engine.
      */
-    private TFObjectDetector tfod;
+    private TFObjectDetector tfod = null;
 
     @Override
     public void runOpMode() {
         // The TFObjectDetector uses the camera frames from the VuforiaLocalizer, so we create that
         // first.
-        initVuforia();
+        if (USE_TENSORFLOW)
+        {
+            initVuforia();
 
-        if (ClassFactory.getInstance().canCreateTFObjectDetector()) {
-            initTfod();
-        } else {
-            telemetry.addData("Sorry!", "This device is not compatible with TFOD");
+            if (ClassFactory.getInstance().canCreateTFObjectDetector())
+            {
+                initTfod();
+            } else
+            {
+                telemetry.addData("Sorry!", "This device is not compatible with TFOD");
+            }
+
+            /** Wait for the game to begin */
+            telemetry.addData(">", "Press Play to start tracking");
+            telemetry.update();
         }
 
-        /** Wait for the game to begin */
-        telemetry.addData(">", "Press Play to start tracking");
-        telemetry.update();
         waitForStart();
 
         if (opModeIsActive()) {
@@ -113,6 +121,7 @@ public class TestTensorFlowObjectDetection extends LinearOpMode {
             }
 
             while (opModeIsActive()) {
+                System.out.printf("*** TrcDebug: [%.3f]\n", System.nanoTime()/1000000000.0);
                 if (tfod != null) {
                     // getUpdatedRecognitions() will return null if no new information is available since
                     // the last time that call was made.
