@@ -380,7 +380,7 @@ public class TrcTaskMgr
 
             if (debugEnabled)
             {
-                dbgTrace.traceInfo(funcName, "Task %s: start=%.6f, elapsed=%.6f",
+                dbgTrace.traceVerbose(funcName, "Task %s: start=%.6f, elapsed=%.6f",
                         taskName, startNanoTime/1000000000.0, elapsedTime/1000000000.0);
             }
         }   //standaloneTask
@@ -636,7 +636,7 @@ public class TrcTaskMgr
 
                 if (debugEnabled)
                 {
-                    dbgTrace.traceInfo(funcName, "Task %s: start=%.6f, elapsed=%.6f",
+                    dbgTrace.traceVerbose(funcName, "Task %s: start=%.6f, elapsed=%.6f",
                             taskObj.taskName, startNanoTime/1000000000.0, elapsedTime/1000000000.0);
                 }
             }

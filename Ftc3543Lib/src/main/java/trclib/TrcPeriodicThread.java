@@ -55,21 +55,19 @@ public class TrcPeriodicThread<T>
      */
     private class TaskState
     {
-        private volatile boolean taskEnabled;
-        private volatile boolean oneShotEnabled;
+        private final Thread periodicThread;
+        private boolean taskEnabled;
         private T data;
-        private Thread periodicThread = null;
 
         /**
          * Constructor: Create an instance of the object.
          */
         public TaskState(String instanceName, Runnable runnable, int taskPriority)
         {
-            taskEnabled = false;
-            oneShotEnabled = false;
-            data = null;
             periodicThread = new Thread(runnable, instanceName);
             periodicThread.setPriority(taskPriority);
+            taskEnabled = false;
+            data = null;
             periodicThread.start();
         }   //TaskState
 
@@ -78,7 +76,7 @@ public class TrcPeriodicThread<T>
          *
          * @return true if task has been terminated, false otherwise.
          */
-        public synchronized boolean isTaskTerminated()
+        public boolean isTaskTerminated()
         {
             return !periodicThread.isAlive();
         }   //isTaskTerminated
@@ -86,7 +84,7 @@ public class TrcPeriodicThread<T>
         /**
          * This method is called to terminate the periodic task.
          */
-        public synchronized void terminateTask()
+        public void terminateTask()
         {
             periodicThread.interrupt();
         }   //terminateTask
@@ -98,7 +96,7 @@ public class TrcPeriodicThread<T>
          */
         public synchronized boolean isTaskEnabled()
         {
-            return periodicThread.isAlive() && (taskEnabled || oneShotEnabled);
+            return taskEnabled && periodicThread.isAlive();
         }   //isTaskEnabled
 
         /**
@@ -113,10 +111,19 @@ public class TrcPeriodicThread<T>
             {
                 taskEnabled = enabled;
             }
+            else
+            {
+                //
+                // Thread is not alive, make sure the task state is disabled.
+                //
+                taskEnabled = false;
+            }
         }   //setTaskEnabled
 
         /**
-         * This method returns the last data object. If there is no data since the last call, it will return null.
+         * This method returns the last data object associated with the task. If there is no new data since the last
+         * call, it will return null. This method, along with setData(), provides a thread-safe way to access the data
+         * produced or processed by the thread.
          *
          * @return newly acquired data if any, null if none.
          */
@@ -127,13 +134,8 @@ public class TrcPeriodicThread<T>
             if (periodicThread.isAlive())
             {
                 //
-                // If task was not enabled, it must be a one-shot deal. Since we don't already have the data, we
-                // must unblock the task so it can acquire/process the data.
+                // Consume the data by transferring it out.
                 //
-                if (!taskEnabled && data == null)
-                {
-                    oneShotEnabled = true;
-                }
                 newData = data;
                 data = null;
             }
@@ -142,7 +144,8 @@ public class TrcPeriodicThread<T>
         }   //getData
 
         /**
-         * This method is called to set new data after new data have been acquired/processed.
+         * This method is called to set new data after new data have been acquired/processed. This method, along with
+         * getData(), provides a thread-safe way to access the data produced or processed by the thread.
          *
          * @param data specifies newly acquired/processed data. 
          */
@@ -151,18 +154,17 @@ public class TrcPeriodicThread<T>
             if (periodicThread.isAlive())
             {
                 this.data = data;
-                oneShotEnabled = false;
             }
         }   //setData
 
     }   //class TaskState
 
-    private static int numActiveThreads = 0;
+    private static volatile int numActiveThreads = 0;
     private final String instanceName;
-    private PeriodicTask task;
-    private Object context;
-    private long processingInterval = 0;    // in msec
-    private TaskState taskState = null;
+    private final PeriodicTask task;
+    private final Object context;
+    private final TaskState taskState;
+    private volatile long processingInterval = 0;   // in msec
 
     /**
      * Constructor: Create an instance of the object.
@@ -366,27 +368,28 @@ public class TrcPeriodicThread<T>
                     numActiveThreads, instanceName, thread.getId(), thread.getPriority(), thread.getThreadGroup());
         }
 
-        while (!Thread.interrupted() && !taskState.isTaskTerminated())
+        while (!Thread.interrupted())
         {
-            long startTime = TrcUtil.getCurrentTimeMillis();
+            long startNanoTime = TrcUtil.getCurrentTimeNanos();
+            long elapsedNanoTime = 0;
 
             if (taskState.isTaskEnabled())
             {
-                long loopStartNanoTime = TrcUtil.getCurrentTimeNanos();
                 task.runPeriodic(context);
-                long elapsedTime = TrcUtil.getCurrentTimeNanos() - loopStartNanoTime;
-                totalThreadNanoTime += elapsedTime;
+                elapsedNanoTime = TrcUtil.getCurrentTimeNanos() - startNanoTime;
+                totalThreadNanoTime += elapsedNanoTime;
                 loopCount++;
+
                 if (debugEnabled)
                 {
-                    dbgTrace.traceInfo(funcName, "%s: start=%.6f, elapsed=%.6f",
-                            instanceName, loopStartNanoTime/1000000000.0, elapsedTime/1000000000.0);
+                    dbgTrace.traceVerbose(funcName, "%s: start=%.6f, elapsed=%.6f",
+                            instanceName, startNanoTime/1000000000.0, elapsedNanoTime/1000000000.0);
                 }
             }
 
             if (processingInterval > 0)
             {
-                long sleepTime = processingInterval - (TrcUtil.getCurrentTimeMillis() - startTime);
+                long sleepTime = processingInterval - (TrcUtil.getCurrentTimeNanos() - startNanoTime)/1000000;
                 //
                 // If the processing time does not use up the processingInterval time, make the thread sleep the
                 // remaining time left.
@@ -419,6 +422,7 @@ public class TrcPeriodicThread<T>
             dbgTrace.traceInfo(moduleName, "Exiting thread %d: %s (AvgLoopTime=%.6f)",
                     numActiveThreads, instanceName, totalThreadNanoTime/1000000000.0/loopCount);
         }
+
         numActiveThreads--;
     }   //run
 
