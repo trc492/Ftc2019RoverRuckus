@@ -246,7 +246,7 @@ public class TrcSwerveDriveBase extends TrcSimpleDriveBase
         {
             if(inverted)
             {
-                dbgTrace.traceWarn(
+                globalTracer.traceWarn(
                     funcName, "You should not be using inverted and field reference frame at the same time!");
             }
 

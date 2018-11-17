@@ -33,6 +33,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public class TrcTaskMgr
 {
     private static final String moduleName = "TrcTaskMgr";
+    private static final TrcDbgTrace globalTracer = TrcDbgTrace.getGlobalTracer();
     private static final boolean debugEnabled = false;
     private static final boolean tracingEnabled = false;
     private static final boolean useGlobalTracer = false;
@@ -217,9 +218,10 @@ public class TrcTaskMgr
          * @param type specifies the task type.
          * @param taskInterval specifies the periodic interval for STANDALONE_TASK, ignore for any other task types.
          *                     If zero interval is specified, the task will be run in a tight loop.
+         * @param taskPriority specifies the priority of the associated thread.
          * @return true if successful, false if the task with that task type is already registered in the task list.
          */
-        public synchronized boolean registerTask(TaskType type, long taskInterval)
+        public synchronized boolean registerTask(TaskType type, long taskInterval, int taskPriority)
         {
             if (type == TaskType.STANDALONE_TASK && taskInterval < 0)
             {
@@ -232,7 +234,7 @@ public class TrcTaskMgr
             {
                 if (type == TaskType.STANDALONE_TASK)
                 {
-                    taskThread = new TrcPeriodicThread<>(taskName, this::standaloneTask, null);
+                    taskThread = new TrcPeriodicThread<>(taskName, this::standaloneTask, null, taskPriority);
                     taskThread.setProcessingInterval(taskInterval);
                     taskThread.setTaskEnabled(true);
                 }
@@ -259,6 +261,19 @@ public class TrcTaskMgr
             }
 
             return added;
+        }   //registerTask
+
+        /**
+         * This method adds the given task type to the task object.
+         *
+         * @param type specifies the task type.
+         * @param taskInterval specifies the periodic interval for STANDALONE_TASK, ignore for any other task types.
+         *                     If zero interval is specified, the task will be run in a tight loop.
+         * @return true if successful, false if the task with that task type is already registered in the task list.
+         */
+        public boolean registerTask(TaskType type, long taskInterval)
+        {
+            return registerTask(type, taskInterval, Thread.NORM_PRIORITY);
         }   //registerTask
 
         /**
@@ -356,17 +371,18 @@ public class TrcTaskMgr
         {
             final String funcName = "standaloneTask";
 
-            if (debugEnabled)
-            {
-                dbgTrace.traceInfo(funcName, "Executing StandaloneTask %s", this);
-            }
-
             long startNanoTime = TrcUtil.getCurrentTimeNanos();
 
             task.runTask(TaskType.STANDALONE_TASK, TrcRobot.getRunMode());
 
             long elapsedTime = TrcUtil.getCurrentTimeNanos() - startNanoTime;
             recordElapsedTime(TaskType.STANDALONE_TASK, elapsedTime);
+
+            if (debugEnabled)
+            {
+                dbgTrace.traceInfo(funcName, "Task %s: start=%.6f, elapsed=%.6f",
+                        taskName, startNanoTime/1000000000.0, elapsedTime/1000000000.0);
+            }
         }   //standaloneTask
 
         /**
@@ -384,7 +400,7 @@ public class TrcTaskMgr
 
             if (debugEnabled)
             {
-                long timeThreshold = getTaskInterval();
+                long timeThreshold = getTaskInterval()*1000000; //convert to nanoseconds.
                 if (timeThreshold == 0) timeThreshold = defTaskTimeThreshold;
                 if (elapsedTime > timeThreshold)
                 {
@@ -421,8 +437,7 @@ public class TrcTaskMgr
     {
         if (debugEnabled)
         {
-            dbgTrace = useGlobalTracer?
-                TrcDbgTrace.getGlobalTracer(): new TrcDbgTrace(moduleName, tracingEnabled, traceLevel, msgLevel);
+            dbgTrace = useGlobalTracer? globalTracer: new TrcDbgTrace(moduleName, tracingEnabled, traceLevel, msgLevel);
         }
     }   //TrcTaskMgr
 
@@ -448,7 +463,9 @@ public class TrcTaskMgr
     {
         if (inputThread == null)
         {
-            inputThread = startThread(moduleName + ".inputThread", this::inputTask, INPUT_THREAD_INTERVAL);
+            inputThread = startThread(
+                    moduleName + ".inputThread", this::inputTask,
+                    INPUT_THREAD_INTERVAL, Thread.MAX_PRIORITY);
         }
     }   //startInputThread
 
@@ -459,7 +476,9 @@ public class TrcTaskMgr
     {
         if (outputThread == null)
         {
-            outputThread = startThread(moduleName + ".outputThread", this::outputTask, OUTPUT_THREAD_INTERVAL);
+            outputThread = startThread(
+                    moduleName + ".outputThread", this::outputTask,
+                    OUTPUT_THREAD_INTERVAL, Thread.MAX_PRIORITY);
         }
     }   //startOutputThread
 
@@ -469,12 +488,13 @@ public class TrcTaskMgr
      * @param instanceName specifies the instance name of the thread.
      * @param task specifies the task run by the thread.
      * @param interval specifies the processing interval of the task.
+     * @param taskPriority specifies the thread priority.
      * @return the created thread.
      */
     private TrcPeriodicThread<Object> startThread(
-            String instanceName, TrcPeriodicThread.PeriodicTask task, long interval)
+            String instanceName, TrcPeriodicThread.PeriodicTask task, long interval, int taskPriority)
     {
-        TrcPeriodicThread<Object> thread = new TrcPeriodicThread<>(instanceName, task, null, Thread.MAX_PRIORITY);
+        TrcPeriodicThread<Object> thread = new TrcPeriodicThread<>(instanceName, task, null, taskPriority);
         thread.setProcessingInterval(interval);
         thread.setTaskEnabled(true);
 
@@ -576,66 +596,34 @@ public class TrcTaskMgr
                 switch (type)
                 {
                     case START_TASK:
-                        if (debugEnabled)
-                        {
-                            dbgTrace.traceInfo(funcName, "Executing StartTask %s", taskObj);
-                        }
                         task.runTask(TaskType.START_TASK, mode);
                         break;
 
                     case STOP_TASK:
-                        if (debugEnabled)
-                        {
-                            dbgTrace.traceInfo(funcName, "Executing StopTask %s", taskObj);
-                        }
                         task.runTask(TaskType.STOP_TASK, mode);
                         break;
 
                     case PREPERIODIC_TASK:
-                        if (debugEnabled)
-                        {
-                            dbgTrace.traceInfo(funcName, "Executing PrePeriodicTask %s", taskObj);
-                        }
                         task.runTask(TaskType.PREPERIODIC_TASK, mode);
                         break;
 
                     case POSTPERIODIC_TASK:
-                        if (debugEnabled)
-                        {
-                            dbgTrace.traceInfo(funcName, "Executing PostPeriodicTask %s", taskObj);
-                        }
                         task.runTask(TaskType.POSTPERIODIC_TASK, mode);
                         break;
 
                     case PRECONTINUOUS_TASK:
-                        if (debugEnabled)
-                        {
-                            dbgTrace.traceInfo(funcName, "Executing PreContinuousTask %s", taskObj);
-                        }
                         task.runTask(TaskType.PRECONTINUOUS_TASK, mode);
                         break;
 
                     case POSTCONTINUOUS_TASK:
-                        if (debugEnabled)
-                        {
-                            dbgTrace.traceInfo(funcName, "Executing PostContinuousTask %s", taskObj);
-                        }
                         task.runTask(TaskType.POSTCONTINUOUS_TASK, mode);
                         break;
 
                     case INPUT_TASK:
-                        if (debugEnabled)
-                        {
-                            dbgTrace.traceInfo(funcName, "Executing InputTask %s", taskObj);
-                        }
                         task.runTask(TaskType.INPUT_TASK, mode);
                         break;
 
                     case OUTPUT_TASK:
-                        if (debugEnabled)
-                        {
-                            dbgTrace.traceInfo(funcName, "Executing OutputTask %s", taskObj);
-                        }
                         task.runTask(TaskType.OUTPUT_TASK, mode);
                         break;
 
@@ -645,6 +633,12 @@ public class TrcTaskMgr
 
                 long elapsedTime = TrcUtil.getCurrentTimeNanos() - startNanoTime;
                 taskObj.recordElapsedTime(type, elapsedTime);
+
+                if (debugEnabled)
+                {
+                    dbgTrace.traceInfo(funcName, "Task %s: start=%.6f, elapsed=%.6f",
+                            taskObj.taskName, startNanoTime/1000000000.0, elapsedTime/1000000000.0);
+                }
             }
         }
     }   //executeTaskType

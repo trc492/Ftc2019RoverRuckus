@@ -31,6 +31,7 @@ package trclib;
 public abstract class TrcDriveBase
 {
     private static final String moduleName = "TrcDriveBase";
+    protected static final TrcDbgTrace globalTracer = TrcDbgTrace.getGlobalTracer();
     protected static final boolean debugEnabled = false;
     private static final boolean tracingEnabled = false;
     private static final boolean useGlobalTracer = false;
@@ -100,8 +101,7 @@ public abstract class TrcDriveBase
     {
         if (debugEnabled)
         {
-            dbgTrace = useGlobalTracer?
-                TrcDbgTrace.getGlobalTracer():
+            dbgTrace = useGlobalTracer? globalTracer:
                     new TrcDbgTrace(moduleName, tracingEnabled, traceLevel, msgLevel);
         }
 
@@ -118,7 +118,7 @@ public abstract class TrcDriveBase
         TrcTaskMgr.TaskObject odometryTaskObj = taskMgr.createTask(
                 moduleName + ".odometryTask", this::odometryTask);
         TrcTaskMgr.TaskObject stopTaskObj = taskMgr.createTask(moduleName + ".stopTask", this::stopTask);
-        odometryTaskObj.registerTask(TrcTaskMgr.TaskType.INPUT_TASK);
+        odometryTaskObj.registerTask(TrcTaskMgr.TaskType.STANDALONE_TASK, 50);
         stopTaskObj.registerTask(TrcTaskMgr.TaskType.STOP_TASK);
     }   //TrcDriveBase
 

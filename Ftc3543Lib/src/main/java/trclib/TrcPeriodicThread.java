@@ -69,8 +69,6 @@ public class TrcPeriodicThread<T>
             oneShotEnabled = false;
             data = null;
             periodicThread = new Thread(runnable, instanceName);
-            System.out.printf("*** TrcDebug ***: tid=%d, group=%s, defPriority=%d\n",
-                    periodicThread.getId(), periodicThread.getThreadGroup(), periodicThread.getPriority());
             periodicThread.setPriority(taskPriority);
             periodicThread.start();
         }   //TaskState
@@ -171,6 +169,8 @@ public class TrcPeriodicThread<T>
      *
      * @param instanceName specifies the instance name.
      * @param task specifies the periodic task the thread is to execute.
+     * @param context specifies the task context to be passed to the periodic thread.
+     * @param taskPriority specifies the periodic thread priority.
      */
     public TrcPeriodicThread(final String instanceName, PeriodicTask task, Object context, int taskPriority)
     {
@@ -185,6 +185,18 @@ public class TrcPeriodicThread<T>
         this.task = task;
         this.context = context;
         taskState = new TaskState(instanceName, this::run, taskPriority);
+    }   //TrcPeriodicThread
+
+    /**
+     * Constructor: Create an instance of the object.
+     *
+     * @param instanceName specifies the instance name.
+     * @param task specifies the periodic task the thread is to execute.
+     * @param context specifies the task context to be passed to the periodic thread.
+     */
+    public TrcPeriodicThread(final String instanceName, PeriodicTask task, Object context)
+    {
+        this(instanceName, task, context, Thread.NORM_PRIORITY);
     }   //TrcPeriodicThread
 
     /**
@@ -349,7 +361,9 @@ public class TrcPeriodicThread<T>
         if (debugEnabled)
         {
             dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.CALLBK);
-            dbgTrace.traceInfo(moduleName, "Starting thread %d: %s", numActiveThreads, instanceName);
+            Thread thread = Thread.currentThread();
+            dbgTrace.traceInfo(moduleName, "Thread %d: name=%s, tid=%d, priority=%d, group=%s",
+                    numActiveThreads, instanceName, thread.getId(), thread.getPriority(), thread.getThreadGroup());
         }
 
         while (!Thread.interrupted() && !taskState.isTaskTerminated())
@@ -360,8 +374,14 @@ public class TrcPeriodicThread<T>
             {
                 long loopStartNanoTime = TrcUtil.getCurrentTimeNanos();
                 task.runPeriodic(context);
-                totalThreadNanoTime += TrcUtil.getCurrentTimeNanos() - loopStartNanoTime;
+                long elapsedTime = TrcUtil.getCurrentTimeNanos() - loopStartNanoTime;
+                totalThreadNanoTime += elapsedTime;
                 loopCount++;
+                if (debugEnabled)
+                {
+                    dbgTrace.traceInfo(funcName, "%s: start=%.6f, elapsed=%.6f",
+                            instanceName, loopStartNanoTime/1000000000.0, elapsedTime/1000000000.0);
+                }
             }
 
             if (processingInterval > 0)

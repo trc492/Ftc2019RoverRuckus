@@ -33,6 +33,7 @@ import java.util.Arrays;
 public abstract class TrcEmic2TextToSpeech implements TrcSerialBusDevice.CompletionHandler
 {
     protected static final String moduleName = "TrcEmic2TextToSpeech";
+    protected static final TrcDbgTrace globalTracer = TrcDbgTrace.getGlobalTracer();
     protected static final boolean debugEnabled = false;
     protected static final boolean tracingEnabled = false;
     protected static final boolean useGlobalTracer = false;
@@ -144,9 +145,8 @@ public abstract class TrcEmic2TextToSpeech implements TrcSerialBusDevice.Complet
     {
         if (debugEnabled)
         {
-            dbgTrace = useGlobalTracer?
-                TrcDbgTrace.getGlobalTracer():
-                new TrcDbgTrace(moduleName + "." + instanceName, tracingEnabled, traceLevel, msgLevel);
+            dbgTrace = useGlobalTracer? globalTracer:
+                    new TrcDbgTrace(moduleName + "." + instanceName, tracingEnabled, traceLevel, msgLevel);
         }
 
         this.instanceName = instanceName;
@@ -495,10 +495,7 @@ public abstract class TrcEmic2TextToSpeech implements TrcSerialBusDevice.Complet
             }
             catch (UnsupportedEncodingException e)
             {
-                if (debugEnabled)
-                {
-                    TrcDbgTrace.getGlobalTracer().traceErr(funcName, "Unsupported Encoding: %s", e.getMessage());
-                }
+                globalTracer.traceErr(funcName, "Unsupported Encoding: %s", e.getMessage());
                 e.printStackTrace();
             }
         }

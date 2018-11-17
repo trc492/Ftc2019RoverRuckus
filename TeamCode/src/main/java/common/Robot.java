@@ -77,10 +77,10 @@ public class Robot implements FtcMenu.MenuButtons
     public FtcDcMotor leftRearWheel = null;
     public FtcDcMotor rightRearWheel = null;
 
+    public TrcSimpleDriveBase driveBase = null;
     public TrcPidController encoderXPidCtrl = null;
     public TrcPidController encoderYPidCtrl = null;
     public TrcPidController gyroPidCtrl = null;
-    public TrcSimpleDriveBase driveBase = null;
     public TrcPidDrive pidDrive = null;
     //
     // Other common subsystems.
@@ -151,6 +151,7 @@ public class Robot implements FtcMenu.MenuButtons
 
     public void startMode(TrcRobot.RunMode runMode)
     {
+        final String funcName = "startMode";
         //
         // Since the IMU gyro is giving us cardinal heading, we need to enable its cardinal to cartesian converter.
         //
@@ -162,16 +163,19 @@ public class Robot implements FtcMenu.MenuButtons
         //
         if (vuforiaVision != null && runMode == TrcRobot.RunMode.AUTO_MODE)
         {
+            tracer.traceInfo(funcName, "Enabling Vuforia.");
             vuforiaVision.setEnabled(true);
         }
 
         if (pixyVision != null && runMode == TrcRobot.RunMode.AUTO_MODE)
         {
+            tracer.traceInfo(funcName, "Enabling Pixy Camera.");
             pixyVision.setCameraEnabled(true);
         }
 
-        if (tensorFlowVision != null && runMode == TrcRobot.RunMode.AUTO_MODE)
+        if (tensorFlowVision != null && runMode != TrcRobot.RunMode.TELEOP_MODE)
         {
+            tracer.traceInfo(funcName, "Enabling TensorFlow.");
             tensorFlowVision.setEnabled(true);
         }
         //

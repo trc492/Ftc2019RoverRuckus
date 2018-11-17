@@ -46,8 +46,10 @@ import trclib.TrcTaskMgr;
 public class FtcDcMotor extends TrcMotor
 {
     private static final String moduleName = "FtcDcMotor";
+    private static final TrcDbgTrace globalTracer = TrcDbgTrace.getGlobalTracer();
     private static final boolean debugEnabled = false;
     private static final boolean tracingEnabled = false;
+    private static final boolean useGlobalTracer = false;
     private static final TrcDbgTrace.TraceLevel traceLevel = TrcDbgTrace.TraceLevel.API;
     private static final TrcDbgTrace.MsgLevel msgLevel = TrcDbgTrace.MsgLevel.INFO;
     private TrcDbgTrace dbgTrace = null;
@@ -84,7 +86,8 @@ public class FtcDcMotor extends TrcMotor
 
         if (debugEnabled)
         {
-            dbgTrace = new TrcDbgTrace(moduleName + "." + instanceName, tracingEnabled, traceLevel, msgLevel);
+            dbgTrace = useGlobalTracer? globalTracer:
+                    new TrcDbgTrace(moduleName + "." + instanceName, tracingEnabled, traceLevel, msgLevel);
         }
 
         this.instanceName = instanceName;
@@ -266,12 +269,9 @@ public class FtcDcMotor extends TrcMotor
         {
             if (currPos == 0.0 && Math.abs(prevEncPos) > 1000)
             {
-                if (debugEnabled)
-                {
-                    dbgTrace.traceWarn(funcName,
-                            "Detected possible motor controller disconnect for %s (prevEncPos=%d).",
-                            instanceName, prevEncPos);
-                }
+                globalTracer.traceWarn(
+                        funcName, "Detected possible motor controller disconnect for %s (prevEncPos=%d).",
+                        instanceName, prevEncPos);
                 currPos = prevEncPos;
             }
             else

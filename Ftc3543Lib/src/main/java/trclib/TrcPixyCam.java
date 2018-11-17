@@ -34,6 +34,7 @@ import java.util.Arrays;
 public abstract class TrcPixyCam
 {
     protected static final String moduleName = "TrcPixyCam";
+    protected static final TrcDbgTrace globalTracer = TrcDbgTrace.getGlobalTracer();
     protected static final boolean debugEnabled = false;
     protected static final boolean tracingEnabled = false;
     protected static final boolean useGlobalTracer = false;
@@ -122,9 +123,8 @@ public abstract class TrcPixyCam
     {
         if (debugEnabled)
         {
-            dbgTrace = useGlobalTracer?
-                TrcDbgTrace.getGlobalTracer():
-                new TrcDbgTrace(instanceName, tracingEnabled, traceLevel, msgLevel);
+            dbgTrace = useGlobalTracer? globalTracer:
+                    new TrcDbgTrace(instanceName, tracingEnabled, traceLevel, msgLevel);
         }
 
         this.instanceName = instanceName;
@@ -351,11 +351,8 @@ public abstract class TrcPixyCam
                         //
                         // Read failed, remain in this state.
                         //
-                        if (debugEnabled)
-                        {
-                            dbgTrace.traceWarn(funcName, "%s: Read failed (data=%s)",
-                                    state, data == null? null: Arrays.toString(data));
-                        }
+                        globalTracer.traceWarn(funcName, "%s: Read failed (data=%s)",
+                                state, data == null? null: Arrays.toString(data));
                     }
                     else
                     {
@@ -381,18 +378,12 @@ public abstract class TrcPixyCam
                                 dbgTrace.traceInfo(funcName, "%s: Word misaligned, realigning...", state);
                             }
                         }
-                        else
+                        //
+                        // We don't find the sync word, throw it away and remain in this state.
+                        //
+                        else if (word != 0)
                         {
-                            //
-                            // We don't find the sync word, throw it away and remain in this state.
-                            //
-                            if (debugEnabled)
-                            {
-                                if (word != 0)
-                                {
-                                    dbgTrace.traceWarn(funcName, "%s: Unexpected word 0x%04x", state, word);
-                                }
-                            }
+                            globalTracer.traceWarn(funcName, "%s: Unexpected word 0x%04x", state, word);
                         }
                     }
                     break;
@@ -421,10 +412,7 @@ public abstract class TrcPixyCam
                         // now word aligned again.
                         //
                         sm.setState(ReaderState.SYNC);
-                        if (debugEnabled)
-                        {
-                            dbgTrace.traceWarn(funcName, "%s: Unexpected data byte 0x%02x.", state, data[0]);
-                        }
+                        globalTracer.traceWarn(funcName, "%s: Unexpected data byte 0x%02x.", state, data[0]);
                     }
                     break;
 
@@ -577,9 +565,9 @@ public abstract class TrcPixyCam
                         objects.add(currBlock);
                         currBlock = null;
                     }
-                    else if (debugEnabled)
+                    else
                     {
-                        dbgTrace.traceWarn(funcName, "%s: Incorrect checksum %d (expecting %d).",
+                        globalTracer.traceWarn(funcName, "%s: Incorrect checksum %d (expecting %d).",
                                 state, runningChecksum, currBlock.checksum);
                     }
                     //
