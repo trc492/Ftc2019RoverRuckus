@@ -206,7 +206,8 @@ public class CmdDisplaceMineral implements TrcRobot.RobotCommand
                         //
                         // We are starting on the depot side. It means we will end inside the depot.
                         //
-                        targetY = mineralAngle == 0.0? 68.0: 48.0;
+                        targetX = -5.0;
+                        targetY = mineralAngle == 0.0? 56.0: 48.0;
                         nextState = mineralAngle == 0.0? State.DONE: State.TURN_TO_DEPOT;
                     }
                     else

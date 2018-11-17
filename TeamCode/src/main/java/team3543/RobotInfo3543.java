@@ -36,11 +36,12 @@ class RobotInfo3543 extends RobotInfo
     //
     // 2018-10-27: Kp=0.1, Ki=0.0, Kd=0.0, Scale=0.0177558441951763
     //
-    static final double ENCODER_X_KP                            = 0.1;
+    // 31 inches
+    static final double ENCODER_X_KP                            = 0.1; // 0.15 / (31.0 / 36.0);
     static final double ENCODER_X_KI                            = 0.0;
     static final double ENCODER_X_KD                            = 0.0;
     static final double ENCODER_X_TOLERANCE                     = 2.0;
-    static final double ENCODER_X_INCHES_PER_COUNT              = 0.0177558441951763;
+    static final double ENCODER_X_INCHES_PER_COUNT              = 16.0 / 1352.5; //0.0177558441951763; // 1352.5
     //
     // 2018-10-27: Kp=0.035, Ki=0.0, Kd=0.0025, Scale=0.0172934
     //
@@ -57,7 +58,7 @@ class RobotInfo3543 extends RobotInfo
     static final double GYRO_KD                                 = 0.002;
     static final double GYRO_TOLERANCE                          = 2.0;
 
-    static final double PIDDRIVE_STALL_TIMEOUT                  = 0.25;     //in msec.
+    static final double PIDDRIVE_STALL_TIMEOUT                  = 1.0; // prev: 0.25     //in msec.
     //
     // Elevator subsystem.
     // 2018-10-27: Kp=3.0, Ki=0.0, Kd=0.0, Scale=5.625/8498
