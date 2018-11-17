@@ -148,7 +148,7 @@ class CmdAutoDepot3543 implements TrcRobot.RobotCommand
                     //
                     robot.elevator.setPosition(RobotInfo3543.ELEVATOR_MIN_HEIGHT);
                     targetX = 0.0;
-                    targetY = 36.0;
+                    targetY = 36.0; // prev: 36
                     nextState = doTeamMarker? State.DROP_TEAM_MARKER: State.TURN_TO_CRATER;
                     robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
                     sm.waitForSingleEvent(event, nextState);
@@ -172,6 +172,7 @@ class CmdAutoDepot3543 implements TrcRobot.RobotCommand
                     if (cmdDisplaceMineral.cmdPeriodic(elapsedTime))
                     {
                         sm.setState(doTeamMarker? State.DROP_TEAM_MARKER: State.TURN_TO_CRATER);
+                        // sm.setState(State.DONE);
                     }
                     else
                     {
