@@ -27,6 +27,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import common.AutoCommon;
 import common.CmdPidDrive;
 import common.CmdTimedDrive;
+import trclib.TrcRobot;
 
 @Autonomous(name="Autonomous6541", group="Auto")
 public class FtcAuto6541 extends AutoCommon
@@ -44,7 +45,7 @@ public class FtcAuto6541 extends AutoCommon
         //
         // Initializing robot objects.
         //
-        robot = new Robot6541();
+        robot = new Robot6541(TrcRobot.getRunMode());
         super.setRobot(robot);
         //
         // Choice menus.

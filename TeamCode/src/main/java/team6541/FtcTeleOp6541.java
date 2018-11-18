@@ -27,6 +27,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import common.TeleOpCommon;
 import ftclib.FtcGamepad;
 import trclib.TrcGameController;
+import trclib.TrcRobot;
 
 @TeleOp(name="TeleOp6541", group="TeleOp")
 public class FtcTeleOp6541 extends TeleOpCommon implements TrcGameController.ButtonHandler
@@ -43,8 +44,9 @@ public class FtcTeleOp6541 extends TeleOpCommon implements TrcGameController.But
     {
         //
         // Initializing robot objects.
+        // FtcTeleOp is also extended by FtcTest so we cannot assume runMode is TELEOP.
         //
-        robot = new Robot6541();
+        robot = new Robot6541(TrcRobot.getRunMode());
         driveMode = DriveMode.TANK_MODE;
         super.setRobot(robot);
         super.initRobot();

@@ -57,10 +57,9 @@ public class Robot3543 extends Robot
     //
     public Elevator3543 elevator;
 
-    public Robot3543()
+    public Robot3543(TrcRobot.RunMode runMode)
     {
-        super();
-        TrcRobot.RunMode runMode = TrcRobot.getRunMode();
+        super(runMode);
         //
         // Initialize global objects.
         //

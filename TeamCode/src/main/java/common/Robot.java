@@ -94,9 +94,8 @@ public class Robot implements FtcMenu.MenuButtons
     public MineralSweeper mineralSweeper = null;
     public TeamMarkerDeployer teamMarkerDeployer = null;
 
-    public Robot()
+    public Robot(TrcRobot.RunMode runMode)
     {
-        TrcRobot.RunMode runMode = TrcRobot.getRunMode();
         //
         // Initialize global objects.
         //
