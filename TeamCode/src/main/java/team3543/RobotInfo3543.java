@@ -83,7 +83,7 @@ class RobotInfo3543 extends RobotInfo
     //
     // Vision subsystem.
     //
-    public static final double SIDE_MINERAL_ANGLE               = 30.0;
+    public static final double SIDE_MINERAL_ANGLE               = 25.0; // 30.0
     public static final double UNHOOK_DISPLACEMENT              = 5.0;
 
 }   //class RobotInfo3543

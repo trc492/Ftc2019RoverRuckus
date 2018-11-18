@@ -161,6 +161,7 @@ class CmdAutoDepot3543 implements TrcRobot.RobotCommand
                     robot.elevator.setPosition(RobotInfo3543.ELEVATOR_MIN_HEIGHT);
                     cmdDisplaceMineral = new CmdDisplaceMineral(
                             robot, true, RobotInfo3543.SIDE_MINERAL_ANGLE, RobotInfo3543.UNHOOK_DISPLACEMENT);
+                    // sm.setState(State.DONE); // lol
                     sm.setState(State.DISPLACE_MINERAL);
                     //
                     // Intentionally falling through.
