@@ -78,16 +78,16 @@ public abstract class TeleOpCommon extends FtcOpMode implements TrcGameControlle
     //
 
     @Override
-    public void startMode(TrcRobot.RunMode runMode)
+    public void startMode(TrcRobot.RunMode prevMode, TrcRobot.RunMode nextMode)
     {
         dashboard.clearDisplay();
-        robot.startMode(runMode);
+        robot.startMode(nextMode);
     }   //startMode
 
     @Override
-    public void stopMode(TrcRobot.RunMode runMode)
+    public void stopMode(TrcRobot.RunMode prevMode, TrcRobot.RunMode nextMode)
     {
-        robot.stopMode(runMode);
+        robot.stopMode(prevMode);
         printPerformanceMetrics(robot.tracer);
     }   //stopMode
 

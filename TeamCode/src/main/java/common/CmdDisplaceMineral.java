@@ -36,13 +36,14 @@ public class CmdDisplaceMineral implements TrcRobot.RobotCommand
 
     private Robot robot;
     private boolean startAtDepot;
+    private double sideMineralAngle;
+    private double unhookDisplacement;
     private TrcEvent event;
     private TrcStateMachine<State> sm;
 
     private double targetX = 0.0;
     private double targetY = 0.0;
     private double mineralAngle = 0.0;
-    private int retries = 0;
     private double startPos = 0.0;
 
     /**
@@ -51,10 +52,12 @@ public class CmdDisplaceMineral implements TrcRobot.RobotCommand
      * @param robot specifies the robot object.
      * @param startAtDepot specifies true if starting position is at the depot side, false if at the crater side.
      */
-    public CmdDisplaceMineral(Robot robot, boolean startAtDepot)
+    public CmdDisplaceMineral(Robot robot, boolean startAtDepot, double sideMineralAngle, double unhookDisplacement)
     {
         this.robot = robot;
         this.startAtDepot = startAtDepot;
+        this.sideMineralAngle = sideMineralAngle;
+        this.unhookDisplacement = unhookDisplacement;
         event = new TrcEvent(moduleName);
         sm = new TrcStateMachine<>(moduleName);
         sm.start(State.SCAN_MINERAL);
@@ -98,84 +101,53 @@ public class CmdDisplaceMineral implements TrcRobot.RobotCommand
             {
                 case SCAN_MINERAL:
                     //
-                    // Use vision to scan for gold mineral. If there is no vision, assume the middle one is gold.
+                    // If vision is enabled, it would have scanned for the gold mineral at InitPeriodic time.
+                    // So we just need to check for the result here. If none found, assume the middle one is gold.
                     //
-                    if (robot.tensorFlowVision != null)
+                    if (robot.targetInfo != null)
                     {
-                        TensorFlowVision.TargetInfo targetInfo =
-                                robot.tensorFlowVision == null? null:
-                                        robot.tensorFlowVision.getTargetInfo(TensorFlowVision.LABEL_GOLD_MINERAL);
+                        //
+                        // Found gold mineral.
+                        //
+                        int leftThird = robot.targetInfo.imageWidth/3;
+                        int rightThird = leftThird*2;
+                        int mineralX = robot.targetInfo.rect.x + robot.targetInfo.rect.width/2;
+                        String sentence;
 
-                        if (targetInfo != null)
+                        if (mineralX < leftThird)
                         {
                             //
-                            // Found gold mineral.
+                            // Gold is the left mineral.
                             //
-                            int leftThird = targetInfo.imageWidth/3;
-                            int rightThird = leftThird*2;
-                            int mineralX = targetInfo.rect.x + targetInfo.rect.width/2;
-                            String sentence;
-
-                            if (mineralX < leftThird)
-                            {
-                                //
-                                // Gold is the left mineral.
-                                //
-                                mineralAngle = -45.0;
-                                sentence = "Gold mineral is on the left.";
-                            }
-                            else if (mineralX < rightThird)
-                            {
-                                //
-                                // Gold is the right mineral.
-                                //
-                                mineralAngle = 0.0;
-                                sentence = "Gold mineral is in the middle.";
-                            }
-                            else
-                            {
-                                //
-                                // Gold is the right mineral.
-                                //
-                                mineralAngle = 45.0;
-                                sentence = "Gold mineral is on the right.";
-                            }
-
-                            robot.speak(sentence);
-                            robot.tracer.traceInfo(moduleName, "%s[%d]: %s (%s).",
-                                    state, retries, sentence, targetInfo);
-                            sm.setState(State.TURN_TO_MINERAL);
+                            mineralAngle = -sideMineralAngle;
+                            sentence = "Gold mineral is on the left.";
+                        }
+                        else if (mineralX < rightThird)
+                        {
+                            //
+                            // Gold is the right mineral.
+                            //
+                            mineralAngle = 0.0;
+                            sentence = "Gold mineral is in the middle.";
                         }
                         else
                         {
                             //
-                            // Don't see gold mineral.
+                            // Gold is the right mineral.
                             //
-                            retries++;
-                            if (retries < 3)
-                            {
-                                //
-                                // Gold not found, remain in this state and try again.
-                                //
-                                robot.tracer.traceInfo(moduleName, "%s[%d]: gold mineral not found, try again.",
-                                        state, retries);
-                                break;
-                            }
-                            else
-                            {
-                                //
-                                // We tried but can't find it, so assume the middle is gold and hope for the best.
-                                //
-                                robot.speak("Gold mineral is not found.");
-                                mineralAngle = 0.0;
-                                sm.setState(State.TURN_TO_MINERAL);
-                            }
+                            mineralAngle = sideMineralAngle;
+                            sentence = "Gold mineral is on the right.";
                         }
+
+                        robot.speak(sentence);
+                        robot.tracer.traceInfo(moduleName, "%s: %s (%s).",
+                                state, sentence, robot.targetInfo);
+                        sm.setState(State.TURN_TO_MINERAL);
                     }
                     else
                     {
                         //
-                        // Vision is not enabled so assume the middle is gold and hope for the best.
+                        // Vision did not find gold mineral so assume the middle is gold and hope for the best.
                         //
                         mineralAngle = 0.0;
                         sm.setState(State.TURN_TO_MINERAL);
@@ -187,7 +159,6 @@ public class CmdDisplaceMineral implements TrcRobot.RobotCommand
                     //
                     // Turn to the gold mineral (hopefully).
                     //
-                    robot.tensorFlowVision.shutdown();
                     targetX = 0.0;
                     targetY = 0.0;
                     robot.targetHeading = mineralAngle;
@@ -200,14 +171,13 @@ public class CmdDisplaceMineral implements TrcRobot.RobotCommand
                     // Drive forward to displace the mineral.
                     //
                     startPos = robot.driveBase.getYPosition();
-                    targetX = 0.0;
+                    targetX = -unhookDisplacement;
                     if (startAtDepot)
                     {
                         //
                         // We are starting on the depot side. It means we will end inside the depot.
                         //
-                        targetX = -5.0;
-                        targetY = mineralAngle == 0.0? 56.0: 48.0;
+                        targetY = mineralAngle == 0.0? 56.0: 64.0;
                         nextState = mineralAngle == 0.0? State.DONE: State.TURN_TO_DEPOT;
                     }
                     else
@@ -240,7 +210,7 @@ public class CmdDisplaceMineral implements TrcRobot.RobotCommand
                     // We need to turn towards the depot.
                     //
                     targetX = targetY = 0.0;
-                    robot.targetHeading += mineralAngle == -45.0? 90.0: -90.0;
+                    robot.targetHeading += mineralAngle == -sideMineralAngle? 90.0: -90.0;
                     robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
                     sm.waitForSingleEvent(event, State.DRIVE_TO_DEPOT);
                     break;
@@ -269,8 +239,11 @@ public class CmdDisplaceMineral implements TrcRobot.RobotCommand
 
         if (robot.pidDrive.isActive())
         {
-            robot.tracer.traceInfo("Battery", "Voltage=%5.2fV (%5.2fV)",
-                    robot.battery.getVoltage(), robot.battery.getLowestVoltage());
+            if (robot.battery != null)
+            {
+                robot.tracer.traceInfo("Battery", "Voltage=%5.2fV (%5.2fV)",
+                        robot.battery.getVoltage(), robot.battery.getLowestVoltage());
+            }
             robot.tracer.traceInfo("Raw Encoder",
                     "lf=%.0f, rf=%.0f, lr=%.0f, rr=%.0f",
                     robot.leftFrontWheel.getPosition(),

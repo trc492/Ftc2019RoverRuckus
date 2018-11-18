@@ -148,12 +148,12 @@ public class TrcCardinalConverter<D>
         if (!this.enabled && enabled)
         {
             reset();
-            converterTaskObj.registerTask(TrcTaskMgr.TaskType.STANDALONE_TASK, 100);
+            converterTaskObj.registerTask(TrcTaskMgr.TaskType.PRECONTINUOUS_TASK);//STANDALONE_TASK, 100);
         }
         else if (this.enabled && !enabled)
         {
             reset();
-            converterTaskObj.unregisterTask(TrcTaskMgr.TaskType.STANDALONE_TASK);
+            converterTaskObj.unregisterTask(TrcTaskMgr.TaskType.PRECONTINUOUS_TASK);//STANDALONE_TASK);
         }
         this.enabled = enabled;
 

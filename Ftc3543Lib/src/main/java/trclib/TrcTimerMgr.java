@@ -62,7 +62,7 @@ public class TrcTimerMgr
         // Timer manager needs its own thread running as fast as it can to process all the timers. This ensures faster
         // timeout response.
         //
-        timerTaskObj.registerTask(TrcTaskMgr.TaskType.PRECONTINUOUS_TASK);//STANDALONE_TASK);
+        timerTaskObj.registerTask(TrcTaskMgr.TaskType.STANDALONE_TASK, 10);
     }   //TrcTimerMgr
 
     /**
@@ -89,8 +89,15 @@ public class TrcTimerMgr
      */
     public synchronized int add(TrcTimer timer, double securityKey)
     {
+        final String funcName = "add";
         double expiredTime = timer.getExpiredTime();
         int position = -1;
+
+        if (debugEnabled)
+        {
+            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API,
+                    "timer=%s,securityKey=%f", timer, securityKey);
+        }
 
         for (int i = 0; i < timerList.size(); i++)
         {
@@ -115,6 +122,12 @@ public class TrcTimerMgr
         //
         securityKeyMap.put(timer, position + securityKey);
 
+        if (debugEnabled)
+        {
+            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%d", position);
+            dbgTrace.traceInfo("add", "Adding timer %s: securityKey=%.3f->%d", timer, securityKey, position);
+        }
+
         return position;
     }   //add
 
@@ -127,14 +140,28 @@ public class TrcTimerMgr
      */
     public synchronized boolean remove(TrcTimer timer, double securityKey)
     {
+        final String funcName = "remove";
+        boolean success = false;
+
+        if (debugEnabled)
+        {
+            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API,
+                    "timer=%s,securityKey=%f", timer, securityKey);
+        }
+
         if (securityKey == securityKeyMap.get(timer))
         {
-            return timerList.remove(timer);
+            success = timerList.remove(timer);
         }
-        else
+
+        if (debugEnabled)
         {
-            return false;
+            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%s", success);
+            dbgTrace.traceInfo(funcName, "timer=%s,securityKey=%f,timerSec=%f",
+                    timer, securityKey, securityKeyMap.get(timer));
         }
+
+        return success;
     }   //remove
 
     /**

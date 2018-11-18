@@ -135,11 +135,11 @@ public class TrcDataIntegrator<D>
         if (enabled)
         {
             reset();
-            integratorTaskObj.registerTask(TrcTaskMgr.TaskType.INPUT_TASK);
+            integratorTaskObj.registerTask(TrcTaskMgr.TaskType.PRECONTINUOUS_TASK);//INPUT_TASK);
         }
         else
         {
-            integratorTaskObj.unregisterTask(TrcTaskMgr.TaskType.INPUT_TASK);
+            integratorTaskObj.unregisterTask(TrcTaskMgr.TaskType.PRECONTINUOUS_TASK);//INPUT_TASK);
         }
 
         if (debugEnabled)

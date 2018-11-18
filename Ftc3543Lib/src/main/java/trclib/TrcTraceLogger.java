@@ -32,6 +32,7 @@ public class TrcTraceLogger
     private String traceLogName;
     private PrintStream traceLog;
     private volatile boolean traceLogEnabled;
+    private TrcTaskMgr.TaskObject loggerTaskObj = null;
     private ConcurrentLinkedQueue<String> msgQueue;
     private TrcDbgTrace perfTracer = null;
     private double totalTime = 0.0;
@@ -50,9 +51,7 @@ public class TrcTraceLogger
         traceLogEnabled = false;
         msgQueue = new ConcurrentLinkedQueue<>();
 
-        TrcTaskMgr.TaskObject loggerTaskObj = TrcTaskMgr.getInstance().createTask(
-                "loggerTask." + traceLogName, this::loggerTask);
-        loggerTaskObj.registerTask(TrcTaskMgr.TaskType.POSTCONTINUOUS_TASK);//STANDALONE_TASK);
+        loggerTaskObj = TrcTaskMgr.getInstance().createTask("loggerTask." + traceLogName, this::loggerTask);
     }   //TrcTraceLogger
 
     /**
@@ -76,11 +75,14 @@ public class TrcTraceLogger
         {
             if (newName != null)
             {
+                // TODO: Cannot close the log file until the message queue is empty.
+                // So need to defer closing of the log file to the task thread.
+                // Also, need to get rid of all these newName and rename business because it was created to get
+                // around the logging performance problem and multi-threading already fixed it.
                 try
                 {
                     String path = traceLogName.substring(0, traceLogName.lastIndexOf(File.separatorChar) + 1);
                     String newFile = path + TrcUtil.getTimestamp() + "!" + newName + ".log";
-                    traceLogEnabled = true;
                     traceLog.close();
                     File file = new File(traceLogName);
                     file.renameTo(new File(newFile));
@@ -98,7 +100,7 @@ public class TrcTraceLogger
 
             traceLog = null;
             traceLogName = null;
-            traceLogEnabled = false;
+            setEnabled(false);
         }
     }   //closeTraceLog
 
@@ -120,6 +122,14 @@ public class TrcTraceLogger
      */
     public synchronized void setEnabled(boolean enabled)
     {
+        if (enabled)
+        {
+            loggerTaskObj.registerTask(TrcTaskMgr.TaskType.POSTCONTINUOUS_TASK);//STANDALONE_TASK, 20);
+        }
+        //
+        // If disabling TraceLogger, don't do anything yet because the message queue may not be empty.
+        // Let the thread empty the queue into the log file and it will unregister itself.
+        //
         traceLogEnabled = enabled;
     }   //setEnabled
 
@@ -180,6 +190,13 @@ public class TrcTraceLogger
             }
             else
             {
+                if (!traceLogEnabled)
+                {
+                    //
+                    // Somebody disabled tracelog, so unregister myself since the message queue is now empty.
+                    //
+                    loggerTaskObj.unregisterTask(TrcTaskMgr.TaskType.POSTCONTINUOUS_TASK);//STANDALONE_TASK);
+                }
                 break;
             }
         }

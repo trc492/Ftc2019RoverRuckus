@@ -135,7 +135,7 @@ class CmdAutoDepot3543 implements TrcRobot.RobotCommand
                     // The robot is still hooked, need to unhook first.
                     //
                     robot.tracer.traceInfo(moduleName, "Initial heading=%f", robot.driveBase.getHeading());
-                    targetX = 5.0;
+                    targetX = RobotInfo3543.UNHOOK_DISPLACEMENT;
                     targetY = 0.0;
                     nextState = doMineral? State.DO_MINERAL: State.PLOW_TO_DEPOT;
                     robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
@@ -159,7 +159,8 @@ class CmdAutoDepot3543 implements TrcRobot.RobotCommand
                     // Set up CmdDisplaceMineral to use vision to displace the gold mineral.
                     //
                     robot.elevator.setPosition(RobotInfo3543.ELEVATOR_MIN_HEIGHT);
-                    cmdDisplaceMineral = new CmdDisplaceMineral(robot, true);
+                    cmdDisplaceMineral = new CmdDisplaceMineral(
+                            robot, true, RobotInfo3543.SIDE_MINERAL_ANGLE, RobotInfo3543.UNHOOK_DISPLACEMENT);
                     sm.setState(State.DISPLACE_MINERAL);
                     //
                     // Intentionally falling through.
@@ -228,8 +229,11 @@ class CmdAutoDepot3543 implements TrcRobot.RobotCommand
 
         if (robot.pidDrive.isActive())
         {
-            robot.tracer.traceInfo("Battery", "Voltage=%5.2fV (%5.2fV)",
-                    robot.battery.getVoltage(), robot.battery.getLowestVoltage());
+            if (robot.battery != null)
+            {
+                robot.tracer.traceInfo("Battery", "Voltage=%5.2fV (%5.2fV)",
+                        robot.battery.getVoltage(), robot.battery.getLowestVoltage());
+            }
             robot.tracer.traceInfo("Raw Encoder",
                     "lf=%.0f, rf=%.0f, lr=%.0f, rr=%.0f",
                     robot.leftFrontWheel.getPosition(),

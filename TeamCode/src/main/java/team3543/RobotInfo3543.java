@@ -80,5 +80,10 @@ class RobotInfo3543 extends RobotInfo
     public static final double MINERAL_SWEEPER_RETRACT_POSITION = 0.7;
     public static final double DEPLOYER_OPEN_POSITION           = 0.8;
     public static final double DEPLOYER_CLOSE_POSITION          = 0.2;
+    //
+    // Vision subsystem.
+    //
+    public static final double SIDE_MINERAL_ANGLE               = 30.0;
+    public static final double UNHOOK_DISPLACEMENT              = 5.0;
 
 }   //class RobotInfo3543

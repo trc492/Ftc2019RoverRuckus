@@ -39,8 +39,6 @@ import org.firstinspires.ftc.robotcore.external.navigation.Velocity;
 import trclib.TrcAccelerometer;
 import trclib.TrcDbgTrace;
 import trclib.TrcGyro;
-import trclib.TrcRobot;
-import trclib.TrcTaskMgr;
 import trclib.TrcUtil;
 
 /**
@@ -64,18 +62,18 @@ public class FtcBNO055Imu
      */
     private class Gyro extends TrcGyro
     {
-        private final TrcTaskMgr.TaskObject gyroTaskObj;
-        private boolean taskEnabled = false;
-        private double timestamp = 0.0;
-        private double xAngle = 0.0, yAngle = 0.0, zAngle = 0.0;
-        private double xRotationRate = 0.0, yRotationRate = 0.0, zRotationRate = 0.0;
+        private AngularVelocity turnRateData = null;
+        private long turnRateTagId = -1;
+        private double[] eulerAngles = new double[3];
+        private Orientation headingData = null;
+        private long headingTagId = -1;
 
         /**
          * Constructor: Creates an instance of the object.
          *
          * @param instanceName specifies the instance name.
          */
-        private Gyro(String instanceName)
+        public Gyro(String instanceName)
         {
             //
             // BNO055 IMU has a 3-axis gyro. The angular orientation data it returns is in Ordinal system.
@@ -83,76 +81,26 @@ public class FtcBNO055Imu
             //
             super(instanceName, 3,
                     GYRO_HAS_X_AXIS | GYRO_HAS_Y_AXIS | GYRO_HAS_Z_AXIS | GYRO_CONVERT_TO_CARTESIAN, null);
-            gyroTaskObj = TrcTaskMgr.getInstance().createTask(instanceName, this::gyroTask);
         }   //Gyro
 
         /**
-         * This method enables/disables the gyro task that reads and caches the gyro data periodically.
+         * This method returns the Euler angles of all 3 axes from quaternion orientation.
          *
-         * @param enabled specifies true for enabling the gyro task, disabling it otherwise.
+         * @param angles specifies the array to hold the angles of the 3 axes.
          */
-        public synchronized void setEnabled(boolean enabled)
+        private void getEulerAngles(double[] angles)
         {
-            super.setEnabled(enabled);
-
-            if (enabled)
-            {
-                gyroTaskObj.registerTask(TrcTaskMgr.TaskType.STANDALONE_TASK, 50);
-            }
-            else
-            {
-                gyroTaskObj.unregisterTask(TrcTaskMgr.TaskType.STANDALONE_TASK);
-            }
-
-            taskEnabled = enabled;
-        }   //setEnabled
-
-        /**
-         * This method returns the state of the gyro task.
-         *
-         * @return true if gyro task is enabled, false otherwise.
-         */
-        public synchronized boolean isEnabled()
-        {
-            return taskEnabled;
-        }   //isEnabled
-
-        /**
-         * This method is called periodically to read the gyro data.
-         *
-         * @param taskType specifies the type of task being run.
-         * @param runMode specifies the competition mode that is running.
-         */
-        private synchronized void gyroTask(TrcTaskMgr.TaskType taskType, TrcRobot.RunMode runMode)
-        {
-            timestamp = TrcUtil.getCurrentTime();
+            Quaternion q = imu.getQuaternionOrientation();
             //
-            // The Z-axis returns positive heading in the anticlockwise direction, so we must negate it for
-            // our convention.
+            // 0: roll (x-axis rotation)
+            // 1: pitch (y-axis rotation)
+            // 2: yaw (z-axis rotation)
             //
-            if (USE_QUATERNION)
-            {
-                Quaternion q = imu.getQuaternionOrientation();
-                double sinp = 2.0 * (q.w * q.y - q.z * q.x);
-
-                xAngle = Math.toDegrees(Math.atan2(2.0 * (q.w * q.x + q.y * q.z), 1.0 - 2.0 * (q.x * q.x + q.y * q.y)));
-                yAngle = Math.toDegrees(Math.abs(sinp) >= 1.0 ? Math.signum(sinp) * (Math.PI / 2.0) : Math.asin(sinp));
-                zAngle = -Math.toDegrees(Math.atan2(2.0 * (q.w * q.z + q.x * q.y), 1.0 - 2.0 * (q.y * q.y + q.z * q.z)));
-            }
-            else
-            {
-                Orientation orientation = imu.getAngularOrientation(
-                        AxesReference.INTRINSIC, AxesOrder.XYZ, AngleUnit.DEGREES);
-                xAngle = orientation.firstAngle;
-                yAngle = orientation.secondAngle;
-                zAngle = -orientation.thirdAngle;
-            }
-
-            AngularVelocity angularVelocity = imu.getAngularVelocity();
-            xRotationRate = angularVelocity.xRotationRate;
-            yRotationRate = angularVelocity.yRotationRate;
-            zRotationRate = angularVelocity.zRotationRate;
-        }   //gyroTask
+            angles[0] = Math.toDegrees(Math.atan2(2.0*(q.w*q.x + q.y*q.z), 1.0 - 2.0*(q.x*q.x + q.y*q.y)));
+            double sinp = 2.0*(q.w*q.y - q.z*q.x);
+            angles[1] = Math.toDegrees(Math.abs(sinp) >= 1.0? Math.signum(sinp)*(Math.PI/2.0): Math.asin(sinp));
+            angles[2] = Math.toDegrees(Math.atan2(2.0*(q.w*q.z + q.x*q.y), 1.0 - 2.0*(q.y*q.y + q.z*q.z)));
+        }   //getEulerAngles
 
         //
         // Implements TrcGyro abstract methods.
@@ -169,14 +117,41 @@ public class FtcBNO055Imu
         {
             final String funcName = "getRawXData";
             double value = 0.0;
+            long currTagId = FtcOpMode.getLoopCounter();
 
             if (dataType == DataType.ROTATION_RATE)
             {
-                value = xRotationRate;
+                if (currTagId != turnRateTagId)
+                {
+                    turnRateData = imu.getAngularVelocity();
+                    turnRateTagId = currTagId;
+                }
+                value = turnRateData.xRotationRate;
             }
             else if (dataType == DataType.HEADING)
             {
-                value = xAngle;
+                if (currTagId != headingTagId)
+                {
+                    if (USE_QUATERNION)
+                    {
+                        getEulerAngles(eulerAngles);
+                    }
+                    else
+                    {
+                        headingData = imu.getAngularOrientation(
+                                AxesReference.INTRINSIC, AxesOrder.XYZ, AngleUnit.DEGREES);
+                    }
+                    headingTagId = currTagId;
+                }
+
+                if (USE_QUATERNION)
+                {
+                    value = eulerAngles[0];
+                }
+                else
+                {
+                    value = headingData.firstAngle;
+                }
             }
             SensorData<Double> data = new SensorData<>(TrcUtil.getCurrentTime(), value);
 
@@ -201,14 +176,41 @@ public class FtcBNO055Imu
         {
             final String funcName = "getRawYData";
             double value = 0.0;
+            long currTagId = FtcOpMode.getLoopCounter();
 
             if (dataType == DataType.ROTATION_RATE)
             {
-                value = yRotationRate;
+                if (currTagId != turnRateTagId)
+                {
+                    turnRateData = imu.getAngularVelocity();
+                    turnRateTagId = currTagId;
+                }
+                value = turnRateData.yRotationRate;
             }
             else if (dataType == DataType.HEADING)
             {
-                value = yAngle;
+                if (currTagId != headingTagId)
+                {
+                    if (USE_QUATERNION)
+                    {
+                        getEulerAngles(eulerAngles);
+                    }
+                    else
+                    {
+                        headingData = imu.getAngularOrientation(
+                                AxesReference.INTRINSIC, AxesOrder.XYZ, AngleUnit.DEGREES);
+                    }
+                    headingTagId = currTagId;
+                }
+
+                if (USE_QUATERNION)
+                {
+                    value = eulerAngles[1];
+                }
+                else
+                {
+                    value = headingData.secondAngle;
+                }
             }
             SensorData<Double> data = new SensorData<>(TrcUtil.getCurrentTime(), value);
 
@@ -233,14 +235,45 @@ public class FtcBNO055Imu
         {
             final String funcName = "getRawZData";
             double value = 0.0;
+            long currTagId = FtcOpMode.getLoopCounter();
 
             if (dataType == DataType.ROTATION_RATE)
             {
-                value = zRotationRate;
+                if (currTagId != turnRateTagId)
+                {
+                    turnRateData = imu.getAngularVelocity();
+                    turnRateTagId = currTagId;
+                }
+                value = turnRateData.zRotationRate;
             }
             else if (dataType == DataType.HEADING)
             {
-                value = zAngle;
+                if (currTagId != headingTagId)
+                {
+                    if (USE_QUATERNION)
+                    {
+                        getEulerAngles(eulerAngles);
+                    }
+                    else
+                    {
+                        headingData = imu.getAngularOrientation(
+                                AxesReference.INTRINSIC, AxesOrder.XYZ, AngleUnit.DEGREES);
+                    }
+                    headingTagId = currTagId;
+                }
+
+                if (USE_QUATERNION)
+                {
+                    value = -eulerAngles[2];
+                }
+                else
+                {
+                    //
+                    // The Z-axis returns positive heading in the anticlockwise direction, so we must negate it for
+                    // our convention.
+                    //
+                    value = -headingData.thirdAngle;
+                }
             }
             SensorData<Double> data = new SensorData<>(TrcUtil.getCurrentTime(), value);
 
@@ -260,85 +293,27 @@ public class FtcBNO055Imu
      * This class implements the accelerometer part of hte BNO055 IMU. It extends TrcAccelerometer so that it
      * implements the standard accelerometer interface.
      */
-    private class Accelerometer extends TrcAccelerometer
+    public class Accelerometer extends TrcAccelerometer
     {
-        private TrcTaskMgr.TaskObject accelTaskObj;
-        private boolean taskEnabled = false;
-        private double timestamp = 0.0;
-        private double xAccel = 0.0, yAccel = 0.0, zAccel = 0.0;
-        private double xVel = 0.0, yVel = 0.0, zVel = 0.0;
-        private double xPos = 0.0, yPos = 0.0, zPos = 0.0;
+        private Acceleration accelData = null;
+        private long accelTagId = -1;
+        private Velocity velData = null;
+        private long velTagId = -1;
+        private Position posData = null;
+        private long posTagId = -1;
 
         /**
          * Constructor: Creates an instance of the object.
          *
          * @param instanceName specifies the instance name.
          */
-        private Accelerometer(String instanceName)
+        public Accelerometer(String instanceName)
         {
             //
             // BNO055 IMU has a 3-axis accelerometer.
             //
             super(instanceName, 3, ACCEL_HAS_X_AXIS | ACCEL_HAS_Y_AXIS | ACCEL_HAS_Z_AXIS, null);
-            accelTaskObj = TrcTaskMgr.getInstance().createTask(instanceName, this::accelTask);
         }   //Accelerometer
-
-        /**
-         * This method enables/disables the accelerometer task that reads and caches the accelerometer data
-         * periodically.
-         *
-         * @param enabled specifies true for enabling the accelerometer task, disabling it otherwise.
-         */
-        public synchronized void setEnabled(boolean enabled)
-        {
-            super.setEnabled(enabled);
-
-            if (enabled)
-            {
-                accelTaskObj.registerTask(TrcTaskMgr.TaskType.STANDALONE_TASK, 50);
-            }
-            else
-            {
-                accelTaskObj.unregisterTask(TrcTaskMgr.TaskType.STANDALONE_TASK);
-            }
-
-            taskEnabled = enabled;
-        }   //setEnabled
-
-        /**
-         * This method returns the state of the accelerometer task.
-         *
-         * @return true if accelerometer task is enabled, false otherwise.
-         */
-        public synchronized boolean isEnabled()
-        {
-            return taskEnabled;
-        }   //isEnabled
-
-        /**
-         * This method is called periodically to read the accelerometer data.
-         *
-         * @param taskType specifies the type of task being run.
-         * @param runMode specifies the competition mode that is running.
-         */
-        private synchronized void accelTask(TrcTaskMgr.TaskType taskType, TrcRobot.RunMode runMode)
-        {
-            timestamp = TrcUtil.getCurrentTime();
-
-            Acceleration acceleration = imu.getAcceleration();
-            Velocity velocity = imu.getVelocity();
-            Position position = imu.getPosition();
-
-            xAccel = acceleration.xAccel;
-            yAccel = acceleration.yAccel;
-            zAccel = acceleration.zAccel;
-            xVel = velocity.xVeloc;
-            yVel = velocity.yVeloc;
-            zVel = velocity.zVeloc;
-            xPos = position.x;
-            yPos = position.y;
-            zPos = position.z;
-        }   //accelTask
 
         //
         // Implements TrcAccelerometer abstract methods.
@@ -355,18 +330,34 @@ public class FtcBNO055Imu
         {
             final String funcName = "getRawXData";
             double value = 0.0;
+            long currTagId = FtcOpMode.getLoopCounter();
 
             if (dataType == DataType.ACCELERATION)
             {
-                value = xAccel;
+                if (currTagId != accelTagId)
+                {
+                    accelData = imu.getAcceleration();
+                    accelTagId = currTagId;
+                }
+                value = accelData.xAccel;
             }
             else if (dataType == DataType.VELOCITY)
             {
-                value = xVel;
+                if (currTagId != velTagId)
+                {
+                    velData = imu.getVelocity();
+                    velTagId = currTagId;
+                }
+                value = velData.xVeloc;
             }
             else if (dataType == DataType.DISTANCE)
             {
-                value = xPos;
+                if (currTagId != posTagId)
+                {
+                    posData = imu.getPosition();
+                    posTagId = currTagId;
+                }
+                value = posData.x;
             }
             SensorData<Double> data = new SensorData<>(TrcUtil.getCurrentTime(), value);
 
@@ -391,18 +382,34 @@ public class FtcBNO055Imu
         {
             final String funcName = "getRawYData";
             double value = 0.0;
+            long currTagId = FtcOpMode.getLoopCounter();
 
             if (dataType == DataType.ACCELERATION)
             {
-                value = yAccel;
+                if (currTagId != accelTagId)
+                {
+                    accelData = imu.getAcceleration();
+                    accelTagId = currTagId;
+                }
+                value = accelData.yAccel;
             }
             else if (dataType == DataType.VELOCITY)
             {
-                value = yVel;
+                if (currTagId != velTagId)
+                {
+                    velData = imu.getVelocity();
+                    velTagId = currTagId;
+                }
+                value = velData.yVeloc;
             }
             else if (dataType == DataType.DISTANCE)
             {
-                value = yPos;
+                if (currTagId != posTagId)
+                {
+                    posData = imu.getPosition();
+                    posTagId = currTagId;
+                }
+                value = posData.y;
             }
             SensorData<Double> data = new SensorData<>(TrcUtil.getCurrentTime(), value);
 
@@ -427,18 +434,34 @@ public class FtcBNO055Imu
         {
             final String funcName = "getRawZData";
             double value = 0.0;
+            long currTagId = FtcOpMode.getLoopCounter();
 
             if (dataType == DataType.ACCELERATION)
             {
-                value = zAccel;
+                if (currTagId != accelTagId)
+                {
+                    accelData = imu.getAcceleration();
+                    accelTagId = currTagId;
+                }
+                value = accelData.zAccel;
             }
             else if (dataType == DataType.VELOCITY)
             {
-                value = zVel;
+                if (currTagId != velTagId)
+                {
+                    velData = imu.getVelocity();
+                    velTagId = currTagId;
+                }
+                value = velData.zVeloc;
             }
             else if (dataType == DataType.DISTANCE)
             {
-                value = zPos;
+                if (currTagId != posTagId)
+                {
+                    posData = imu.getPosition();
+                    posTagId = currTagId;
+                }
+                value = posData.z;
             }
             SensorData<Double> data = new SensorData<>(TrcUtil.getCurrentTime(), value);
 
@@ -506,10 +529,7 @@ public class FtcBNO055Imu
         this(FtcOpMode.getInstance().hardwareMap, instanceName);
     }   //FtcBNO055Imu
 
-    /**
-     * This method initializes the IMU hardware.
-     */
-    private void initialize()
+    public void initialize()
     {
         BNO055IMU.Parameters imuParams = new BNO055IMU.Parameters();
 

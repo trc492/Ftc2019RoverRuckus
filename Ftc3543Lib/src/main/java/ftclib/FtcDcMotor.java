@@ -324,7 +324,7 @@ public class FtcDcMotor extends TrcMotor
     public double getPower()
     {
         final String funcName = "getPower";
-        double power = motor.getPower();
+        double power = prevPower;
 
         if (debugEnabled)
         {

@@ -122,6 +122,15 @@ public class TestCommon
                         robot, robot.pidDrive, 0.0, 0.0, 0.0, turnDegrees);
                 break;
         }
+        //
+        // Only SENSORS_TEST needs TensorFlow, shut it down for all other tests.
+        //
+        if (test != Test.SENSORS_TEST && robot.tensorFlowVision != null)
+        {
+            robot.tracer.traceInfo("TestInit", "Shutting down TensorFlow.");
+            robot.tensorFlowVision.shutdown();
+            robot.tensorFlowVision = null;
+        }
 
         sm.start(State.START);
     }   //init

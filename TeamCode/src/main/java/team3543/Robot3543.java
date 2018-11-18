@@ -57,9 +57,10 @@ public class Robot3543 extends Robot
     //
     public Elevator3543 elevator;
 
-    public Robot3543(TrcRobot.RunMode runMode)
+    public Robot3543()
     {
-        super(runMode);
+        super();
+        TrcRobot.RunMode runMode = TrcRobot.getRunMode();
         //
         // Initialize global objects.
         //
@@ -116,13 +117,17 @@ public class Robot3543 extends Robot
             pixyVision = new PixyVision("pixy", this,
                     PixyVision.Orientation.NORMAL_LANDSCAPE, 80);
         }
-
-        if (USE_TENSORFLOW)
+        //
+        // TensorFlow slows down our threads really badly, so don't enable it if we don't need it.
+        //
+        if (USE_TENSORFLOW && (runMode == TrcRobot.RunMode.AUTO_MODE || runMode == TrcRobot.RunMode.TEST_MODE))
         {
             int tfodMonitorViewId = opMode.hardwareMap.appContext.getResources().getIdentifier(
                     "tfodMonitorViewId", "id", opMode.hardwareMap.appContext.getPackageName());
             final VuforiaLocalizer.CameraDirection CAMERA_DIR = BACK;
             tensorFlowVision = new TensorFlowVision(-1/*tfodMonitorViewId*/, CAMERA_DIR, tracer);
+            tensorFlowVision.setEnabled(true);
+            tracer.traceInfo("Robot3543", "Enabling TensorFlow.");
         }
         //
         // Initialize DriveBase.

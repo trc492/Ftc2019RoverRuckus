@@ -57,9 +57,10 @@ public class Robot6541 extends Robot
     //
     public Elevator6541 elevator;
 
-    public Robot6541(TrcRobot.RunMode runMode)
+    public Robot6541()
     {
-        super(runMode);
+        super();
+        TrcRobot.RunMode runMode = TrcRobot.getRunMode();
         //
         // Initialize global objects.
         //
@@ -116,13 +117,17 @@ public class Robot6541 extends Robot
             pixyVision = new PixyVision("pixy", this,
                     PixyVision.Orientation.NORMAL_LANDSCAPE, 80);
         }
-
-        if (USE_TENSORFLOW)
+        //
+        // TensorFlow slows down our threads really badly, so don't enable it if we don't need it.
+        //
+        if (USE_TENSORFLOW && (runMode == TrcRobot.RunMode.AUTO_MODE || runMode == TrcRobot.RunMode.TEST_MODE))
         {
             int tfodMonitorViewId = opMode.hardwareMap.appContext.getResources().getIdentifier(
                     "tfodMonitorViewId", "id", opMode.hardwareMap.appContext.getPackageName());
             final VuforiaLocalizer.CameraDirection CAMERA_DIR = BACK;
-            tensorFlowVision = new TensorFlowVision(tfodMonitorViewId, CAMERA_DIR, tracer);
+            tensorFlowVision = new TensorFlowVision(-1/*tfodMonitorViewId*/, CAMERA_DIR, tracer);
+            tensorFlowVision.setEnabled(true);
+            tracer.traceInfo("Robot3543", "Enabling TensorFlow.");
         }
         //
         // Initialize DriveBase.
@@ -130,8 +135,8 @@ public class Robot6541 extends Robot
         leftFrontWheel = new FtcDcMotor("lfWheel");
         rightFrontWheel = new FtcDcMotor("rfWheel");
 
-        leftRearWheel = new FakeMotor("lrWheel", leftFrontWheel);
-        rightRearWheel = new FakeMotor("rrWheel", rightFrontWheel);
+        leftRearWheel = new RearWheelMotor("lrWheel", leftFrontWheel);
+        rightRearWheel = new RearWheelMotor("rrWheel", rightFrontWheel);
 
         leftFrontWheel.motor.setMode(RobotInfo6541.DRIVE_MOTOR_MODE);
         rightFrontWheel.motor.setMode(RobotInfo6541.DRIVE_MOTOR_MODE);

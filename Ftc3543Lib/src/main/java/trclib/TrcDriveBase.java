@@ -84,6 +84,8 @@ public abstract class TrcDriveBase
     private double gyroHeading, gyroTurnRate;
     private double[] stallStartTimes;
     private double[] prevPositions;
+    private TrcTaskMgr.TaskObject odometryTaskObj;
+    private TrcTaskMgr.TaskObject stopTaskObj;
     protected MotorPowerMapper motorPowerMapper = null;
     private double sensitivity = DEF_SENSITIVITY;
     private double maxOutput = DEF_MAX_OUTPUT;
@@ -115,12 +117,42 @@ public abstract class TrcDriveBase
         resetStallTimer();
 
         TrcTaskMgr taskMgr = TrcTaskMgr.getInstance();
-        TrcTaskMgr.TaskObject odometryTaskObj = taskMgr.createTask(
+        odometryTaskObj = taskMgr.createTask(
                 moduleName + ".odometryTask", this::odometryTask);
-        TrcTaskMgr.TaskObject stopTaskObj = taskMgr.createTask(moduleName + ".stopTask", this::stopTask);
-        odometryTaskObj.registerTask(TrcTaskMgr.TaskType.STANDALONE_TASK, 50);
-        stopTaskObj.registerTask(TrcTaskMgr.TaskType.STOP_TASK);
+        stopTaskObj = taskMgr.createTask(moduleName + ".stopTask", this::stopTask);
     }   //TrcDriveBase
+
+    /**
+     * This method is called to enable/disable the odometry task that keeps track of the robot position and orientation.
+     *
+     * @param enabled specifies true to enable, false to disable.
+     */
+    public void setOdometryEnabled(boolean enabled)
+    {
+        final String funcName = "setOdometryEnabled";
+
+        if (debugEnabled)
+        {
+            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "enabled=%s", enabled);
+        }
+
+        if (enabled)
+        {
+            resetOdometry();
+            odometryTaskObj.registerTask(TrcTaskMgr.TaskType.STANDALONE_TASK, 50);
+            stopTaskObj.registerTask(TrcTaskMgr.TaskType.STOP_TASK);
+        }
+        else
+        {
+            odometryTaskObj.unregisterTask(TrcTaskMgr.TaskType.STANDALONE_TASK);
+            stopTaskObj.unregisterTask(TrcTaskMgr.TaskType.STOP_TASK);
+        }
+
+        if (debugEnabled)
+        {
+            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
+        }
+    }   //setOdometryEnabled
 
     /**
      * Constructor: Create an instance of the object.

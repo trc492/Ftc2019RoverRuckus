@@ -161,7 +161,6 @@ public abstract class TrcSerialBusDevice
         this.instanceName = instanceName;
         requestQueue = new ConcurrentLinkedQueue<>();
         processRequestTaskObj = TrcTaskMgr.getInstance().createTask(instanceName, this::processRequestTask);
-        processRequestTaskObj.registerTask(TrcTaskMgr.TaskType.PRECONTINUOUS_TASK); //TODO: should use STANDALONE_TASK
     }   //TrcSerialBusDevice
 
     /**

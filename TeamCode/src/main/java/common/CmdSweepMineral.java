@@ -204,8 +204,11 @@ public class CmdSweepMineral implements TrcRobot.RobotCommand
 
         if (robot.pidDrive.isActive())
         {
-            robot.tracer.traceInfo("Battery", "Voltage=%5.2fV (%5.2fV)",
-                    robot.battery.getVoltage(), robot.battery.getLowestVoltage());
+            if (robot.battery != null)
+            {
+                robot.tracer.traceInfo("Battery", "Voltage=%5.2fV (%5.2fV)",
+                        robot.battery.getVoltage(), robot.battery.getLowestVoltage());
+            }
             robot.tracer.traceInfo("Raw Encoder",
                     "lf=%.0f, rf=%.0f, lr=%.0f, rr=%.0f",
                     robot.leftFrontWheel.getPosition(),

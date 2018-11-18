@@ -45,6 +45,7 @@ import trclib.TrcSimpleDriveBase;
 public class Robot implements FtcMenu.MenuButtons
 {
     public static final boolean USE_SPEECH = true;
+    public static final boolean MONITOR_BATTERY = false;
     public static final boolean USE_VELOCITY_CONTROL = false;
     //
     // Global objects.
@@ -53,15 +54,20 @@ public class Robot implements FtcMenu.MenuButtons
     public FtcOpMode opMode;
     public HalDashboard dashboard;
     public TrcDbgTrace tracer;
-    public FtcRobotBattery battery;
     public FtcAndroidTone androidTone;
     public TextToSpeech textToSpeech = null;
+    public FtcRobotBattery battery = null;
     //
     // Vision subsystems.
     //
     public VuforiaVision vuforiaVision = null;
     public PixyVision pixyVision = null;
     public TensorFlowVision tensorFlowVision = null;
+    public TensorFlowVision.TargetInfo targetInfo = null;
+    public long detectionIntervalTotalTime = 0;
+    public long detectionIntervalStartTime = 0;
+    public int detectionSuccessCount = 0;
+    public int detectionFailedCount = 0;
     //
     // Sensors.
     //
@@ -88,8 +94,9 @@ public class Robot implements FtcMenu.MenuButtons
     public MineralSweeper mineralSweeper = null;
     public TeamMarkerDeployer teamMarkerDeployer = null;
 
-    public Robot(TrcRobot.RunMode runMode)
+    public Robot()
     {
+        TrcRobot.RunMode runMode = TrcRobot.getRunMode();
         //
         // Initialize global objects.
         //
@@ -99,13 +106,17 @@ public class Robot implements FtcMenu.MenuButtons
         tracer = FtcOpMode.getGlobalTracer();
         dashboard.setTextView(
                 ((FtcRobotControllerActivity)opMode.hardwareMap.appContext).findViewById(R.id.textOpMode));
-        battery = new FtcRobotBattery();
         androidTone = new FtcAndroidTone("AndroidTone");
 
         if (USE_SPEECH)
         {
             textToSpeech = FtcOpMode.getInstance().getTextToSpeech();
             speak("Init starting");
+        }
+
+        if (MONITOR_BATTERY)
+        {
+            battery = new FtcRobotBattery();
         }
         //
         // Initialize sensors.
@@ -155,7 +166,6 @@ public class Robot implements FtcMenu.MenuButtons
         //
         // Since the IMU gyro is giving us cardinal heading, we need to enable its cardinal to cartesian converter.
         //
-        gyro.resetZIntegrator();
         gyro.setEnabled(true);
         targetHeading = 0.0;
         //
@@ -172,16 +182,13 @@ public class Robot implements FtcMenu.MenuButtons
             tracer.traceInfo(funcName, "Enabling Pixy Camera.");
             pixyVision.setCameraEnabled(true);
         }
-
-        if (tensorFlowVision != null && runMode != TrcRobot.RunMode.TELEOP_MODE)
+        //
+        // Enable odometry only for autonomous or test modes.
+        //
+        if (runMode == TrcRobot.RunMode.AUTO_MODE || runMode == TrcRobot.RunMode.TEST_MODE)
         {
-            tracer.traceInfo(funcName, "Enabling TensorFlow.");
-            tensorFlowVision.setEnabled(true);
+            driveBase.setOdometryEnabled(true);
         }
-        //
-        // Reset all X, Y and heading values.
-        //
-        driveBase.resetOdometry();
     }   //startMode
 
     public void stopMode(TrcRobot.RunMode runMode)
@@ -209,19 +216,34 @@ public class Robot implements FtcMenu.MenuButtons
 
         if (tensorFlowVision != null)
         {
+            tracer.traceInfo("RobotStopMode", "Shutting down TensorFlow.");
             tensorFlowVision.shutdown();
+            tensorFlowVision = null;
         }
+
+        driveBase.setOdometryEnabled(false);
     }   //stopMode
 
     public void traceStateInfo(double elapsedTime, String stateName, double xDistance, double yDistance, double heading)
     {
-        tracer.traceInfo(
-                moduleName,
-                "[%5.3f] >>>>> %s: xPos=%6.2f/%6.2f,yPos=%6.2f/%6.2f,heading=%6.1f/%6.1f,volt=%5.2fV(%5.2fV)",
-                elapsedTime, stateName,
-                driveBase.getXPosition(), xDistance, driveBase.getYPosition(), yDistance,
-                getHeading(), heading, battery.getVoltage(), battery.getLowestVoltage());
-    }   //traceStateInfo
+        if (battery != null)
+        {
+            tracer.traceInfo(
+                    moduleName,
+                    "[%5.3f] >>>>> %s: xPos=%6.2f/%6.2f,yPos=%6.2f/%6.2f,heading=%6.1f/%6.1f,volt=%5.2fV(%5.2fV)",
+                    elapsedTime, stateName,
+                    driveBase.getXPosition(), xDistance, driveBase.getYPosition(), yDistance, getHeading(), heading,
+                    battery.getVoltage(), battery.getLowestVoltage());
+        }
+        else
+        {
+            tracer.traceInfo(
+                    moduleName,
+                    "[%5.3f] >>>>> %s: xPos=%6.2f/%6.2f,yPos=%6.2f/%6.2f,heading=%6.1f/%6.1f",
+                    elapsedTime, stateName,
+                    driveBase.getXPosition(), xDistance, driveBase.getYPosition(), yDistance, getHeading(), heading);
+        }
+   }   //traceStateInfo
 
     //
     // Implements FtcMenu.MenuButtons interface.

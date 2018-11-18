@@ -73,5 +73,9 @@ class RobotInfo6541 extends RobotInfo
     public static final double DEPLOYER_CLOSE_POSITION          = 0.8;
     public static final double HANGING_HOOK_OPEN_POSITION       = 0.2;
     public static final double HANGING_HOOK_CLOSE_POSITION      = 0.7;
+    //
+    // Vision subsystem.
+    //
+    public static final double SIDE_MINERAL_ANGLE               = 30.0;
 
 }   //class RobotInfo6541

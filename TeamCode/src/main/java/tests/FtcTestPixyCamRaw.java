@@ -26,13 +26,13 @@ public class FtcTestPixyCamRaw extends FtcOpMode
     }   //initRobot
 
     @Override
-    public void startMode(TrcRobot.RunMode runMode)
+    public void startMode(TrcRobot.RunMode prevMode, TrcRobot.RunMode nextMode)
     {
         pixyCam.getDeviceClient().engage();
     }   //startMode
 
     @Override
-    public void stopMode(TrcRobot.RunMode runMode)
+    public void stopMode(TrcRobot.RunMode prevMode, TrcRobot.RunMode nextMode)
     {
         pixyCam.getDeviceClient().disengage();
     }   //stopMode

@@ -29,6 +29,7 @@ import ftclib.FtcMenu;
 import ftclib.FtcOpMode;
 import ftclib.FtcValueMenu;
 import trclib.TrcRobot;
+import trclib.TrcUtil;
 
 public abstract class AutoCommon extends FtcOpMode
 {
@@ -84,19 +85,90 @@ public abstract class AutoCommon extends FtcOpMode
     //
 
     @Override
-    public void startMode(TrcRobot.RunMode runMode)
+    public void initPeriodic()
+    {
+        final String funcName = "initPeriodic";
+
+        if (robot.tensorFlowVision != null)
+        {
+            TensorFlowVision.TargetInfo targetInfo =
+                    robot.tensorFlowVision.getTargetInfo(TensorFlowVision.LABEL_GOLD_MINERAL);
+
+            if (targetInfo != null)
+            {
+                long currNanoTime = TrcUtil.getCurrentTimeNanos();
+
+                robot.detectionSuccessCount++;
+                robot.targetInfo = targetInfo;
+                if (robot.detectionIntervalStartTime == 0)
+                {
+                    //
+                    // This is the first time we detected target.
+                    //
+                    robot.detectionIntervalStartTime = currNanoTime;
+                }
+                else
+                {
+                    //
+                    // Sum the interval between each successful detection.
+                    //
+                    robot.detectionIntervalTotalTime += currNanoTime - robot.detectionIntervalStartTime;
+                    robot.detectionIntervalStartTime = currNanoTime;
+                }
+            }
+            else
+            {
+                robot.detectionFailedCount++;
+            }
+        }
+        else
+        {
+            super.initPeriodic();
+        }
+    }   //initPeriodic
+
+    @Override
+    public void startMode(TrcRobot.RunMode prevMode, TrcRobot.RunMode nextMode)
     {
         robot.tracer.traceInfo(moduleName, "%s: ***** Starting autonomous *****", new Date());
-        robot.startMode(TrcRobot.RunMode.AUTO_MODE);
-        robot.battery.setEnabled(true);
+        robot.startMode(nextMode);
+
+        if (robot.tensorFlowVision != null)
+        {
+            String msg;
+
+            if (robot.targetInfo != null)
+            {
+                msg = String.format("Gold mineral found at position %d",
+                        robot.targetInfo.rect.x + robot.targetInfo.rect.width/2);
+            }
+            else
+            {
+                msg = "Gold mineral not found";
+            }
+            robot.tracer.traceInfo(moduleName, "%s: DetectionAvgTime=%.3f, SuccessCount=%d, FailedCount=%d",
+                    msg, robot.detectionIntervalTotalTime/robot.detectionSuccessCount/1000000000.0,
+                    robot.detectionSuccessCount, robot.detectionFailedCount);
+            robot.tracer.traceInfo(moduleName, "Shutting down TensorFlow.");
+            robot.tensorFlowVision.shutdown();
+            robot.tensorFlowVision = null;
+        }
+
+        if (robot.battery != null)
+        {
+            robot.battery.setEnabled(true);
+        }
         robot.dashboard.clearDisplay();
     }   //startMode
 
     @Override
-    public void stopMode(TrcRobot.RunMode runMode)
+    public void stopMode(TrcRobot.RunMode prevMode, TrcRobot.RunMode nextMode)
     {
-        robot.stopMode(TrcRobot.RunMode.AUTO_MODE);
-        robot.battery.setEnabled(false);
+        robot.stopMode(prevMode);
+        if (robot.battery != null)
+        {
+            robot.battery.setEnabled(false);
+        }
         printPerformanceMetrics(robot.tracer);
 
         if (USE_TRACELOG)

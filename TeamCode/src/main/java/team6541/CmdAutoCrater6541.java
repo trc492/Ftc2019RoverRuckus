@@ -150,7 +150,8 @@ public class CmdAutoCrater6541 implements TrcRobot.RobotCommand
                     // Set up CmdDisplaceMineral to use vision to displace the gold mineral.
                     //
                     robot.elevator.setPosition(RobotInfo6541.ELEVATOR_MIN_HEIGHT);
-                    cmdDisplaceMineral = new CmdDisplaceMineral(robot, false);
+                    cmdDisplaceMineral = new CmdDisplaceMineral(
+                            robot, false, RobotInfo6541.SIDE_MINERAL_ANGLE, 0.0);
                     sm.setState(State.DISPLACE_MINERAL);
                     //
                     // Intentionally falling through.
@@ -261,8 +262,11 @@ public class CmdAutoCrater6541 implements TrcRobot.RobotCommand
 
         if (robot.pidDrive.isActive())
         {
-            robot.tracer.traceInfo("Battery", "Voltage=%5.2fV (%5.2fV)",
-                    robot.battery.getVoltage(), robot.battery.getLowestVoltage());
+            if (robot.battery != null)
+            {
+                robot.tracer.traceInfo("Battery", "Voltage=%5.2fV (%5.2fV)",
+                        robot.battery.getVoltage(), robot.battery.getLowestVoltage());
+            }
             robot.tracer.traceInfo("Raw Encoder",
                     "lf=%.0f, rf=%.0f, lr=%.0f, rr=%.0f",
                     robot.leftFrontWheel.getPosition(),

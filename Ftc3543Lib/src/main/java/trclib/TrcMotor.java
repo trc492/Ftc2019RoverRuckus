@@ -122,7 +122,7 @@ public abstract class TrcMotor implements TrcMotorController
         {
             prevTime = TrcUtil.getCurrentTime();
             prevPos = getPosition();
-            motorSpeedTaskObj.registerTask(TaskType.PRECONTINUOUS_TASK);//INPUT_TASK);
+            motorSpeedTaskObj.registerTask(TaskType.INPUT_TASK);
             motorStopSpeedTaskObj.registerTask(TrcTaskMgr.TaskType.STOP_TASK);
         }
         else

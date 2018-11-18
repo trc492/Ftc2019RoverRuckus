@@ -41,7 +41,7 @@ public class FtcTestTensorFlow extends FtcOpMode
     }   //initRobot
 
     @Override
-    public void startMode(TrcRobot.RunMode runMode)
+    public void startMode(TrcRobot.RunMode prevMode, TrcRobot.RunMode nextMode)
     {
         if (USE_TRACELOG)
         {
@@ -51,7 +51,7 @@ public class FtcTestTensorFlow extends FtcOpMode
     }   //startMode
 
     @Override
-    public void stopMode(TrcRobot.RunMode runMode)
+    public void stopMode(TrcRobot.RunMode prevMode, TrcRobot.RunMode nextMode)
     {
         tensorFlowVision.shutdown();
         if (USE_TRACELOG)
