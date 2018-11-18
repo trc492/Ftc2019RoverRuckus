@@ -261,17 +261,17 @@ public abstract class FtcOpMode extends LinearOpMode implements TrcRobot.RobotMo
             dbgTrace.traceInfo(funcName, "opModeFullName=<%s>", opModeFullName);
         }
 
-        if (opModeFullName.startsWith(OPMODE_AUTO))
+        if (opModeFullName.contains(OPMODE_AUTO))
         {
             runMode = TrcRobot.RunMode.AUTO_MODE;
             opModeName = "Auto";
         }
-        else if (opModeFullName.startsWith(OPMODE_TELEOP))
+        else if (opModeFullName.contains(OPMODE_TELEOP))
         {
             runMode = TrcRobot.RunMode.TELEOP_MODE;
             opModeName = "TeleOp";
         }
-        else if (opModeFullName.startsWith(OPMODE_TEST))
+        else if (opModeFullName.contains(OPMODE_TEST))
         {
             runMode = TrcRobot.RunMode.TEST_MODE;
             opModeName = "Test";
