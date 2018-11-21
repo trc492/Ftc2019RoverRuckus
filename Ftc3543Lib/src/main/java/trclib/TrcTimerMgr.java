@@ -62,7 +62,7 @@ public class TrcTimerMgr
         // Timer manager needs its own thread running as fast as it can to process all the timers. This ensures faster
         // timeout response.
         //
-        timerTaskObj.registerTask(TrcTaskMgr.TaskType.STANDALONE_TASK, 10);
+        timerTaskObj.registerTask(TrcTaskMgr.TaskType.PRECONTINUOUS_TASK); //STANDALONE_TASK, 10);
     }   //TrcTimerMgr
 
     /**

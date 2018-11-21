@@ -163,8 +163,8 @@ public class CmdDisplaceMineral implements TrcRobot.RobotCommand
                     targetY = 0.0;
                     robot.targetHeading = mineralAngle;
                     robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
-                    // sm.waitForSingleEvent(event, State.DONE); // lol
-                    sm.waitForSingleEvent(event, State.DISPLACE_MINERAL);
+                    sm.waitForSingleEvent(event, State.DONE); // lol
+                    // sm.waitForSingleEvent(event, State.DISPLACE_MINERAL);
                     break;
 
                 case DISPLACE_MINERAL:

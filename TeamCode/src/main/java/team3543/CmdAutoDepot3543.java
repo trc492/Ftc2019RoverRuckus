@@ -173,8 +173,8 @@ class CmdAutoDepot3543 implements TrcRobot.RobotCommand
                     traceState = false;
                     if (cmdDisplaceMineral.cmdPeriodic(elapsedTime))
                     {
-                        sm.setState(doTeamMarker? State.DROP_TEAM_MARKER: State.TURN_TO_CRATER);
-                        // sm.setState(State.DONE);
+                        // sm.setState(doTeamMarker? State.DROP_TEAM_MARKER: State.TURN_TO_CRATER);
+                        sm.setState(State.DONE);
                     }
                     else
                     {
