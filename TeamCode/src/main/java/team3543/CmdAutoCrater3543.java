@@ -24,7 +24,6 @@ package team3543;
 
 import common.AutoCommon;
 import common.CmdDisplaceMineral;
-import common.RobotInfo;
 import trclib.TrcEvent;
 import trclib.TrcRobot;
 import trclib.TrcStateMachine;

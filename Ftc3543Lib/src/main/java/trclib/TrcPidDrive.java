@@ -188,7 +188,7 @@ public class TrcPidDrive
      *
      * @return true if warpspace processing is enabled, false otherwise.
      */
-    public synchronized boolean isWarpSpaceEnabled()
+    public boolean isWarpSpaceEnabled()
     {
         return warpSpaceEnabled;
     }   //isWarpSpaceEnabled
@@ -198,7 +198,7 @@ public class TrcPidDrive
      *
      * @param enabled specifies true to enable warpspace processing, false to disable.
      */
-    public synchronized void setWarpSpaceEnabled(boolean enabled)
+    public void setWarpSpaceEnabled(boolean enabled)
     {
         warpSpaceEnabled = enabled;
     }   //setWarpSpaceEnabled
@@ -286,7 +286,7 @@ public class TrcPidDrive
      *
      * @param turnMode specifies the turn mode to set to.
      */
-    public synchronized void setTurnMode(TurnMode turnMode)
+    public void setTurnMode(TurnMode turnMode)
     {
         final String funcName = "setTurnMode";
 
@@ -304,7 +304,7 @@ public class TrcPidDrive
      *
      * @return current turn mode.
      */
-    public synchronized TurnMode getTurnMode()
+    public TurnMode getTurnMode()
     {
         final String funcName = "getTurnMode";
 
@@ -347,7 +347,7 @@ public class TrcPidDrive
      *
      * @param beepDevice specifies the beep device object.
      */
-    public synchronized void setBeep(TrcTone beepDevice)
+    public void setBeep(TrcTone beepDevice)
     {
         setBeep(beepDevice, DEF_BEEP_FREQUENCY, DEF_BEEP_DURATION);
     }   //setBeep
@@ -358,7 +358,7 @@ public class TrcPidDrive
      *
      * @param stallTimeout specifies stall timeout in seconds.
      */
-    public synchronized void setStallTimeout(double stallTimeout)
+    public void setStallTimeout(double stallTimeout)
     {
         final String funcName = "setStallTimeout";
 
@@ -517,14 +517,14 @@ public class TrcPidDrive
      *
      * @return true if PID drive is active, false otherwise.
      */
-    public synchronized boolean isActive()
+    public boolean isActive()
     {
         final String funcName = "isActive";
 
         if (debugEnabled)
         {
             dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%s", Boolean.toString(active));
+            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%s", active);
         }
 
         return active;
@@ -564,7 +564,7 @@ public class TrcPidDrive
      *
      * @return true if PID drive is active, false otherwise.
      */
-    public synchronized boolean isCanceled()
+    public boolean isCanceled()
     {
         final String funcName = "isCanceled";
 
@@ -619,7 +619,7 @@ public class TrcPidDrive
     }   //stopPid
 
     /**
-     * This method enables/disables the PID drive task.
+     * This method enables/disables the PID drive task. It assumes the caller has the synchronized lock.
      *
      * @param enabled specifies true to enable PID drive task, false to disable.
      */
@@ -687,7 +687,7 @@ public class TrcPidDrive
             }
         }
 
-        if ((stalled || expired) && (beepDevice != null || msgTracer != null))
+        if (stalled || expired)
         {
             if (beepDevice != null)
             {

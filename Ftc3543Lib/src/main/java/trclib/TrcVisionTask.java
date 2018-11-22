@@ -146,11 +146,11 @@ public class TrcVisionTask<I, O>
             totalTime = 0;
             totalFrames = 0;
             taskStartTime = TrcUtil.getCurrentTime();
-            visionTaskObj.registerTask(TrcTaskMgr.TaskType.STANDALONE_TASK, 50);
+            visionTaskObj.registerTask(TrcTaskMgr.TaskType.PRECONTINUOUS_TASK);//STANDALONE_TASK, 50);
         }
         else if (!enabled && taskEnabled)
         {
-            visionTaskObj.unregisterTask(TrcTaskMgr.TaskType.STANDALONE_TASK);
+            visionTaskObj.unregisterTask(TrcTaskMgr.TaskType.PRECONTINUOUS_TASK);//STANDALONE_TASK);
         }
         taskEnabled = enabled;
 

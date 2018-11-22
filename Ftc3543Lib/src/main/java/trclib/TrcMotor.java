@@ -43,14 +43,21 @@ public abstract class TrcMotor implements TrcMotorController
     protected static final TrcDbgTrace.MsgLevel msgLevel = TrcDbgTrace.MsgLevel.INFO;
     protected TrcDbgTrace dbgTrace = null;
 
+    private class MotorSpeed
+    {
+        double prevTimestamp;
+        double currTimestamp;
+        double prevPos;
+        double currPos;
+        double speedSensorUnitsPerSec;
+    }   //class MotorSpeed
+
     private final String instanceName;
+    private MotorSpeed motorSpeed;
     private final TrcTaskMgr.TaskObject motorSpeedTaskObj;
     private final TrcTaskMgr.TaskObject motorStopSpeedTaskObj;
     private TrcDigitalTrigger digitalTrigger = null;
     private boolean speedTaskEnabled = false;
-    private double speedSensorUnitsPerSec = 0.0;
-    private double prevTime = 0.0;
-    private double prevPos = 0.0;
 
     /**
      * Constructor: Create an instance of the object.
@@ -67,6 +74,8 @@ public abstract class TrcMotor implements TrcMotorController
         }
 
         this.instanceName = instanceName;
+        motorSpeed = new MotorSpeed();
+        resetMotorSpeed();
         TrcTaskMgr taskMgr = TrcTaskMgr.getInstance();
         motorSpeedTaskObj = taskMgr.createTask(instanceName + ".motorSpeedTask", this::motorSpeedTask);
         motorStopSpeedTaskObj = taskMgr.createTask(instanceName + ".motorSpeedTask", this::motorStopSpeedTask);
@@ -102,6 +111,16 @@ public abstract class TrcMotor implements TrcMotorController
         digitalTrigger.setEnabled(true);
     }   //resetPositionOnDigitalInput
 
+    private void resetMotorSpeed()
+    {
+        synchronized (motorSpeed)
+        {
+            motorSpeed.prevTimestamp = motorSpeed.currTimestamp = TrcUtil.getCurrentTime();
+            motorSpeed.prevPos = motorSpeed.currPos = getPosition();
+            motorSpeed.speedSensorUnitsPerSec = 0.0;
+        }
+    }   //resetMotorSpeed
+
     /**
      * This method enables/disables the task that monitors the motor speed. To determine the motor speed, the task
      * runs periodically and determines the delta encoder reading over delta time to calculate the speed. Since the
@@ -109,7 +128,7 @@ public abstract class TrcMotor implements TrcMotorController
      *
      * @param enabled specifies true to enable speed monitor task, disable otherwise.
      */
-    public synchronized void setSpeedTaskEnabled(boolean enabled)
+    public void setSpeedTaskEnabled(boolean enabled)
     {
         final String funcName = "setSpeedTaskEnabled";
 
@@ -120,9 +139,8 @@ public abstract class TrcMotor implements TrcMotorController
 
         if (enabled)
         {
-            prevTime = TrcUtil.getCurrentTime();
-            prevPos = getPosition();
-            motorSpeedTaskObj.registerTask(TaskType.INPUT_TASK);
+            resetMotorSpeed();
+            motorSpeedTaskObj.registerTask(TaskType.PRECONTINUOUS_TASK);//INPUT_TASK);
             motorStopSpeedTaskObj.registerTask(TrcTaskMgr.TaskType.STOP_TASK);
         }
         else
@@ -144,7 +162,7 @@ public abstract class TrcMotor implements TrcMotorController
      * @param taskType specifies the type of task being run.
      * @param runMode specifies the competition mode that is running.
      */
-    public synchronized void motorSpeedTask(TrcTaskMgr.TaskType taskType, TrcRobot.RunMode runMode)
+    public void motorSpeedTask(TrcTaskMgr.TaskType taskType, TrcRobot.RunMode runMode)
     {
         final String funcName = "motorSpeedTask";
 
@@ -153,11 +171,18 @@ public abstract class TrcMotor implements TrcMotorController
             dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.TASK, "taskType=%s,runMode=%s", taskType, runMode);
         }
 
-        double currTime = TrcUtil.getCurrentTime();
-        double currPos = getPosition();
-        speedSensorUnitsPerSec = (currPos - prevPos)/(currTime - prevTime);
-        prevTime = currTime;
-        prevPos = currPos;
+        synchronized (motorSpeed)
+        {
+            motorSpeed.prevTimestamp = motorSpeed.currTimestamp;
+            motorSpeed.currTimestamp = TrcUtil.getCurrentTime();
+            motorSpeed.prevPos = motorSpeed.currPos;
+            motorSpeed.currPos = getPosition();
+            double deltaTime = motorSpeed.currTimestamp - motorSpeed.prevTimestamp;
+            if (deltaTime > 0.0)
+            {
+                motorSpeed.speedSensorUnitsPerSec = (motorSpeed.currPos - motorSpeed.prevPos)/deltaTime;
+            }
+        }
 
         if (debugEnabled)
         {
@@ -200,24 +225,28 @@ public abstract class TrcMotor implements TrcMotorController
      * @return motor speed in sensor units per second.
      */
     @Override
-    public synchronized double getSpeed()
+    public double getSpeed()
     {
         final String funcName = "getSpeed";
 
         if (debugEnabled)
         {
             dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%.3f", speedSensorUnitsPerSec);
         }
 
-        if (speedTaskEnabled)
-        {
-            return speedSensorUnitsPerSec;
-        }
-        else
+        if (!speedTaskEnabled)
         {
             throw new UnsupportedOperationException("MotorSpeedTask is not enabled.");
         }
+
+        double speed = motorSpeed.speedSensorUnitsPerSec;
+
+        if (debugEnabled)
+        {
+            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%.3f", speed);
+        }
+
+        return speed;
     }   //getSpeed
 
     //
