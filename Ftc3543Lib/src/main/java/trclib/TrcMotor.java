@@ -72,7 +72,7 @@ public abstract class TrcMotor implements TrcMotorController
 
     private static final ArrayList<TrcMotor> motorsList = new ArrayList<>();
     private static TrcTaskMgr.TaskObject odometryTaskObj = null;
-    private Odometry odometry = new Odometry();
+    private final Odometry odometry = new Odometry();
 
     private final String instanceName;
     private final TrcTaskMgr.TaskObject velocityCtrlTaskObj;
@@ -449,7 +449,11 @@ public abstract class TrcMotor implements TrcMotorController
     public double getPosition()
     {
         final String funcName = "getPosition";
-        double currPos = odometry.currPos;
+
+        final double currPos;
+        synchronized (odometry) {
+            currPos = odometry.currPos;
+        }
 
         if (debugEnabled)
         {
@@ -484,7 +488,10 @@ public abstract class TrcMotor implements TrcMotorController
             throw new UnsupportedOperationException("Odometry is not enabled.");
         }
 
-        double velocity = odometry.velocity;
+        final double velocity;
+        synchronized (odometry) {
+            velocity = odometry.velocity;
+        }
 
         if (debugEnabled)
         {
