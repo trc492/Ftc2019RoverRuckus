@@ -615,7 +615,7 @@ public class TrcPidController
      * @param target specifies the target set point.
      * @param warpSpace specifies the warp space object if the target is in one, null if not.
      */
-    public synchronized void setTarget(double target, TrcWarpSpace warpSpace)
+    public void setTarget(double target, TrcWarpSpace warpSpace)
     {
         final String funcName = "setTarget";
 
@@ -624,52 +624,56 @@ public class TrcPidController
             dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "target=%f,warpSpace=%s", target, warpSpace);
         }
 
-        double input = pidInput.get();
-        if (!absSetPoint)
-        {
-            //
-            // Set point is relative, add target to current input to get absolute set point.
-            //
-            setPoint = input + target;
-            currError = target;
-        }
-        else
-        {
-            //
-            // Set point is absolute, use as is but optimize it if it is in warp space.
-            //
-            setPoint = target;
-            if (warpSpace != null)
+        // Read from input device without holding a lock on this object, since this could
+        // be a long-running call.
+        final double input = pidInput.get();
+
+        synchronized (this) {
+            if (!absSetPoint)
             {
-                setPoint = warpSpace.getOptimizedTarget(setPoint, input);
+                //
+                // Set point is relative, add target to current input to get absolute set point.
+                //
+                setPoint = input + target;
+                currError = target;
             }
-            currError = setPoint - input;
-        }
-
-        if (inverted)
-        {
-            currError = -currError;
-        }
-
-        setPointSign = Math.signum(currError);
-
-        //
-        // If there is a valid target range, limit the set point to this range.
-        //
-        if (maxTarget > minTarget)
-        {
-            if (setPoint > maxTarget)
+            else
             {
-                setPoint = maxTarget;
+                //
+                // Set point is absolute, use as is but optimize it if it is in warp space.
+                //
+                setPoint = target;
+                if (warpSpace != null) {
+                    setPoint = warpSpace.getOptimizedTarget(setPoint, input);
+                }
+                currError = setPoint - input;
             }
-            else if (setPoint < minTarget)
-            {
-                setPoint = minTarget;
-            }
-        }
 
-        totalError = 0.0;
-        prevTime = settlingStartTime = TrcUtil.getCurrentTime();
+            if (inverted)
+            {
+                currError = -currError;
+            }
+
+            setPointSign = Math.signum(currError);
+
+            //
+            // If there is a valid target range, limit the set point to this range.
+            //
+            if (maxTarget > minTarget)
+            {
+                if (setPoint > maxTarget)
+                {
+                    setPoint = maxTarget;
+                }
+                else if (setPoint < minTarget)
+                {
+                    setPoint = minTarget;
+                }
+            }
+
+            totalError = 0.0;
+            prevTime = settlingStartTime = TrcUtil.getCurrentTime();
+        }
 
         if (debugEnabled)
         {
@@ -781,72 +785,75 @@ public class TrcPidController
      *
      * @return PID output value.
      */
-    public synchronized double getOutput()
+    public double getOutput()
     {
-        final String funcName = "getOutput";
+        // Read from input device without holding a lock on this object, since this could
+        // be a long-running call.
+        final double currentInputValue = pidInput.get();
 
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
-        }
+        synchronized (this) {
+            final String funcName = "getOutput";
 
-        double prevError = currError;
-        double currTime = TrcUtil.getCurrentTime();
-        double deltaTime = currTime - prevTime;
-        prevTime = currTime;
-        input = pidInput.get();
-        currError = setPoint - input;
-        if (inverted)
-        {
-            currError = -currError;
-        }
-
-        if (pidCoefficients.kI != 0.0)
-        {
-            //
-            // Make sure the total error doesn't get wound up too much exceeding maxOutput.
-            //
-            double potentialGain = (totalError + currError * deltaTime) * pidCoefficients.kI;
-            if (potentialGain >= maxOutput)
+            if (debugEnabled)
             {
-                totalError = maxOutput / pidCoefficients.kI;
+                dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
             }
-            else if (potentialGain > minOutput)
+
+            double prevError = currError;
+            double currTime = TrcUtil.getCurrentTime();
+            double deltaTime = currTime - prevTime;
+            prevTime = currTime;
+            input = currentInputValue;
+            currError = setPoint - input;
+            if (inverted) {
+                currError = -currError;
+            }
+
+            if (pidCoefficients.kI != 0.0)
             {
-                totalError += currError * deltaTime;
+                //
+                // Make sure the total error doesn't get wound up too much exceeding maxOutput.
+                //
+                double potentialGain = (totalError + currError * deltaTime) * pidCoefficients.kI;
+                if (potentialGain >= maxOutput)
+                {
+                    totalError = maxOutput / pidCoefficients.kI;
+                } else if (potentialGain > minOutput)
+                {
+                    totalError += currError * deltaTime;
+                } else
+                {
+                    totalError = minOutput / pidCoefficients.kI;
+                }
             }
-            else
+
+            pTerm = pidCoefficients.kP * currError;
+            iTerm = pidCoefficients.kI * totalError;
+            dTerm = deltaTime > 0.0 ? pidCoefficients.kD * (currError - prevError) / deltaTime : 0.0;
+            fTerm = pidCoefficients.kF * setPoint;
+            output = pTerm + iTerm + dTerm + fTerm;
+
+            if (output > maxOutput)
             {
-                totalError = minOutput / pidCoefficients.kI;
+                output = maxOutput;
             }
-        }
+            else if (output < minOutput)
+            {
+                output = minOutput;
+            }
 
-        pTerm = pidCoefficients.kP*currError;
-        iTerm = pidCoefficients.kI*totalError;
-        dTerm = deltaTime > 0.0? pidCoefficients.kD*(currError - prevError)/deltaTime: 0.0;
-        fTerm = pidCoefficients.kF*setPoint;
-        output = pTerm + iTerm + dTerm + fTerm;
+            if (debugTracer != null)
+            {
+                printPidInfo(debugTracer);
+            }
 
-        if (output > maxOutput)
-        {
-            output = maxOutput;
-        }
-        else if (output < minOutput)
-        {
-            output = minOutput;
-        }
+            if (debugEnabled)
+            {
+                dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%f", output);
+            }
 
-        if (debugTracer != null)
-        {
-            printPidInfo(debugTracer);
+            return output;
         }
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%f", output);
-        }
-
-        return output;
     }   //getOutput
 
 }   //class TrcPidController
