@@ -151,18 +151,12 @@ public class TrcDbgTrace
      */
     public boolean openTraceLog(final String traceLogName)
     {
-        boolean success = true;
+        boolean success = false;
 
         if (traceLogger == null)
         {
-            try
-            {
-                traceLogger = new TrcTraceLogger(traceLogName);
-            }
-            catch (FileNotFoundException e)
-            {
-                success = false;
-            }
+            traceLogger = new TrcTraceLogger(traceLogName);
+            success = true;
         }
 
         return success;
@@ -198,26 +192,17 @@ public class TrcDbgTrace
     }   //openTraceLog
 
     /**
-     * This method closes the trace log file. If newName is not null, the log will be renamed to the new name.
-     *
-     * @param newName specifies the new log file name, null if none given.
+     * This method closes the trace log file.
      */
-    public void closeTraceLog(String newName)
+    public void closeTraceLog()
     {
         final String funcName = "closeTraceLog";
 
         if (traceLogger != null)
         {
-            traceLogger.close(newName);
+            traceLogger.setEnabled(false);
+            traceLogger = null;
         }
-    }   //closeTraceLog
-
-    /**
-     * This method closes the trace log file.
-     */
-    public void closeTraceLog()
-    {
-        closeTraceLog(null);
     }   //closeTraceLog
 
     /**

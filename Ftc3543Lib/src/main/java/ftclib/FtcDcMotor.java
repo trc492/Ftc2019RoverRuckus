@@ -22,8 +22,6 @@
 
 package ftclib;
 
-import android.support.annotation.NonNull;
-
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsUsbDcMotorController;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -32,7 +30,6 @@ import trclib.TrcAnalogInput;
 import trclib.TrcDigitalInput;
 import trclib.TrcDbgTrace;
 import trclib.TrcMotor;
-import trclib.TrcPidController;
 import trclib.TrcRobot;
 import trclib.TrcTaskMgr;
 
@@ -46,29 +43,20 @@ import trclib.TrcTaskMgr;
 public class FtcDcMotor extends TrcMotor
 {
     private static final String moduleName = "FtcDcMotor";
-    private static final TrcDbgTrace globalTracer = TrcDbgTrace.getGlobalTracer();
-    private static final boolean debugEnabled = false;
-    private static final boolean tracingEnabled = false;
-    private static final boolean useGlobalTracer = false;
-    private static final TrcDbgTrace.TraceLevel traceLevel = TrcDbgTrace.TraceLevel.API;
-    private static final TrcDbgTrace.MsgLevel msgLevel = TrcDbgTrace.MsgLevel.INFO;
-    private TrcDbgTrace dbgTrace = null;
 
-    private String instanceName;
-    private TrcDigitalInput lowerLimitSwitch = null;
-    private TrcDigitalInput upperLimitSwitch = null;
-    private TrcAnalogInput analogSensor = null;
-    public DcMotor motor;
-    private int zeroEncoderValue;
+    private final String instanceName;
+    private final TrcDigitalInput lowerLimitSwitch;
+    private final TrcDigitalInput upperLimitSwitch;
+    private final TrcAnalogInput analogSensor;
+    public final DcMotor motor;
     private int prevEncPos;
+    private int zeroEncoderValue;
     private int positionSensorSign = 1;
     private double prevPower = 0.0;
     private boolean softLowerLimitEnabled = false;
     private boolean softUpperLimitEnabled = false;
     private double softLowerLimit = 0.0;
     private double softUpperLimit = 0.0;
-    private double maxVelocitySensorUnitsPerSec = 0.0;
-    private TrcPidController velocityController = null;
 
     /**
      * Constructor: Create an instance of the object.
@@ -95,8 +83,8 @@ public class FtcDcMotor extends TrcMotor
         this.upperLimitSwitch = upperLimitSwitch;
         this.analogSensor = analogSensor;
         motor = hardwareMap.dcMotor.get(instanceName);
-        zeroEncoderValue = motor.getCurrentPosition();
-        prevEncPos = zeroEncoderValue;
+        prevEncPos = motor.getCurrentPosition();
+        zeroEncoderValue = prevEncPos;
     }   //FtcDcMotor
 
     /**
@@ -157,91 +145,61 @@ public class FtcDcMotor extends TrcMotor
     }   //toString
 
     /**
-     * This method sets the motor controller to velocity mode with the specified maximum velocity.
+     * This method returns the battery voltage that powers the motor. This method is specific to FTC.
      *
-     * @param maxVelocitySensorUnitsPerSec specifies the maximum velocity the motor can run, in sensor units per second.
-     * @param pidCoefficients specifies the PID coefficients to use to compute a desired torque value for the motor.
-     *                        E.g. these coefficients go from velocity error percent to desired stall torque percent.
+     * @return battery voltage.
      */
-    public synchronized void enableVelocityMode(
-            double maxVelocitySensorUnitsPerSec, @NonNull TrcPidController.PidCoefficients pidCoefficients)
+    public double getVoltage()
     {
-        final String funcName = "enableVelocityMode";
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "maxVel=%f,pidCoefficients=%s",
-                    maxVelocitySensorUnitsPerSec, pidCoefficients.toString());
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
-        }
-
-        this.maxVelocitySensorUnitsPerSec = maxVelocitySensorUnitsPerSec;
-        setSpeedTaskEnabled(true);
-        velocityController = new TrcPidController(
-                instanceName + ".velocityController", pidCoefficients, 1.0, this::getNormalizedSpeed);
-        velocityController.setAbsoluteSetPoint(true);
-    }   //enableVelocityMode
-
-    /**
-     * This method disables velocity mode returning it to power mode.
-     */
-    public synchronized void disableVelocityMode()
-    {
-        final String funcName = "disableVelocityMode";
+        final String funcName = "getVoltage";
+        double voltage = ((ModernRoboticsUsbDcMotorController)motor.getController()).getVoltage();
 
         if (debugEnabled)
         {
             dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
+            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%.3f", voltage);
         }
 
-        setSpeedTaskEnabled(false);
-        velocityController = null;
-    }   //disableVelocityMode
+        return voltage;
+    }   //getVoltage
 
     /**
-     * This method returns the motor speed normalized to the range of -1.0 to 1.0, essentially a percentage of the
-     * maximum motor speed.
+     * Ensures that the given requested motor power does not violate limit switch constraints (e.g. if the upper limit
+     * switch is pressed, the motor may not be commanded forward).
      *
-     * @return normalized motor speed.
+     * If the given value does not violate limit switch constraints, it is returned as-is; otherwise, 0;
+     *
+     * @param motorPower The requested motor power value.
+     * @return The given motor power value respecting limit switch constraints.
      */
-    private synchronized double getNormalizedSpeed()
+    private double constrainMotorPowerByLimitSwitches(double motorPower)
     {
-        final String funcName = "getNormalizedSpeed";
-        double normalizedSpeed = getSpeed()/maxVelocitySensorUnitsPerSec;
+        final String funcName = "constrainMotorPowerByLimitSwitches";
 
         if (debugEnabled)
         {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%f", normalizedSpeed);
+            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "power=%f", motorPower);
         }
 
-        return normalizedSpeed;
-    }   //getNormalizedSpeed
+        if (motorPower > 0.0 && (upperLimitSwitch != null && upperLimitSwitch.isActive() ||
+                softUpperLimitEnabled && getPosition() >= softUpperLimit) ||
+                motorPower < 0.0 && (lowerLimitSwitch != null && lowerLimitSwitch.isActive() ||
+                        softLowerLimitEnabled && getPosition() <= softLowerLimit))
+        {
+            motorPower = 0.0;
+        }
+
+        if (debugEnabled)
+        {
+            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%f", motorPower);
+        }
+
+        return motorPower;
+    }   //constrainMotorPowerByLimitSwitches
 
     //
     // Implements TrcMotor abstract methods.
     //
-
-    /**
-     * This method returns the state of the motor controller direction.
-     *
-     * @return true if the motor direction is inverted, false otherwise.
-     */
-    @Override
-    public boolean getInverted()
-    {
-        final String funcName = "getInverted";
-        boolean inverted = motor.getDirection() == DcMotor.Direction.REVERSE;
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%s", Boolean.toString(inverted));
-        }
-
-        return inverted;
-    }   //getInverted
 
     /**
      * This method returns the motor position by reading the position sensor. The position sensor can be an encoder
@@ -250,9 +208,9 @@ public class FtcDcMotor extends TrcMotor
      * @return current motor position.
      */
     @Override
-    public synchronized double getPosition()
+    public double getMotorPosition()
     {
-        final String funcName = "getPosition";
+        final String funcName = "getMotorPosition";
         double currPos = analogSensor == null?
                 motor.getCurrentPosition(): analogSensor.getRawData(0, TrcAnalogInput.DataType.INPUT_DATA).value;
 
@@ -260,7 +218,6 @@ public class FtcDcMotor extends TrcMotor
         {
             dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
         }
-
         //
         // Somebody said if motor controller got disconnected, we may get a zero. Let's detect this and see if this
         // really happened.
@@ -292,28 +249,60 @@ public class FtcDcMotor extends TrcMotor
         }
 
         return currPos;
-    }   //getPosition
+    }   //getMotorPosition
 
     /**
-     * This method inverts the position sensor direction. This may be rare but there are scenarios where the motor
-     * encoder may be mounted somewhere in the power train that it rotates opposite to the motor rotation. This will
-     * cause the encoder reading to go down when the motor is receiving positive power. This method can correct this
-     * situation.
+     * This method sets the motor power.
      *
-     * @param inverted specifies true to invert position sensor direction, false otherwise.
+     * @param power specifies the percentage power (range -1.0 to 1.0) to be set.
      */
-    public synchronized void setPositionSensorInverted(boolean inverted)
+    @Override
+    public void setMotorPower(double power)
     {
-        final String funcName = "setPositionSensorInverted";
+        final String funcName = "setMotorPower";
 
         if (debugEnabled)
         {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "inverted=%s", Boolean.toString(inverted));
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
+            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "value=%f", power);
         }
 
-        positionSensorSign = inverted? -1: 1;
-    }   //setPositionSensorInverted
+        power = constrainMotorPowerByLimitSwitches(power);
+
+        if (power != prevPower)
+        {
+            motor.setPower(power);
+            prevPower = power;
+        }
+
+        if (debugEnabled)
+        {
+            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "! (value=%f)", power);
+        }
+    }   //setMotorPower
+
+    //
+    // Implements TrcMotorController interface.
+    //
+
+    /**
+     * This method returns the state of the motor controller direction.
+     *
+     * @return true if the motor direction is inverted, false otherwise.
+     */
+    @Override
+    public boolean getInverted()
+    {
+        final String funcName = "getInverted";
+        boolean inverted = motor.getDirection() == DcMotor.Direction.REVERSE;
+
+        if (debugEnabled)
+        {
+            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
+            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%s", inverted);
+        }
+
+        return inverted;
+    }   //getInverted
 
     /**
      * This method gets the last set power.
@@ -334,25 +323,6 @@ public class FtcDcMotor extends TrcMotor
 
         return power;
     }   //getPower
-
-    /**
-     * This method returns the battery voltage that powers the motor.
-     *
-     * @return battery voltage.
-     */
-    public double getVoltage()
-    {
-        final String funcName = "getVoltage";
-        double voltage = ((ModernRoboticsUsbDcMotorController)motor.getController()).getVoltage();
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%.3f", voltage);
-        }
-
-        return voltage;
-    }   //getVoltage
 
     /**
      * This method returns the state of the lower limit switch.
@@ -400,7 +370,7 @@ public class FtcDcMotor extends TrcMotor
      * @param hardware specifies true for resetting hardware position, false for resetting software position.
      */
     @Override
-    public synchronized void resetPosition(boolean hardware)
+    public void resetPosition(boolean hardware)
     {
         final String funcName = "resetPosition";
 
@@ -433,83 +403,26 @@ public class FtcDcMotor extends TrcMotor
     }   //resetPosition
 
     /**
-     * This method resets the motor position sensor, typically an encoder.
-     */
-    public void resetPosition()
-    {
-        resetPosition(false);
-    }   //resetPosition
-
-    /**
-     * This method sets the motor output value. The value can be power or velocity percentage depending on whether
-     * the motor controller is in power mode or velocity mode.
+     * This method inverts the position sensor direction. This may be rare but there are scenarios where the motor
+     * encoder may be mounted somewhere in the power train that it rotates opposite to the motor rotation. This will
+     * cause the encoder reading to go down when the motor is receiving positive power. This method can correct this
+     * situation.
      *
-     * @param value specifies the percentage power or velocity (range -1.0 to 1.0) to be set.
+     * @param inverted specifies true to invert position sensor direction, false otherwise.
      */
     @Override
-    public synchronized void set(double value)
+    public void setPositionSensorInverted(boolean inverted)
     {
-        final String funcName = "set";
+        final String funcName = "setPositionSensorInverted";
 
         if (debugEnabled)
         {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "value=%f", value);
+            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "inverted=%s", Boolean.toString(inverted));
+            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
         }
 
-        value = constrainMotorPowerByLimitSwitches(value);
-
-        if (value != prevPower)
-        {
-            if (velocityController != null)
-            {
-                velocityController.setTarget(value);
-            }
-            else
-            {
-                motor.setPower(value);
-            }
-            prevPower = value;
-        }
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "! (value=%f)", value);
-        }
-    }   //set
-
-    /**
-     * Ensures that the given requested motor power does not violate limit switch constraints (e.g. if the upper limit
-     * switch is pressed, the motor may not be commanded forward).
-     *
-     * If the given value does not violate limit switch constraints, it is returned as-is; otherwise, 0;
-     *
-     * @param motorPower The requested motor power value.
-     * @return The given motor power value respecting limit switch constraints.
-     */
-    private double constrainMotorPowerByLimitSwitches(double motorPower)
-    {
-        final String funcName = "constrainMotorPowerByLimitSwitches";
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "power=%f", motorPower);
-        }
-
-        if (motorPower > 0.0 && (upperLimitSwitch != null && upperLimitSwitch.isActive() ||
-                                 softUpperLimitEnabled && getPosition() >= softUpperLimit) ||
-            motorPower < 0.0 && (lowerLimitSwitch != null && lowerLimitSwitch.isActive() ||
-                                 softLowerLimitEnabled && getPosition() <= softLowerLimit))
-        {
-            motorPower = 0.0;
-        }
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%f", motorPower);
-        }
-
-        return motorPower;
-    }   //constrainMotorPowerByLimitSwitches
+        positionSensorSign = inverted? -1: 1;
+    }   //setPositionSensorInverted
 
     /**
      * This method enables/disables motor brake mode. In motor brake mode, set power to 0 would stop the motor very
@@ -608,92 +521,5 @@ public class FtcDcMotor extends TrcMotor
 
         softUpperLimit = position;
     }   //setSoftUpperLimit
-
-    /**
-     * This method overrides the motorSpeedTask in TrcMotor which is called periodically to calculate he speed of
-     * the motor. In addition to calculate the motor speed, it also calculates and sets the motor power required
-     * to maintain the set speed if speed control mode is enabled.
-     *
-     * @param taskType specifies the type of task being run.
-     * @param runMode specifies the competition mode that is running.
-     */
-    public synchronized void motorSpeedTask(TrcTaskMgr.TaskType taskType, TrcRobot.RunMode runMode)
-    {
-        final String funcName = "motorSpeedTask";
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.TASK, "taskType=%s,runMode=%s", taskType, runMode);
-        }
-
-        super.motorSpeedTask(taskType, runMode);
-        if (velocityController != null)
-        {
-            double desiredStallTorquePercentage = velocityController.getOutput();
-            double motorPower = transformTorqueToMotorPower(desiredStallTorquePercentage);
-
-            motor.setPower(constrainMotorPowerByLimitSwitches(motorPower));
-            if (debugEnabled)
-            {
-                dbgTrace.traceInfo(instanceName,
-                        "targetSpeed=%.2f, currSpeed=%.2f, desiredStallTorque=%.2f, motorPower=%.2f",
-                        velocityController.getTarget(), getSpeed(), desiredStallTorquePercentage, motorPower);
-            }
-        }
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.TASK);
-        }
-    }   //motorSpeedTask
-
-    /**
-     * Transforms the desired percentage of motor stall torque to the motor duty cycle (aka power)
-     * that would give us that amount of torque at the current motor speed.
-     *
-     * @param desiredStallTorquePercentage specifies the desired percentage of motor torque to receive in percent of
-     *                                     motor stall torque.
-     * @return power percentage to apply to the motor to generate the desired torque (to the best ability of the motor).
-     */
-    private double transformTorqueToMotorPower(double desiredStallTorquePercentage)
-    {
-        final String funcName = "transformTorqueToMotorPower";
-        double power;
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.FUNC, "torque=%f", desiredStallTorquePercentage);
-        }
-        //
-        // Leverage motor curve information to linearize torque output across varying RPM
-        // as best we can. We know that max torque is available at 0 RPM and zero torque is
-        // available at max RPM - use that relationship to proportionately boost voltage output
-        // as motor speed increases.
-        //
-        final double currSpeedSensorUnitPerSec = Math.abs(getSpeed());
-        final double currNormalizedSpeed = currSpeedSensorUnitPerSec / maxVelocitySensorUnitsPerSec;
-
-        // Max torque percentage declines proportionally to motor speed.
-        final double percentMaxTorqueAvailable = 1 - currNormalizedSpeed;
-
-        if (percentMaxTorqueAvailable > 0)
-        {
-            double correctionFactor = 1 / percentMaxTorqueAvailable;
-            power = desiredStallTorquePercentage * correctionFactor;
-        }
-        else
-        {
-            // When we exceed max motor speed (and the correction factor is undefined),
-            // apply 100% voltage.
-            power = Math.signum(desiredStallTorquePercentage);
-        }
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.FUNC, "=%f", power);
-        }
-
-        return power;
-    }   //transformTorqueToMotorPower
 
 }   //class FtcDcMotor

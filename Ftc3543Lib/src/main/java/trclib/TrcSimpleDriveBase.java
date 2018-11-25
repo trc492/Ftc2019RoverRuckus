@@ -260,7 +260,7 @@ public class TrcSimpleDriveBase extends TrcDriveBase
             wheelPower = leftPower;
             if (motorPowerMapper != null)
             {
-                wheelPower = motorPowerMapper.translateMotorPower(wheelPower, leftFrontMotor.getSpeed());
+                wheelPower = motorPowerMapper.translateMotorPower(wheelPower, leftFrontMotor.getVelocity());
             }
             leftFrontMotor.set(wheelPower);
         }
@@ -270,7 +270,7 @@ public class TrcSimpleDriveBase extends TrcDriveBase
             wheelPower = rightPower;
             if (motorPowerMapper != null)
             {
-                wheelPower = motorPowerMapper.translateMotorPower(wheelPower, rightFrontMotor.getSpeed());
+                wheelPower = motorPowerMapper.translateMotorPower(wheelPower, rightFrontMotor.getVelocity());
             }
             rightFrontMotor.set(wheelPower);
         }
@@ -280,7 +280,7 @@ public class TrcSimpleDriveBase extends TrcDriveBase
             wheelPower = leftPower;
             if (motorPowerMapper != null)
             {
-                wheelPower = motorPowerMapper.translateMotorPower(wheelPower, leftRearMotor.getSpeed());
+                wheelPower = motorPowerMapper.translateMotorPower(wheelPower, leftRearMotor.getVelocity());
             }
             leftRearMotor.set(wheelPower);
         }
@@ -290,7 +290,7 @@ public class TrcSimpleDriveBase extends TrcDriveBase
             wheelPower = rightPower;
             if (motorPowerMapper != null)
             {
-                wheelPower = motorPowerMapper.translateMotorPower(wheelPower, rightRearMotor.getSpeed());
+                wheelPower = motorPowerMapper.translateMotorPower(wheelPower, rightRearMotor.getVelocity());
             }
             rightRearMotor.set(wheelPower);
         }
@@ -300,7 +300,7 @@ public class TrcSimpleDriveBase extends TrcDriveBase
             wheelPower = leftPower;
             if (motorPowerMapper != null)
             {
-                wheelPower = motorPowerMapper.translateMotorPower(wheelPower, leftMidMotor.getSpeed());
+                wheelPower = motorPowerMapper.translateMotorPower(wheelPower, leftMidMotor.getVelocity());
             }
             leftMidMotor.set(wheelPower);
         }
@@ -310,7 +310,7 @@ public class TrcSimpleDriveBase extends TrcDriveBase
             wheelPower = rightPower;
             if (motorPowerMapper != null)
             {
-                wheelPower = motorPowerMapper.translateMotorPower(wheelPower, rightMidMotor.getSpeed());
+                wheelPower = motorPowerMapper.translateMotorPower(wheelPower, rightMidMotor.getVelocity());
             }
             rightMidMotor.set(wheelPower);
         }
@@ -340,9 +340,9 @@ public class TrcSimpleDriveBase extends TrcDriveBase
         odometry.yRawPos = TrcUtil.average(
                 odometry.currPositions[MotorType.LEFT_FRONT.value], odometry.currPositions[MotorType.RIGHT_FRONT.value],
                 odometry.currPositions[MotorType.LEFT_REAR.value], odometry.currPositions[MotorType.RIGHT_REAR.value]);
-        odometry.yRawSpeed = TrcUtil.average(
-                odometry.currSpeeds[MotorType.LEFT_FRONT.value], odometry.currSpeeds[MotorType.RIGHT_FRONT.value],
-                odometry.currSpeeds[MotorType.LEFT_REAR.value], odometry.currSpeeds[MotorType.RIGHT_REAR.value]);
+        odometry.yRawVel = TrcUtil.average(
+                odometry.currVelocities[MotorType.LEFT_FRONT.value], odometry.currVelocities[MotorType.RIGHT_FRONT.value],
+                odometry.currVelocities[MotorType.LEFT_REAR.value], odometry.currVelocities[MotorType.RIGHT_REAR.value]);
         odometry.rotRawPos = TrcUtil.average(
                 odometry.currPositions[MotorType.LEFT_FRONT.value],
                 odometry.currPositions[MotorType.LEFT_REAR.value],

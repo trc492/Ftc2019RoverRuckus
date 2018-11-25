@@ -125,28 +125,28 @@ public class TrcMecanumDriveBase extends TrcSimpleDriveBase
         wheelPower = wheelPowers[MotorType.LEFT_FRONT.value];
         if (motorPowerMapper != null)
         {
-            wheelPower = motorPowerMapper.translateMotorPower(wheelPower, leftFrontMotor.getSpeed());
+            wheelPower = motorPowerMapper.translateMotorPower(wheelPower, leftFrontMotor.getVelocity());
         }
         leftFrontMotor.set(wheelPower);
 
         wheelPower = wheelPowers[MotorType.RIGHT_FRONT.value];
         if (motorPowerMapper != null)
         {
-            wheelPower = motorPowerMapper.translateMotorPower(wheelPower, rightFrontMotor.getSpeed());
+            wheelPower = motorPowerMapper.translateMotorPower(wheelPower, rightFrontMotor.getVelocity());
         }
         rightFrontMotor.set(wheelPower);
 
         wheelPower = wheelPowers[MotorType.LEFT_REAR.value];
         if (motorPowerMapper != null)
         {
-            wheelPower = motorPowerMapper.translateMotorPower(wheelPower, leftRearMotor.getSpeed());
+            wheelPower = motorPowerMapper.translateMotorPower(wheelPower, leftRearMotor.getVelocity());
         }
         leftRearMotor.set(wheelPower);
 
         wheelPower = wheelPowers[MotorType.RIGHT_REAR.value];
         if (motorPowerMapper != null)
         {
-            wheelPower = motorPowerMapper.translateMotorPower(wheelPower, rightRearMotor.getSpeed());
+            wheelPower = motorPowerMapper.translateMotorPower(wheelPower, rightRearMotor.getVelocity());
         }
         rightRearMotor.set(wheelPower);
 
@@ -191,11 +191,11 @@ public class TrcMecanumDriveBase extends TrcSimpleDriveBase
                 odometry.currPositions[MotorType.RIGHT_REAR.value],
                 -odometry.currPositions[MotorType.RIGHT_FRONT.value],
                 -odometry.currPositions[MotorType.LEFT_REAR.value]);
-        odometry.xRawSpeed = TrcUtil.average(
-                odometry.currSpeeds[MotorType.LEFT_FRONT.value],
-                odometry.currSpeeds[MotorType.RIGHT_REAR.value],
-                -odometry.currSpeeds[MotorType.RIGHT_FRONT.value],
-                -odometry.currSpeeds[MotorType.LEFT_REAR.value]);
+        odometry.xRawVel = TrcUtil.average(
+                odometry.currVelocities[MotorType.LEFT_FRONT.value],
+                odometry.currVelocities[MotorType.RIGHT_REAR.value],
+                -odometry.currVelocities[MotorType.RIGHT_FRONT.value],
+                -odometry.currVelocities[MotorType.LEFT_REAR.value]);
     }   //updateOdometry
 
 }   //class TrcMecanumDriveBase

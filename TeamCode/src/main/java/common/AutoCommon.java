@@ -130,6 +130,10 @@ public abstract class AutoCommon extends FtcOpMode
     @Override
     public void startMode(TrcRobot.RunMode prevMode, TrcRobot.RunMode nextMode)
     {
+        if (USE_TRACELOG)
+        {
+            robot.tracer.setTraceLogEnabled(true);
+        }
         robot.tracer.traceInfo(moduleName, "%s: ***** Starting autonomous *****", new Date());
         robot.startMode(nextMode);
 

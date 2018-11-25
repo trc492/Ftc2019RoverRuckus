@@ -22,87 +22,108 @@
 
 package trclib;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.PrintStream;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.concurrent.LinkedBlockingQueue;
 
 public class TrcTraceLogger
 {
-    private String traceLogName;
-    private PrintStream traceLog;
-    private volatile boolean traceLogEnabled;
-    private TrcTaskMgr.TaskObject loggerTaskObj = null;
-    private ConcurrentLinkedQueue<String> msgQueue;
-    private TrcDbgTrace perfTracer = null;
-    private double totalTime = 0.0;
+    private static final String moduleName = "TrcTraceLogger";
+    private static final boolean debugEnabled = false;
+    private static final boolean tracingEnabled = false;
+    private static final boolean useGlobalTracer = false;
+    private static final TrcDbgTrace.TraceLevel traceLevel = TrcDbgTrace.TraceLevel.API;
+    private static final TrcDbgTrace.MsgLevel msgLevel = TrcDbgTrace.MsgLevel.INFO;
+    private TrcDbgTrace dbgTrace = null;
+
+    private final String traceLogName;
+    private final LinkedBlockingQueue<String> msgQueue;
+
+    private PrintWriter traceLog = null;
+    private volatile Thread loggerThread = null;
+    private volatile boolean enabled = false;
+    private volatile TrcDbgTrace perfTracer = null;
+    private double totalNanoTime = 0.0;
     private int totalMessages = 0;
 
     /**
-     * Constructor: Opens a log file for writing all the trace messages to it.
+     * Constructor: Create an instance of the trace logger.
      *
-     * @param traceLogName specifies the full trace log file path name.
-     * @throws FileNotFoundException failed to open log file.
+     * @param traceLogName specifies the log file name.
      */
-    public TrcTraceLogger(final String traceLogName) throws FileNotFoundException
+    public TrcTraceLogger(String traceLogName)
     {
-        this.traceLogName = traceLogName;
-        traceLog = new PrintStream(new File(traceLogName));
-        traceLogEnabled = false;
-        msgQueue = new ConcurrentLinkedQueue<>();
+        if (debugEnabled)
+        {
+            dbgTrace = useGlobalTracer?
+                    TrcDbgTrace.getGlobalTracer():
+                    new TrcDbgTrace(moduleName + "." + traceLogName, tracingEnabled, traceLevel, msgLevel);
+        }
 
-        loggerTaskObj = TrcTaskMgr.getInstance().createTask("loggerTask." + traceLogName, this::loggerTask);
+        this.traceLogName = traceLogName;
+        msgQueue = new LinkedBlockingQueue<>();
     }   //TrcTraceLogger
 
     /**
      * This method returns the trace log name.
      *
-     * @return trace log name.
+     * @return trace log name, "None" if no log file opened.
      */
     public String toString()
     {
         return traceLogName;
     }   //toString
 
-    /**
-     * This method closes the trace log file. If newName is not null, the log will be renamed to the new name.
-     *
-     * @param newName specifies the new log file name, null if none given.
-     */
-    public synchronized void close(String newName)
+    public synchronized void setEnabled(boolean enabled)
     {
-        if (traceLog != null)
+        if (loggerThread == null && enabled)
         {
-            if (newName != null)
+            //
+            // Trace logger was not enabled, somebody wants to enable it.
+            // Open the log file for append and create the logger thread.
+            //
+            try
             {
-                // TODO: Cannot close the log file until the message queue is empty.
-                // So need to defer closing of the log file to the task thread.
-                // Also, need to get rid of all these newName and rename business because it was created to get
-                // around the logging performance problem and multi-threading already fixed it.
-                try
-                {
-                    String path = traceLogName.substring(0, traceLogName.lastIndexOf(File.separatorChar) + 1);
-                    String newFile = path + TrcUtil.getTimestamp() + "!" + newName + ".log";
-                    traceLog.close();
-                    File file = new File(traceLogName);
-                    file.renameTo(new File(newFile));
-                }
-                catch(Exception e)
-                {
-                    // We failed to rename the file, close the log anyway.
-                    traceLog.close();
-                }
+                traceLog = new PrintWriter(new BufferedWriter(new FileWriter(traceLogName, true)));
             }
-            else
+            catch (IOException e)
             {
-                traceLog.close();
+                throw new RuntimeException("Failed to open trace log file " + traceLogName);
             }
-
-            traceLog = null;
-            traceLogName = null;
-            setEnabled(false);
+            loggerThread = new Thread(this::loggerTask, traceLogName);
+            loggerThread.start();
+            this.enabled = true;
         }
-    }   //closeTraceLog
+        else if (loggerThread != null && !enabled)
+        {
+            //
+            // Trace logger was enabled, somebody wants to disable it.
+            //
+            if (this.enabled)
+            {
+                //
+                // Make sure the trace logger is indeed enabled. The message queue may not be empty. So we need to
+                // signal termination but allow the logger thread to empty the queue before exiting.
+                // If trace logger is already disabled and the loggerThread is still active, it means the thread is
+                // busy emptying its queue. So we don't need to double signal termination.
+                //
+                this.enabled = false;
+                loggerThread.interrupt();
+            }
+        }
+    }   //setEnabled
+
+    /**
+     * This method checks if the trace log is enabled.
+     *
+     * @return true if trace log is enabled, false if disabled.
+     */
+    public boolean isEnabled()
+    {
+        return enabled;
+    }   //isEnabled
 
     /**
      * This method enables/disables performance report.
@@ -116,90 +137,112 @@ public class TrcTraceLogger
     }   //setPerformanceTracer
 
     /**
-     * This method enables/disables the trace log.
-     *
-     * @param enabled specifies true to enable trace log, false otherwise.
-     */
-    public synchronized void setEnabled(boolean enabled)
-    {
-        if (enabled)
-        {
-            loggerTaskObj.registerTask(TrcTaskMgr.TaskType.POSTCONTINUOUS_TASK);//STANDALONE_TASK, 20);
-        }
-        //
-        // If disabling TraceLogger, don't do anything yet because the message queue may not be empty.
-        // Let the thread empty the queue into the log file and it will unregister itself.
-        //
-        traceLogEnabled = enabled;
-    }   //setEnabled
-
-    /**
-     * This method checks if the trace log is enabled.
-     *
-     * @return true if trace log is enabled, false if disabled.
-     */
-    public synchronized boolean isEnabled()
-    {
-        return traceLogEnabled;
-    }   //isEnabled
-
-    /**
      * This method is called to log a message to the log file.
      *
      * @param msg specifies the message to be logged.
      */
-    public synchronized void logMessage(String msg)
+    public synchronized boolean logMessage(String msg)
     {
-        if (traceLogEnabled)
+        boolean success = false;
+
+        if (isEnabled())
         {
-            msgQueue.add(msg);
+            success = msgQueue.offer(msg);
         }
+
+        return success;
     }   //logMessage
 
     /**
-     * This method is called periodically to process the logger message queue. Every time this task is run, it will
-     * empty the message queue into the log file and flush on each write.
+     * This method writes the message to the trace log and also keeps track of logging performance.
      *
-     * @param taskType specifies the task type (not used).
-     * @param runMode specifies the competition run mode (not used).
+     * @param msg specifies the message to be logged.
      */
-    private synchronized void loggerTask(TrcTaskMgr.TaskType taskType, TrcRobot.RunMode runMode)
+    private void writeMessage(String msg)
+    {
+        long startNanoTime = TrcUtil.getCurrentTimeNanos();
+        traceLog.print(msg + "\r\n");
+        traceLog.flush();
+        double elapsedNanoTime = TrcUtil.getCurrentTimeNanos() - startNanoTime;
+        totalNanoTime += elapsedNanoTime;
+        totalMessages++;
+        //
+        // Make sure we don't recursively log the performance message itself.
+        //
+        if (perfTracer != null && !msg.startsWith(moduleName + "." + traceLogName)) //TODO: test this!
+        {
+            perfTracer.traceInfo(moduleName + "." + traceLogName, "Avg message log time = %.3f msec",
+                    totalNanoTime/totalMessages/1000000000.0);
+        }
+    }   //writeMessage
+
+    /**
+     * This method closes the trace log file.
+     */
+    private void closeTraceLog()
+    {
+        if (traceLog != null)
+        {
+            traceLog.close();
+            traceLog = null;
+        }
+    }   //closeTraceLog
+
+    /**
+     * This method is called when the logger thread is started. It processes all messages in the message queue when
+     * they arrive. If the message queue is empty, the thread is blocked until a new message arrives. Therefore,
+     * this thread only runs when there are messages in the queue. If this thread is interrupted, it will exit
+     * only after all the remaining messages in the queue are written to the log.
+     */
+    private void loggerTask()
     {
         final String funcName = "loggerTask";
+        String msg;
 
-        for (;;)
+        if (debugEnabled)
         {
-            String msg = msgQueue.poll();
+            dbgTrace.traceInfo("Trace Logger %s starting...", traceLogName);
+        }
 
-            if (msg != null)
+        while (!Thread.currentThread().isInterrupted())
+        {
+            try
             {
-                double startTime = TrcUtil.getCurrentTime();
-                traceLog.print(msg + "\r\n");
-                traceLog.flush();
-                double elapsedTime = TrcUtil.getCurrentTime() - startTime;
-                totalTime += elapsedTime;
-                totalMessages++;
-                //
-                // Make sure we don't recursively log the performance message itself.
-                //
-                if (perfTracer != null && !msg.startsWith(perfTracer.toString() + "." + funcName))
+                msg = msgQueue.take();
+                writeMessage(msg);
+                if (debugEnabled)
                 {
-                    perfTracer.traceInfo(funcName, "Average message log time = %.3f msec",
-                            totalTime/totalMessages);
+                    dbgTrace.traceInfo(funcName, "[%.3f] Logging message <%s>", TrcUtil.getCurrentTime(), msg);
                 }
             }
-            else
+            catch (InterruptedException e)
             {
-                if (!traceLogEnabled)
+                if (debugEnabled)
                 {
-                    //
-                    // Somebody disabled tracelog, so unregister myself since the message queue is now empty.
-                    //
-                    loggerTaskObj.unregisterTask(TrcTaskMgr.TaskType.POSTCONTINUOUS_TASK);//STANDALONE_TASK);
+                    dbgTrace.traceInfo(funcName, "Terminating Trace Logger %s", traceLogName);
                 }
                 break;
             }
         }
+        //
+        // The thread is terminating, empty the queue before exiting.
+        //
+        while ((msg = msgQueue.poll()) != null)
+        {
+            writeMessage(msg);
+            if (debugEnabled)
+            {
+                dbgTrace.traceInfo(funcName, "[%.3f] Emptying message <%s>", TrcUtil.getCurrentTime(), msg);
+            }
+        }
+
+        if (debugEnabled)
+        {
+            dbgTrace.traceInfo(funcName, "Closing Trace Log %s", traceLogName);
+        }
+
+        closeTraceLog();
+        loggerThread = null;
     }   //loggerTask
 
 }   //class TrcTraceLogger

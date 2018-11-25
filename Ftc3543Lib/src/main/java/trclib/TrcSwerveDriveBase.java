@@ -281,10 +281,10 @@ public class TrcSwerveDriveBase extends TrcSimpleDriveBase
 
         if (motorPowerMapper != null)
         {
-            lfPower = motorPowerMapper.translateMotorPower(lfPower, lfModule.getSpeed());
-            rfPower = motorPowerMapper.translateMotorPower(rfPower, rfModule.getSpeed());
-            lrPower = motorPowerMapper.translateMotorPower(lrPower, lrModule.getSpeed());
-            rrPower = motorPowerMapper.translateMotorPower(rrPower, rrModule.getSpeed());
+            lfPower = motorPowerMapper.translateMotorPower(lfPower, lfModule.getVelocity());
+            rfPower = motorPowerMapper.translateMotorPower(rfPower, rfModule.getVelocity());
+            lrPower = motorPowerMapper.translateMotorPower(lrPower, lrModule.getVelocity());
+            rrPower = motorPowerMapper.translateMotorPower(rrPower, rrModule.getVelocity());
         }
 
         lfModule.setSteerAngle(lfAngle);
@@ -335,12 +335,12 @@ public class TrcSwerveDriveBase extends TrcSimpleDriveBase
                 odometry.currPositions[MotorType.RIGHT_FRONT.value] - odometry.prevPositions[MotorType.RIGHT_FRONT.value],
                 odometry.currPositions[MotorType.LEFT_REAR.value] - odometry.prevPositions[MotorType.LEFT_REAR.value],
                 odometry.currPositions[MotorType.RIGHT_REAR.value] - odometry.prevPositions[MotorType.RIGHT_REAR.value]);
-        double avgEncSpeed = timeDelta != 0.0 ? avgEncDelta / timeDelta : 0.0;
+        double avgEncVel = timeDelta != 0.0 ? avgEncDelta / timeDelta : 0.0;
 
         odometry.xRawPos = getRawXPosition() + avgEncDelta*angleCos;
-        odometry.xRawSpeed = avgEncSpeed*angleCos;
+        odometry.xRawVel = avgEncVel*angleCos;
         odometry.yRawPos = getRawYPosition() + avgEncDelta*angleSin;
-        odometry.yRawSpeed = avgEncSpeed*angleSin;
+        odometry.yRawVel = avgEncVel*angleSin;
         //
         // Rotation position is only valid when the robot is doing turn-in-place.
         // In Swerve Drive, the wheels are steered in a diamond formation (i.e. tangential to the turning circle).

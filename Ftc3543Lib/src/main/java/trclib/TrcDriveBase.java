@@ -44,11 +44,11 @@ public abstract class TrcDriveBase
         double prevTimestamp;
         double currTimestamp;
         double[] currPositions;
-        double[] currSpeeds;
+        double[] currVelocities;
         double[] prevPositions;
         double[] stallStartTimes;
         double xRawPos, yRawPos, rotRawPos;
-        double xRawSpeed, yRawSpeed;
+        double xRawVel, yRawVel;
         double gyroHeading, gyroTurnRate;
     }   //class Odometry
 
@@ -79,13 +79,13 @@ public abstract class TrcDriveBase
     {
         /**
          * This method is called to translate the desired motor power to the actual motor power taking into
-         * consideration of the motor torque curve with the current motor speed.
+         * consideration of the motor torque curve with the current motor velocity.
          *
          * @param power specifies the desired motor power.
-         * @param speed specifies the current motor speed in the unit of encoder counts per second.
+         * @param velocity specifies the current motor velocity in the unit of encoder counts per second.
          * @return resulting motor power.
          */
-        double translateMotorPower(double power, double speed);
+        double translateMotorPower(double power, double velocity);
     }   //interface MotorPowerMapper
 
     private static double DEF_SENSITIVITY = 0.5;
@@ -123,7 +123,7 @@ public abstract class TrcDriveBase
 
         odometry = new Odometry();
         odometry.currPositions = new double[motors.length];
-        odometry.currSpeeds = new double[motors.length];
+        odometry.currVelocities = new double[motors.length];
         odometry.prevPositions = new double[motors.length];
         odometry.stallStartTimes = new double[motors.length];
         resetOdometry(true, true);
@@ -360,42 +360,42 @@ public abstract class TrcDriveBase
     }   //getHeading
 
     /**
-     * This method returns the drive base speed in the X direction.
+     * This method returns the drive base velocity in the X direction.
      *
-     * @return X speed.
+     * @return X velocity.
      */
-    public double getXSpeed()
+    public double getXVelocity()
     {
-        final String funcName = "getXSpeed";
-        double speed = odometry.xRawSpeed*xScale;
+        final String funcName = "getXVelocity";
+        double vel = odometry.xRawVel*xScale;
 
         if (debugEnabled)
         {
             dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%f", speed);
+            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%f", vel);
         }
 
-        return speed;
-    }   //getXSpeed
+        return vel;
+    }   //getXVelocity
 
     /**
-     * This method returns the drive base speed in the Y direction.
+     * This method returns the drive base velocity in the Y direction.
      *
-     * @return Y speed.
+     * @return Y velocity.
      */
-    public double getYSpeed()
+    public double getYVelocity()
     {
-        final String funcName = "getYSpeed";
-        double speed = odometry.yRawSpeed*yScale;
+        final String funcName = "getYVelocity";
+        double vel = odometry.yRawVel*yScale;
 
         if (debugEnabled)
         {
             dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API);
-            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%f", speed);
+            dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API, "=%f", vel);
         }
 
-        return speed;
-    }   //getYSpeed
+        return vel;
+    }   //getYVelocity
 
     /**
      * This method returns the gyro turn rate.
@@ -417,7 +417,7 @@ public abstract class TrcDriveBase
     }   //getGyroTurnRate
 
     /**
-     * This method resets the drive base odometry. This includes the motor encoders, drive base position, speed and
+     * This method resets the drive base odometry. This includes the motor encoders, drive base position, velocity and
      * gyro heading.
      *
      * @param hardware specifies true for resetting hardware position, false for resetting software position.
@@ -440,13 +440,13 @@ public abstract class TrcDriveBase
             {
                 motors[i].resetPosition(hardware);
                 odometry.currPositions[i] = 0.0;
-                odometry.currSpeeds[i] = 0.0;
+                odometry.currVelocities[i] = 0.0;
                 odometry.prevPositions[i] = 0.0;
                 odometry.stallStartTimes[i] = odometry.currTimestamp;
             }
 
             odometry.xRawPos = odometry.yRawPos = odometry.rotRawPos = 0.0;
-            odometry.xRawSpeed = odometry.yRawSpeed = 0.0;
+            odometry.xRawVel = odometry.yRawVel = 0.0;
 
             if (gyro != null && resetGyro)
             {
@@ -1056,11 +1056,11 @@ public abstract class TrcDriveBase
 
                 try
                 {
-                    odometry.currSpeeds[i] = motors[i].getSpeed();
+                    odometry.currVelocities[i] = motors[i].getVelocity();
                 }
                 catch (UnsupportedOperationException e)
                 {
-                    odometry.currSpeeds[i] = 0;
+                    odometry.currVelocities[i] = 0;
                 }
 
                 if (odometry.currPositions[i] != odometry.prevPositions[i] || motors[i].getPower() == 0.0)
