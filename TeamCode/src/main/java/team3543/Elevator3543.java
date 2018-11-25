@@ -45,6 +45,7 @@ public class Elevator3543
 
         elevatorMotor = new FtcDcMotor("elevatorMotor", lowerLimitSwitch, upperLimitSwitch);
         elevatorMotor.setBrakeModeEnabled(true);
+        elevatorMotor.setOdometryEnabled(true);
 
         pidController = new TrcPidController("elevatorPidController",
                 new TrcPidController.PidCoefficients(
