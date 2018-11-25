@@ -141,6 +141,11 @@ public class Robot3543 extends Robot
         leftRearWheel.motor.setMode(RobotInfo3543.DRIVE_MOTOR_MODE);
         rightRearWheel.motor.setMode(RobotInfo3543.DRIVE_MOTOR_MODE);
 
+        leftFrontWheel.setOdometryEnabled(true);
+        rightFrontWheel.setOdometryEnabled(true);
+        leftRearWheel.setOdometryEnabled(true);
+        rightRearWheel.setOdometryEnabled(true);
+
         if (USE_VELOCITY_CONTROL)
         {
             TrcPidController.PidCoefficients motorPidCoef = new TrcPidController.PidCoefficients(
