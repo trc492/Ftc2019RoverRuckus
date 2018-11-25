@@ -31,7 +31,6 @@ import trclib.TrcTimer;
 
 public class CmdAutoCrater6541 implements TrcRobot.RobotCommand
 {
-    private static final boolean debugXPid = true;
     private static final boolean debugYPid = true;
     private static final boolean debugTurnPid = true;
 
@@ -273,11 +272,6 @@ public class CmdAutoCrater6541 implements TrcRobot.RobotCommand
                     robot.rightFrontWheel.getPosition(),
                     robot.leftRearWheel.getPosition(),
                     robot.rightRearWheel.getPosition());
-
-            if (debugXPid)
-            {
-                robot.encoderXPidCtrl.printPidInfo(robot.tracer, elapsedTime);
-            }
 
             if (debugYPid)
             {
