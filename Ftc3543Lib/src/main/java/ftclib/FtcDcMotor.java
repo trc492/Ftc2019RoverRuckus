@@ -30,8 +30,6 @@ import trclib.TrcAnalogInput;
 import trclib.TrcDigitalInput;
 import trclib.TrcDbgTrace;
 import trclib.TrcMotor;
-import trclib.TrcRobot;
-import trclib.TrcTaskMgr;
 
 /**
  * This class implements the Modern Robotics Motor Controller extending TrcMotor. It provides implementation of the
