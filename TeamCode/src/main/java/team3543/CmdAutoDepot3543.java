@@ -126,7 +126,6 @@ class CmdAutoDepot3543 implements TrcRobot.RobotCommand
                     //
                     // The robot started hanging on the lander, lower it to the ground.
                     //
-                    robot.speak("Lowering Robot");
                     robot.elevator.setPosition(RobotInfo3543.ELEVATOR_HANGING_HEIGHT, event, 0.0);
                     sm.waitForSingleEvent(event, State.UNHOOK_ROBOT);
                     break;
@@ -135,7 +134,6 @@ class CmdAutoDepot3543 implements TrcRobot.RobotCommand
                     //
                     // The robot is still hooked, need to unhook first.
                     //
-                    robot.speak("Unhooking Robot");
                     robot.tracer.traceInfo(moduleName, "Initial heading=%f", robot.driveBase.getHeading());
                     targetX = RobotInfo3543.UNHOOK_DISPLACEMENT;
                     targetY = 0.0;
@@ -175,8 +173,8 @@ class CmdAutoDepot3543 implements TrcRobot.RobotCommand
                     traceState = false;
                     if (cmdDisplaceMineral.cmdPeriodic(elapsedTime))
                     {
-                        // sm.setState(doTeamMarker? State.DROP_TEAM_MARKER: State.TURN_TO_CRATER);
-                        sm.setState(State.DONE);
+                        sm.setState(doTeamMarker? State.DROP_TEAM_MARKER: State.TURN_TO_CRATER);
+                        // sm.setState(State.DONE);
                     }
                     else
                     {
