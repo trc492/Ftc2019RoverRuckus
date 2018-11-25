@@ -233,7 +233,11 @@ public abstract class TrcDriveBase
     public double getRawXPosition()
     {
         final String funcName = "getRawXPosition";
-        double pos = odometry.xRawPos;
+
+        final double pos;
+        synchronized (odometry) {
+            pos = odometry.xRawPos;
+        }
 
         if (debugEnabled)
         {
@@ -252,7 +256,11 @@ public abstract class TrcDriveBase
     public double getRawYPosition()
     {
         final String funcName = "getRawYPosition";
-        double pos = odometry.yRawPos;
+
+        final double pos;
+        synchronized (odometry) {
+            pos = odometry.yRawPos;
+        }
 
         if (debugEnabled)
         {
@@ -271,7 +279,11 @@ public abstract class TrcDriveBase
     public double getRawRotationPosition()
     {
         final String funcName = "getRawRotationPosition";
-        double pos = odometry.rotRawPos;
+
+        final double pos;
+        synchronized (odometry) {
+            pos = odometry.rotRawPos;
+        }
 
         if (debugEnabled)
         {
@@ -290,7 +302,11 @@ public abstract class TrcDriveBase
     public double getXPosition()
     {
         final String funcName = "getXPosition";
-        double pos = odometry.xRawPos*xScale;
+
+        final double pos;
+        synchronized (odometry) {
+            pos = odometry.xRawPos * xScale;
+        }
 
         if (debugEnabled)
         {
@@ -309,7 +325,11 @@ public abstract class TrcDriveBase
     public double getYPosition()
     {
         final String funcName = "getYPosition";
-        double pos = odometry.yRawPos*yScale;
+
+        double pos;
+        synchronized (odometry) {
+            pos = odometry.yRawPos * yScale;
+        }
 
         if (debugEnabled)
         {
@@ -328,7 +348,11 @@ public abstract class TrcDriveBase
     public double getRotationPosition()
     {
         final String funcName = "getRotationPosition";
-        double pos = odometry.rotRawPos*rotScale;
+
+        final double pos;
+        synchronized (odometry) {
+            pos = odometry.rotRawPos * rotScale;
+        }
 
         if (debugEnabled)
         {
@@ -348,7 +372,11 @@ public abstract class TrcDriveBase
     public double getHeading()
     {
         final String funcName = "getHeading";
-        double heading = gyro != null? odometry.gyroHeading: odometry.rotRawPos*rotScale;
+
+        final double heading;
+        synchronized (odometry) {
+            heading = gyro != null ? odometry.gyroHeading : odometry.rotRawPos * rotScale;
+        }
 
         if (debugEnabled)
         {
@@ -367,7 +395,11 @@ public abstract class TrcDriveBase
     public double getXVelocity()
     {
         final String funcName = "getXVelocity";
-        double vel = odometry.xRawVel*xScale;
+
+        final double vel;
+        synchronized (odometry) {
+            vel = odometry.xRawVel * xScale;
+        }
 
         if (debugEnabled)
         {
@@ -386,7 +418,11 @@ public abstract class TrcDriveBase
     public double getYVelocity()
     {
         final String funcName = "getYVelocity";
-        double vel = odometry.yRawVel*yScale;
+
+        final double vel;
+        synchronized (odometry) {
+            vel = odometry.yRawVel * yScale;
+        }
 
         if (debugEnabled)
         {
@@ -405,7 +441,11 @@ public abstract class TrcDriveBase
     public double getGyroTurnRate()
     {
         final String funcName = "getGyroTurnRate";
-        double turnRate = odometry.gyroTurnRate;
+
+        final double turnRate;
+        synchronized (odometry) {
+            turnRate = odometry.gyroTurnRate;
+        }
 
         if (debugEnabled)
         {
@@ -667,7 +707,11 @@ public abstract class TrcDriveBase
     {
         final String funcName = "isMotorStalled";
         double currTime = TrcUtil.getCurrentTime();
-        boolean stalled = currTime - odometry.stallStartTimes[index] > stallTime;
+
+        final boolean stalled;
+        synchronized (odometry) {
+            stalled = currTime - odometry.stallStartTimes[index] > stallTime;
+        }
 
         if (debugEnabled)
         {
