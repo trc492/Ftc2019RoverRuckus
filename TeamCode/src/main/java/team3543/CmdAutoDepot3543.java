@@ -80,6 +80,7 @@ class CmdAutoDepot3543 implements TrcRobot.RobotCommand
         DISPLACE_MINERAL,
         DROP_TEAM_MARKER,
         TURN_TO_CRATER,
+        KISS_THE_WALL,
         DRIVE_TO_CRATER,
         DONE
     }   //enum State
@@ -200,6 +201,12 @@ class CmdAutoDepot3543 implements TrcRobot.RobotCommand
                     targetY = 0.0;
                     robot.targetHeading = 45.0;
                     robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
+                    sm.waitForSingleEvent(event, State.KISS_THE_WALL);
+                    break;
+
+                case KISS_THE_WALL:
+                    robot.driveBase.holonomicDrive(-0.35, 0.0, 0.0);
+                    timer.set(1.6, event);
                     sm.waitForSingleEvent(event, State.DRIVE_TO_CRATER);
                     break;
 
