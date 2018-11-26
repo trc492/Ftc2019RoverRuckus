@@ -102,11 +102,11 @@ public class FtcBNO055Imu
 
             if (enabled)
             {
-                gyroTaskObj.registerTask(TrcTaskMgr.TaskType.STANDALONE_TASK, 50);
+                gyroTaskObj.registerTask(TrcTaskMgr.TaskType.INPUT_TASK);
             }
             else
             {
-                gyroTaskObj.unregisterTask(TrcTaskMgr.TaskType.STANDALONE_TASK);
+                gyroTaskObj.unregisterTask(TrcTaskMgr.TaskType.INPUT_TASK);
             }
 
             taskEnabled = enabled;
@@ -130,16 +130,36 @@ public class FtcBNO055Imu
          */
         private void gyroTask(TrcTaskMgr.TaskType taskType, TrcRobot.RunMode runMode)
         {
+            Quaternion q = null;
+            Orientation orientation = null;
+            AngularVelocity angularVelocity;
+            double currTime = TrcUtil.getCurrentTime();
+
+            if (USE_QUATERNION)
+            {
+                q = imu.getQuaternionOrientation();
+            }
+            else
+            {
+                orientation = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.XYZ, AngleUnit.DEGREES);
+            }
+            angularVelocity = imu.getAngularVelocity();
+
+            if (debugEnabled)
+            {
+                dbgTrace.traceInfo(instanceName + ".gyroTask", "[%.3f]: elapsedTime=%.3f",
+                        currTime, TrcUtil.getCurrentTime() - currTime);
+            }
+
             synchronized (gyroData)
             {
-                gyroData.timestamp = TrcUtil.getCurrentTime();
+                gyroData.timestamp = currTime;
                 //
                 // The Z-axis returns positive heading in the anticlockwise direction, so we must negate it for
                 // our convention.
                 //
-                if (USE_QUATERNION)
+                if (q != null)
                 {
-                    Quaternion q = imu.getQuaternionOrientation();
                     double sinp = 2.0 * (q.w * q.y - q.z * q.x);
 
                     gyroData.xAngle = Math.toDegrees(
@@ -149,16 +169,13 @@ public class FtcBNO055Imu
                     gyroData.zAngle = -Math.toDegrees(
                             Math.atan2(2.0 * (q.w * q.z + q.x * q.y), 1.0 - 2.0 * (q.y * q.y + q.z * q.z)));
                 }
-                else
+                else if (orientation != null)
                 {
-                    Orientation orientation = imu.getAngularOrientation(
-                            AxesReference.INTRINSIC, AxesOrder.XYZ, AngleUnit.DEGREES);
                     gyroData.xAngle = orientation.firstAngle;
                     gyroData.yAngle = orientation.secondAngle;
                     gyroData.zAngle = -orientation.thirdAngle;
                 }
 
-                AngularVelocity angularVelocity = imu.getAngularVelocity();
                 gyroData.xRotationRate = angularVelocity.xRotationRate;
                 gyroData.yRotationRate = angularVelocity.yRotationRate;
                 gyroData.zRotationRate = angularVelocity.zRotationRate;
@@ -325,11 +342,11 @@ public class FtcBNO055Imu
 
             if (enabled)
             {
-                accelTaskObj.registerTask(TrcTaskMgr.TaskType.STANDALONE_TASK, 50);
+                accelTaskObj.registerTask(TrcTaskMgr.TaskType.INPUT_TASK);
             }
             else
             {
-                accelTaskObj.unregisterTask(TrcTaskMgr.TaskType.STANDALONE_TASK);
+                accelTaskObj.unregisterTask(TrcTaskMgr.TaskType.INPUT_TASK);
             }
 
             taskEnabled = enabled;
@@ -353,14 +370,20 @@ public class FtcBNO055Imu
          */
         private void accelTask(TrcTaskMgr.TaskType taskType, TrcRobot.RunMode runMode)
         {
+            double currTime = TrcUtil.getCurrentTime();
+            Acceleration acceleration = imu.getAcceleration();
+            Velocity velocity = imu.getVelocity();
+            Position position = imu.getPosition();
+
+            if (debugEnabled)
+            {
+                dbgTrace.traceInfo(instanceName + ".accelTask", "[%.3f]: elapsedTime=%.3f",
+                        currTime, TrcUtil.getCurrentTime() - currTime);
+            }
+
             synchronized (accelData)
             {
-                accelData.timestamp = TrcUtil.getCurrentTime();
-
-                Acceleration acceleration = imu.getAcceleration();
-                Velocity velocity = imu.getVelocity();
-                Position position = imu.getPosition();
-
+                accelData.timestamp = currTime;
                 accelData.xAccel = acceleration.xAccel;
                 accelData.yAccel = acceleration.yAccel;
                 accelData.zAccel = acceleration.zAccel;

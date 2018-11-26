@@ -233,9 +233,10 @@ public abstract class TrcDriveBase
     public double getRawXPosition()
     {
         final String funcName = "getRawXPosition";
-
         final double pos;
-        synchronized (odometry) {
+
+        synchronized (odometry)
+        {
             pos = odometry.xRawPos;
         }
 
@@ -256,9 +257,10 @@ public abstract class TrcDriveBase
     public double getRawYPosition()
     {
         final String funcName = "getRawYPosition";
-
         final double pos;
-        synchronized (odometry) {
+
+        synchronized (odometry)
+        {
             pos = odometry.yRawPos;
         }
 
@@ -279,9 +281,10 @@ public abstract class TrcDriveBase
     public double getRawRotationPosition()
     {
         final String funcName = "getRawRotationPosition";
-
         final double pos;
-        synchronized (odometry) {
+
+        synchronized (odometry)
+        {
             pos = odometry.rotRawPos;
         }
 
@@ -302,9 +305,10 @@ public abstract class TrcDriveBase
     public double getXPosition()
     {
         final String funcName = "getXPosition";
-
         final double pos;
-        synchronized (odometry) {
+
+        synchronized (odometry)
+        {
             pos = odometry.xRawPos * xScale;
         }
 
@@ -325,9 +329,10 @@ public abstract class TrcDriveBase
     public double getYPosition()
     {
         final String funcName = "getYPosition";
-
         double pos;
-        synchronized (odometry) {
+
+        synchronized (odometry)
+        {
             pos = odometry.yRawPos * yScale;
         }
 
@@ -348,9 +353,10 @@ public abstract class TrcDriveBase
     public double getRotationPosition()
     {
         final String funcName = "getRotationPosition";
-
         final double pos;
-        synchronized (odometry) {
+
+        synchronized (odometry)
+        {
             pos = odometry.rotRawPos * rotScale;
         }
 
@@ -372,10 +378,11 @@ public abstract class TrcDriveBase
     public double getHeading()
     {
         final String funcName = "getHeading";
-
         final double heading;
-        synchronized (odometry) {
-            heading = gyro != null ? odometry.gyroHeading : odometry.rotRawPos * rotScale;
+
+        synchronized (odometry)
+        {
+            heading = gyro != null? odometry.gyroHeading: odometry.rotRawPos*rotScale;
         }
 
         if (debugEnabled)
@@ -395,9 +402,10 @@ public abstract class TrcDriveBase
     public double getXVelocity()
     {
         final String funcName = "getXVelocity";
-
         final double vel;
-        synchronized (odometry) {
+
+        synchronized (odometry)
+        {
             vel = odometry.xRawVel * xScale;
         }
 
@@ -418,9 +426,10 @@ public abstract class TrcDriveBase
     public double getYVelocity()
     {
         final String funcName = "getYVelocity";
-
         final double vel;
-        synchronized (odometry) {
+
+        synchronized (odometry)
+        {
             vel = odometry.yRawVel * yScale;
         }
 
@@ -441,9 +450,10 @@ public abstract class TrcDriveBase
     public double getGyroTurnRate()
     {
         final String funcName = "getGyroTurnRate";
-
         final double turnRate;
-        synchronized (odometry) {
+
+        synchronized (odometry)
+        {
             turnRate = odometry.gyroTurnRate;
         }
 
@@ -707,9 +717,10 @@ public abstract class TrcDriveBase
     {
         final String funcName = "isMotorStalled";
         double currTime = TrcUtil.getCurrentTime();
-
         final boolean stalled;
-        synchronized (odometry) {
+
+        synchronized (odometry)
+        {
             stalled = currTime - odometry.stallStartTimes[index] > stallTime;
         }
 
@@ -735,9 +746,10 @@ public abstract class TrcDriveBase
             dbgTrace.traceExit(funcName, TrcDbgTrace.TraceLevel.API);
         }
 
-        double currTime = TrcUtil.getCurrentTime();
         synchronized (odometry)
         {
+            double currTime = TrcUtil.getCurrentTime();
+
             for (int i = 0; i < odometry.stallStartTimes.length; i++)
             {
                 odometry.stallStartTimes[i] = currTime;

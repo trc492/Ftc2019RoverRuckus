@@ -76,7 +76,7 @@ public abstract class TrcAccelerometer extends TrcSensor<TrcAccelerometer.DataTy
     public static final int ACCEL_INTEGRATE             = (1 << 3);
     public static final int ACCEL_DOUBLE_INTEGRATE      = (1 << 4);
 
-    private final String instanceName;
+    protected final String instanceName;
     private TrcDataIntegrator<DataType> dataIntegrator = null;
     private int xIndex = -1;
     private int yIndex = -1;
