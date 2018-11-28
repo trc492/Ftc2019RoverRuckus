@@ -22,6 +22,8 @@
 
 package common;
 
+import android.util.Log;
+
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
@@ -122,22 +124,11 @@ public class TensorFlowVision
         vuforia.setFlashlightEnabled(enabled);
     }   //setLightEnabled
 
-    /**
-     * This method gets the rectangle of the last detected target from the camera. If the camera does not have
-     * any. It may mean the camera is still busy analyzing a frame or it can't find any valid target in a frame.
-     * We can't tell the reason. If the camera is likely busying processing a frame, we will return the last
-     * cached rectangle. Therefore, the last cached rectangle will have an expiration (i.e. cached data can be
-     * stale). If the last cached data becomes stale, we will discard it and return nothing. Otherwise, we will
-     * return the cached data. Of course we will return fresh data if the camera does return another rectangle,
-     * in which case it will become the new cached data.
-     *
-     * @return rectangle of the detected target last received from the camera or last cached target if cached
-     *         data has not expired. Null if no object was seen and last cached data has expired.
-     */
-    private Recognition getTargetObject(String label)
+    public TargetInfo getTargetInfo(String label)
     {
-        final String funcName = "getTargetObject";
-        Recognition targetObject = null;
+        final String funcName = "getTargetInfo";
+        TargetInfo targetInfo = null;
+
         //
         // getUpdatedRecognitions() will return null if no new information is available since
         // the last time that call was made.
@@ -149,38 +140,32 @@ public class TensorFlowVision
             {
                 if (object.getLabel().equals(label))
                 {
-                    targetObject = object;
-                    break;
+                    Rect rect = new Rect((int)object.getTop(), (int)object.getRight(),
+                            (int)object.getHeight(), (int)object.getWidth());
+
+                    // begin the filtering code.
+                    int halfway = object.getImageWidth() / 2;
+                    float objectY = rect.y + rect.height/2;
+                    if (objectY >= halfway)
+                    {
+                        // end the filtering code.
+                        if (debugEnabled)
+                        {
+                            tracer.traceInfo(funcName, "###TargetInfo###: %s", targetInfo);
+                        }
+
+                        return new TargetInfo(
+                                object.getLabel(),
+                                rect,
+                                object.estimateAngleToObject(AngleUnit.DEGREES),
+                                object.getConfidence(),
+                                object.getImageHeight(), object.getImageWidth());
+                   }
                 }
             }
         }
 
-        return targetObject;
-    }   //getTargetObject
-
-    public TargetInfo getTargetInfo(String label)
-    {
-        final String funcName = "getTargetInfo";
-        TargetInfo targetInfo = null;
-        Recognition targetObject = getTargetObject(label);
-
-        if (targetObject != null)
-        {
-            targetInfo = new TargetInfo(
-                    targetObject.getLabel(),
-                    new Rect((int)targetObject.getTop(), (int)targetObject.getRight(),
-                             (int)targetObject.getHeight(), (int)targetObject.getWidth()),
-                    targetObject.estimateAngleToObject(AngleUnit.DEGREES),
-                    targetObject.getConfidence(),
-                    targetObject.getImageHeight(), targetObject.getImageWidth());
-
-            if (debugEnabled)
-            {
-                tracer.traceInfo(funcName, "###TargetInfo###: %s", targetInfo);
-            }
-        }
-
-        return targetInfo;
+        return null;
     }   //getTargetInfo
 
 }   //class TensorFlowVision
