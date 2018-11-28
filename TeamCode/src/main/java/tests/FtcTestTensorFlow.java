@@ -14,7 +14,7 @@ import trclib.TrcRobot;
 import static org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer.CameraDirection.BACK;
 
 @TeleOp(name="Test: FTC Tensor Flow", group="Test")
-//@Disabled
+@Disabled
 public class FtcTestTensorFlow extends FtcOpMode
 {
     private static final boolean USE_TRACELOG = true;

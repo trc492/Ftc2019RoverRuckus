@@ -53,7 +53,7 @@ import java.util.List;
  * is explained below.
  */
 @TeleOp(name = "Test: TensorFlow Test", group = "Test")
-//@Disabled
+@Disabled
 public class TestTensorFlowObjectDetection extends LinearOpMode {
     private static final boolean USE_TENSORFLOW = true;
 

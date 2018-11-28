@@ -22,8 +22,6 @@
 
 package common;
 
-import android.util.Log;
-
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
@@ -38,8 +36,6 @@ import trclib.TrcDbgTrace;
 
 public class TensorFlowVision
 {
-    private static final boolean debugEnabled = false;
-
     public class TargetInfo
     {
         public String label;
@@ -91,8 +87,7 @@ public class TensorFlowVision
             TFObjectDetector.Parameters tfodParameters =
                     tfodMonitorViewId == -1?
                             new TFObjectDetector.Parameters() : new TFObjectDetector.Parameters(tfodMonitorViewId);
-            tfod =
-                    ClassFactory.getInstance().createTFObjectDetector(tfodParameters, vuforia.getLocalizer());
+            tfod = ClassFactory.getInstance().createTFObjectDetector(tfodParameters, vuforia.getLocalizer());
             tfod.loadModelFromAsset(TFOD_MODEL_ASSET, LABEL_GOLD_MINERAL, LABEL_SILVER_MINERAL);
         }
         else
@@ -128,7 +123,6 @@ public class TensorFlowVision
     {
         final String funcName = "getTargetInfo";
         TargetInfo targetInfo = null;
-
         //
         // getUpdatedRecognitions() will return null if no new information is available since
         // the last time that call was made.
@@ -136,36 +130,62 @@ public class TensorFlowVision
         List<Recognition> updatedRecognitions = tfod.getUpdatedRecognitions();
         if (updatedRecognitions != null)
         {
-            for (Recognition object: updatedRecognitions)
+            int potentialTargetCount = 0;
+            int targetIndex = 0;
+            Recognition targetObject = null;
+            float targetObjectY = 0.0f;
+            float landscapeHeight = 0.0f;
+            //
+            // Loop through all potential targets and pick the one lowest on the screen (i.e. max Y).
+            //
+            for (int i = 0; i < updatedRecognitions.size(); i++)
             {
+                Recognition object = updatedRecognitions.get(i);
+
+//                tracer.traceInfo(funcName, "***TargetInfo***: [%d: %s]: %.0f/%.0f/%.0f/%.0f",
+//                        i, object.getLabel(), object.getTop(), object.getImageWidth() - object.getRight(),
+//                        object.getHeight(), object.getWidth());
                 if (object.getLabel().equals(label))
                 {
-                    Rect rect = new Rect((int)object.getTop(), (int)object.getRight(),
-                            (int)object.getHeight(), (int)object.getWidth());
+                    float imageWidth = object.getImageWidth();
+                    float objectY = imageWidth - object.getRight();
 
-                    // begin the filtering code.
-                    int halfway = object.getImageWidth() / 2;
-                    float objectY = rect.y + rect.height/2;
-                    if (objectY >= halfway)
+                    potentialTargetCount++;
+                    if (targetObject == null || objectY > targetObjectY)
                     {
-                        // end the filtering code.
-                        if (debugEnabled)
-                        {
-                            tracer.traceInfo(funcName, "###TargetInfo###: %s", targetInfo);
-                        }
+                        targetIndex = potentialTargetCount;
+                        targetObject = object;
+                        targetObjectY = objectY;
+                        landscapeHeight = imageWidth;
+                    }
+                }
+            }
 
-                        return new TargetInfo(
-                                object.getLabel(),
-                                rect,
-                                object.estimateAngleToObject(AngleUnit.DEGREES),
-                                object.getConfidence(),
-                                object.getImageHeight(), object.getImageWidth());
-                   }
+            if (targetObject != null)
+            {
+                //
+                // Found the lowest target on the screen.
+                // Target object is presented in portrait mode but since the phone orientation is really landscape,
+                // we need to transpose the rect to landscape coordinates.
+                //
+                targetInfo = new TargetInfo(
+                        targetObject.getLabel(),
+                        new Rect(
+                                (int)targetObject.getTop(), (int)(landscapeHeight - targetObject.getRight()),
+                                (int)targetObject.getHeight(), (int)targetObject.getWidth()),
+                        targetObject.estimateAngleToObject(AngleUnit.DEGREES),
+                        targetObject.getConfidence(),
+                        targetObject.getImageHeight(), targetObject.getImageWidth());
+
+                if (tracer != null)
+                {
+                    tracer.traceInfo(funcName, "###TargetInfo###: [%d/%d] %s",
+                            targetIndex, potentialTargetCount, targetInfo);
                 }
             }
         }
 
-        return null;
+        return targetInfo;
     }   //getTargetInfo
 
 }   //class TensorFlowVision
