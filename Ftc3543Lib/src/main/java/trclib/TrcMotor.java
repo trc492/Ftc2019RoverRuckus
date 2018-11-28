@@ -233,6 +233,12 @@ public abstract class TrcMotor implements TrcMotorController
                     {
                         motor.odometry.velocity = (motor.odometry.currPos - motor.odometry.prevPos)/deltaTime;
                     }
+
+                    if (debugEnabled)
+                    {
+                        globalTracer.traceInfo(funcName, "[%.3f]: %s encPos=%.0f",
+                                motor.odometry.currTimestamp, motor, motor.odometry.currPos);
+                    }
                 }
             }
         }
@@ -449,9 +455,10 @@ public abstract class TrcMotor implements TrcMotorController
     public double getPosition()
     {
         final String funcName = "getPosition";
-
         final double currPos;
-        synchronized (odometry) {
+
+        synchronized (odometry)
+        {
             currPos = odometry.currPos;
         }
 
@@ -489,7 +496,8 @@ public abstract class TrcMotor implements TrcMotorController
         }
 
         final double velocity;
-        synchronized (odometry) {
+        synchronized (odometry)
+        {
             velocity = odometry.velocity;
         }
 

@@ -623,12 +623,14 @@ public class TrcPidController
         {
             dbgTrace.traceEnter(funcName, TrcDbgTrace.TraceLevel.API, "target=%f,warpSpace=%s", target, warpSpace);
         }
-
+        //
         // Read from input device without holding a lock on this object, since this could
         // be a long-running call.
+        //
         final double input = pidInput.get();
 
-        synchronized (this) {
+        synchronized (this)
+        {
             if (!absSetPoint)
             {
                 //
@@ -655,7 +657,6 @@ public class TrcPidController
             }
 
             setPointSign = Math.signum(currError);
-
             //
             // If there is a valid target range, limit the set point to this range.
             //
@@ -787,11 +788,14 @@ public class TrcPidController
      */
     public double getOutput()
     {
+        //
         // Read from input device without holding a lock on this object, since this could
         // be a long-running call.
+        //
         final double currentInputValue = pidInput.get();
 
-        synchronized (this) {
+        synchronized (this)
+        {
             final String funcName = "getOutput";
 
             if (debugEnabled)

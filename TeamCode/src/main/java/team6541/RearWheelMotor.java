@@ -12,8 +12,9 @@ public class RearWheelMotor extends FtcDcMotor
         this.frontWheelMotor = frontWheelMotor;
     }
 
-    public double getPosition()
+    @Override
+    public double getMotorPosition()
     {
-        return frontWheelMotor.getPosition();
+        return frontWheelMotor.getMotorPosition();
     }
 }   //RearWheelMotor

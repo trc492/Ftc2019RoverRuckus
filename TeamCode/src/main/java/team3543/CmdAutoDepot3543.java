@@ -211,6 +211,7 @@ class CmdAutoDepot3543 implements TrcRobot.RobotCommand
                     break;
 
                 case DRIVE_TO_CRATER:
+                    robot.driveBase.stop();
                     //
                     // Go and park at the crater.
                     //

@@ -179,6 +179,15 @@ public class FtcBNO055Imu
                 gyroData.xRotationRate = angularVelocity.xRotationRate;
                 gyroData.yRotationRate = angularVelocity.yRotationRate;
                 gyroData.zRotationRate = angularVelocity.zRotationRate;
+
+                if (debugEnabled)
+                {
+                    dbgTrace.traceInfo(
+                            instanceName + ".gyroTask",
+                            "[%.3f]: %s xAngle=%.1f, yAngle=%.1f, zAngle=%.1f, xRate=%.1f, yRate=%.1f, zRate=%.1f",
+                            gyroData.timestamp, instanceName + ".gyro", gyroData.xAngle, gyroData.yAngle, gyroData.zAngle,
+                            gyroData.xRotationRate, gyroData.yRotationRate, gyroData.zRotationRate);
+                }
             }
         }   //gyroTask
 
@@ -393,6 +402,17 @@ public class FtcBNO055Imu
                 accelData.xPos = position.x;
                 accelData.yPos = position.y;
                 accelData.zPos = position.z;
+
+                if (debugEnabled)
+                {
+                    dbgTrace.traceInfo(
+                            instanceName + ".accelTask",
+                            "[%.3f]: %s accel=%.1f/%.1f/%.1f, vel=%.1f/%.1f/%.1f, pos=%.1f/%.1f/%.1f",
+                            accelData.timestamp, instanceName + ".accel",
+                            accelData.xAccel, accelData.yAccel, accelData.zAccel,
+                            accelData.xVel, accelData.yVel, accelData.zVel,
+                            accelData.xPos, accelData.yPos, accelData.zPos);
+                }
             }
         }   //accelTask
 
