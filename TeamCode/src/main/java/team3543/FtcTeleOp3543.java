@@ -130,17 +130,9 @@ public class FtcTeleOp3543 extends TeleOpCommon implements TrcGameController.But
                     break;
 
                 case FtcGamepad.GAMEPAD_DPAD_UP:
-                    if (pressed)
-                    {
-                        robot.mineralSweeper.retract();
-                    }
                     break;
 
                 case FtcGamepad.GAMEPAD_DPAD_DOWN:
-                    if (pressed)
-                    {
-                        robot.mineralSweeper.extend();
-                    }
                     break;
 
                 case FtcGamepad.GAMEPAD_DPAD_LEFT:

@@ -91,7 +91,6 @@ public class Robot implements FtcMenu.MenuButtons
     //
     // Other common subsystems.
     //
-    public MineralSweeper mineralSweeper = null;
     public TeamMarkerDeployer teamMarkerDeployer = null;
 
     public Robot(TrcRobot.RunMode runMode)

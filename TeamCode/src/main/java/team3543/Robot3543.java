@@ -26,7 +26,6 @@ import org.firstinspires.ftc.robotcore.external.matrices.OpenGLMatrix;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 
-import common.MineralSweeper;
 import common.PixyVision;
 import common.Robot;
 import common.RobotInfo;
@@ -196,8 +195,6 @@ public class Robot3543 extends Robot
         // Initialize other subsystems.
         //
         elevator = new Elevator3543();
-        mineralSweeper = new MineralSweeper(
-                RobotInfo3543.MINERAL_SWEEPER_EXTEND_POSITION, RobotInfo3543.MINERAL_SWEEPER_RETRACT_POSITION);
         teamMarkerDeployer = new TeamMarkerDeployer(
                 RobotInfo3543.DEPLOYER_OPEN_POSITION, RobotInfo3543.DEPLOYER_CLOSE_POSITION);
         //

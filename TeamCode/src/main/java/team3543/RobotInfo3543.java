@@ -76,8 +76,6 @@ class RobotInfo3543 extends RobotInfo
     //
     // Other subsystems.
     //
-    public static final double MINERAL_SWEEPER_EXTEND_POSITION  = 0.0;
-    public static final double MINERAL_SWEEPER_RETRACT_POSITION = 0.7;
     public static final double DEPLOYER_OPEN_POSITION           = 0.8;
     public static final double DEPLOYER_CLOSE_POSITION          = 0.2;
     //
