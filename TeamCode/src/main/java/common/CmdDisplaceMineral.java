@@ -163,7 +163,6 @@ public class CmdDisplaceMineral implements TrcRobot.RobotCommand
                     targetY = 0.0;
                     robot.targetHeading = mineralAngle;
                     robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
-                    // sm.waitForSingleEvent(event, State.DONE); // lol
                     sm.waitForSingleEvent(event, State.DISPLACE_MINERAL);
                     break;
 
@@ -172,7 +171,7 @@ public class CmdDisplaceMineral implements TrcRobot.RobotCommand
                     // Drive forward to displace the mineral.
                     //
                     startPos = robot.driveBase.getYPosition();
-                    targetX = -unhookDisplacement;
+                    targetX = mineralAngle > 0.0? 0.0: -unhookDisplacement;
                     if (startAtDepot)
                     {
                         //
@@ -186,7 +185,7 @@ public class CmdDisplaceMineral implements TrcRobot.RobotCommand
                         //
                         // We are starting on the crater side. It means we will end at our starting position.
                         //
-                        targetY = mineralAngle == 0.0? 12.0: 18.0;
+                        targetY = mineralAngle == 0.0? 30.0: mineralAngle > 0.0? 28.0: 30.0;
                         nextState = State.BACK_TO_START_POSITION;
                     }
                     robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
@@ -199,8 +198,9 @@ public class CmdDisplaceMineral implements TrcRobot.RobotCommand
                     // By subtracting our current Y position from the start position recorded, we cancel
                     // out any PID drive error that may have been accumulated.
                     //
+                    double offset = mineralAngle < 0.0? 20.0: 15.0;
                     targetX = 0.0;
-                    targetY = startPos - robot.driveBase.getYPosition();
+                    targetY = startPos + offset - robot.driveBase.getYPosition();
                     robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
                     sm.waitForSingleEvent(event, State.DONE);
                     break;
@@ -221,7 +221,7 @@ public class CmdDisplaceMineral implements TrcRobot.RobotCommand
                     // Drive forward to the depot and we are done.
                     //
                     targetX = 0.0;
-                    targetY = 44.0;//48.0;
+                    targetY = 44.0;
                     robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
                     sm.waitForSingleEvent(event, State.DONE);
                     break;

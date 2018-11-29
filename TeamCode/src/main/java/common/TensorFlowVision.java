@@ -147,8 +147,8 @@ public class TensorFlowVision
 //                        object.getHeight(), object.getWidth());
                 if (object.getLabel().equals(label))
                 {
-                    float imageWidth = object.getImageWidth();
-                    float objectY = imageWidth - object.getRight();
+                    float portraitWidth = object.getImageWidth();
+                    float objectY = portraitWidth - object.getRight();
 
                     potentialTargetCount++;
                     if (targetObject == null || objectY > targetObjectY)
@@ -156,7 +156,7 @@ public class TensorFlowVision
                         targetIndex = potentialTargetCount;
                         targetObject = object;
                         targetObjectY = objectY;
-                        landscapeHeight = imageWidth;
+                        landscapeHeight = portraitWidth;
                     }
                 }
             }

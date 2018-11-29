@@ -181,7 +181,7 @@ public class CmdAutoCrater3543 implements TrcRobot.RobotCommand
                     robot.elevator.setPosition(RobotInfo3543.ELEVATOR_MIN_HEIGHT);
                     targetX = 0.0;
                     targetY = 0.0;
-                    robot.targetHeading = -90.0;
+                    robot.targetHeading = -80.0;
                     robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
                     sm.waitForSingleEvent(event, State.DRIVE_TO_WALL);
                     break;
@@ -202,7 +202,7 @@ public class CmdAutoCrater3543 implements TrcRobot.RobotCommand
                     //
                     targetX = 0.0;
                     targetY = 0.0;
-                    robot.targetHeading -= 45.0;
+                    robot.targetHeading -= 55.0;
                     nextState = doTeamMarker? State.DRIVE_TO_DEPOT: State.DRIVE_FROM_MID_WALL_TO_CRATER;
                     robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
                     sm.waitForSingleEvent(event, nextState);
@@ -213,7 +213,7 @@ public class CmdAutoCrater3543 implements TrcRobot.RobotCommand
                     // Go to the depot to drop off team marker.
                     //
                     targetX = 0.0;
-                    targetY = 36.0;
+                    targetY = 48.0;
                     robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
                     sm.waitForSingleEvent(event, State.DROP_TEAM_MARKER);
                     break;
@@ -232,7 +232,7 @@ public class CmdAutoCrater3543 implements TrcRobot.RobotCommand
                     // Go to the crater and park there.
                     //
                     targetX = 0.0;
-                    targetY = -72.0;
+                    targetY = -85.0;
                     robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
                     sm.waitForSingleEvent(event, State.DONE);
                     break;
