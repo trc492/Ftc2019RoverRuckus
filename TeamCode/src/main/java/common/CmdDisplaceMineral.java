@@ -162,7 +162,8 @@ public class CmdDisplaceMineral implements TrcRobot.RobotCommand
                     targetX = 0.0;
                     targetY = 0.0;
                     robot.targetHeading = mineralAngle;
-                    robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
+                    robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event, 2.0);
+
                     sm.waitForSingleEvent(event, State.DISPLACE_MINERAL);
                     break;
 
@@ -177,7 +178,7 @@ public class CmdDisplaceMineral implements TrcRobot.RobotCommand
                         //
                         // We are starting on the depot side. It means we will end inside the depot.
                         //
-                        targetY = mineralAngle == 0.0? 56.0: 48.0;//50.0; // 64.0;
+                        targetY = mineralAngle == 0.0? 56.0: 44.0; // prev side: 48in
                         nextState = mineralAngle == 0.0? State.DONE: State.TURN_TO_DEPOT;
                     }
                     else
@@ -211,7 +212,7 @@ public class CmdDisplaceMineral implements TrcRobot.RobotCommand
                     // We need to turn towards the depot.
                     //
                     targetX = targetY = 0.0;
-                    robot.targetHeading += mineralAngle == -sideMineralAngle? 90.0: -90.0;
+                    robot.targetHeading += mineralAngle == -sideMineralAngle? 90.0: -90.0; // prev: 90.0 : -90.0
                     robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
                     sm.waitForSingleEvent(event, State.DRIVE_TO_DEPOT);
                     break;

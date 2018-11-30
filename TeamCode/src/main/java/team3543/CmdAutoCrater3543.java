@@ -83,6 +83,7 @@ public class CmdAutoCrater3543 implements TrcRobot.RobotCommand
         TURN_TO_DEPOT,
         DRIVE_TO_DEPOT,
         DROP_TEAM_MARKER,
+        KISS_THE_WALL,
         DRIVE_TO_CRATER,
         DRIVE_FROM_MID_WALL_TO_CRATER,
         DONE
@@ -191,7 +192,7 @@ public class CmdAutoCrater3543 implements TrcRobot.RobotCommand
                     // Drive to mid-wall.
                     //
                     targetX = 0.0;
-                    targetY = 54.0;
+                    targetY = 50.0; //54.0;
                     robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
                     sm.waitForSingleEvent(event, State.TURN_TO_DEPOT);
                     break;
@@ -223,16 +224,23 @@ public class CmdAutoCrater3543 implements TrcRobot.RobotCommand
                     // Release team marker by opening the deployer.
                     //
                     robot.teamMarkerDeployer.open();
-                    timer.set(4.0, event);
+                    timer.set(3.0, event); // prev: 4 seconds
+                    sm.waitForSingleEvent(event, State.KISS_THE_WALL);
+                    break;
+
+                case KISS_THE_WALL:
+                    robot.driveBase.holonomicDrive(0.6, 0.0, 0.0);
+                    timer.set(1.0, event);
                     sm.waitForSingleEvent(event, State.DRIVE_TO_CRATER);
                     break;
 
                 case DRIVE_TO_CRATER:
+                    robot.driveBase.stop();
                     //
                     // Go to the crater and park there.
                     //
                     targetX = 0.0;
-                    targetY = -85.0;
+                    targetY = -90.0; //-85.0;
                     robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
                     sm.waitForSingleEvent(event, State.DONE);
                     break;
