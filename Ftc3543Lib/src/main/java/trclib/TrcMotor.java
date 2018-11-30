@@ -70,7 +70,7 @@ public abstract class TrcMotor implements TrcMotorController
         double velocity;
     }   //class Odometry
 
-    private static final ArrayList<TrcMotor> motorsList = new ArrayList<>();
+    private static final ArrayList<TrcMotor> odometryMotors = new ArrayList<>();
     private static TrcTaskMgr.TaskObject odometryTaskObj = null;
     private final Odometry odometry = new Odometry();
 
@@ -122,6 +122,39 @@ public abstract class TrcMotor implements TrcMotorController
     }   //toString
 
     /**
+     * This method returns the number of motors in the list registered for odometry monitoring.
+     *
+     * @return number of motors in the list.
+     */
+    public static int getNumOdometryMotors()
+    {
+        int numMotors;
+
+        synchronized (odometryMotors)
+        {
+            numMotors = odometryMotors.size();
+        }
+
+        return numMotors;
+    }   //getNumOdometryMotors
+
+    /**
+     * This method clears the list of motors that register for odometry monitoring. This method should only be called
+     * by the task scheduler.
+     */
+    public static void clearOdometryMotorsList()
+    {
+        synchronized (odometryMotors)
+        {
+            if (odometryMotors.size() > 0)
+            {
+                odometryMotors.clear();
+                odometryTaskObj.unregisterTask(TaskType.INPUT_TASK);
+            }
+        }
+    }   //clearOdometryMotorsList
+
+    /**
      * This method resets the odometry data for the motor.
      */
     private void resetOdometry()
@@ -152,10 +185,10 @@ public abstract class TrcMotor implements TrcMotorController
         if (enabled)
         {
             resetOdometry();
-            synchronized (motorsList)
+            synchronized (odometryMotors)
             {
-                motorsList.add(this);
-                if (motorsList.size() == 1)
+                odometryMotors.add(this);
+                if (odometryMotors.size() == 1)
                 {
                     //
                     // We are the first one on the list, start the task.
@@ -166,10 +199,10 @@ public abstract class TrcMotor implements TrcMotorController
         }
         else
         {
-            synchronized (motorsList)
+            synchronized (odometryMotors)
             {
-                motorsList.remove(this);
-                if (motorsList.isEmpty())
+                odometryMotors.remove(this);
+                if (odometryMotors.isEmpty())
                 {
                     //
                     // We were the only one on the list, stop the task.
@@ -217,9 +250,9 @@ public abstract class TrcMotor implements TrcMotorController
                     "taskType=%s,runMode=%s", taskType, runMode);
         }
 
-        synchronized (motorsList)
+        synchronized (odometryMotors)
         {
-            for (TrcMotor motor: motorsList)
+            for (TrcMotor motor: odometryMotors)
             {
                 synchronized (motor.odometry)
                 {

@@ -30,6 +30,7 @@ import java.util.Locale;
 
 import hallib.HalDashboard;
 import trclib.TrcDbgTrace;
+import trclib.TrcMotor;
 import trclib.TrcRobot;
 import trclib.TrcTaskMgr;
 import trclib.TrcUtil;
@@ -283,6 +284,13 @@ public abstract class FtcOpMode extends LinearOpMode implements TrcRobot.RobotMo
         }
         TrcRobot.setRunMode(runMode);
 
+        if (TrcMotor.getNumOdometryMotors() > 0)
+        {
+            throw new IllegalStateException(
+                    String.format("Odometry motors list is not empty (numMotors=%d)!",
+                            TrcMotor.getNumOdometryMotors()));
+        }
+
         //
         // robotInit contains code to initialize the robot.
         //
@@ -397,6 +405,8 @@ public abstract class FtcOpMode extends LinearOpMode implements TrcRobot.RobotMo
 
             startNanoTime = TrcUtil.getCurrentTimeNanos();
         }
+        TrcMotor.clearOdometryMotorsList();
+
         //
         // runOpMode could be "interrupted" soon, so the taskmgr.shutdown() call below may not run.
         // Explicitly terminating all taskmgr threads while we still can.
