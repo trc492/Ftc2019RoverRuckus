@@ -37,28 +37,30 @@ class RobotInfo3543 extends RobotInfo
     // 2018-10-27: Kp=0.1, Ki=0.0, Kd=0.0, Scale=0.0177558441951763
     //
     // 31 inches
-    static final double ENCODER_X_KP                            = 0.1; // 0.15 / (31.0 / 36.0);
+    static final double ENCODER_X_KP                            = 0.1;
     static final double ENCODER_X_KI                            = 0.0;
     static final double ENCODER_X_KD                            = 0.0;
     static final double ENCODER_X_TOLERANCE                     = 2.0;
     static final double ENCODER_X_INCHES_PER_COUNT              = 0.0177558441951763 * (26.5 / 36.8) * (24.25 / 25.1) * (37.0 / 36.2);  // (16.0 / 1352.5) * (26.0 / 24.6) * (37.4 / 40.0) * (37.1 / 42.0); //0.0177558441951763; // 1352.5
     //
     // 2018-10-27: Kp=0.035, Ki=0.0, Kd=0.0025, Scale=0.0172934
+    // 2018-11-29: Kp=0.05, Ki=0.0, Kd=0.0, Scale=0.0158423538151923
     //
-    static final double ENCODER_Y_KP                            = 0.05; //0.035;
+    static final double ENCODER_Y_KP                            = 0.05;
     static final double ENCODER_Y_KI                            = 0.0;
-    static final double ENCODER_Y_KD                            = 0.0025;
+    static final double ENCODER_Y_KD                            = 0.0;
     static final double ENCODER_Y_TOLERANCE                     = 1.0;
-    static final double ENCODER_Y_INCHES_PER_COUNT              = 43.0 / 2686.0; // 52.75 / 3284.5; //0.0172934;
+    static final double ENCODER_Y_INCHES_PER_COUNT              = 0.0158423538151923;
     //
     // 2018-10-27: Kp=0.025, Ki=0.0, Kd=0.0
+    // 2018-11-29: Kp=0.025, Ki=0.0, Kd=0.0025
     //
     static final double GYRO_KP                                 = 0.025;
     static final double GYRO_KI                                 = 0.0;
-    static final double GYRO_KD                                 = 0.002;
+    static final double GYRO_KD                                 = 0.0025;
     static final double GYRO_TOLERANCE                          = 2.0;
 
-    static final double PIDDRIVE_STALL_TIMEOUT                  = 1.0; // prev: 0.25     //in msec.
+    static final double PIDDRIVE_STALL_TIMEOUT                  = 0.5;      //in seconds.
     //
     // Elevator subsystem.
     // 2018-10-27: Kp=3.0, Ki=0.0, Kd=0.0, Scale=5.625/8498
