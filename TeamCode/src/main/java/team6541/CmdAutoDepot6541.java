@@ -79,6 +79,8 @@ class CmdAutoDepot6541 implements TrcRobot.RobotCommand
         DISPLACE_MINERAL,
         DROP_TEAM_MARKER,
         TURN_TO_CRATER,
+        DRIVE_TO_MID_WALL,
+        TURN_AT_MID_WALL,
         DRIVE_TO_CRATER,
         DONE
     }   //enum State
@@ -190,11 +192,32 @@ class CmdAutoDepot6541 implements TrcRobot.RobotCommand
 
                 case TURN_TO_CRATER:
                     //
-                    // Turn towards the crater.
+                    // Turn towards the mid wall.
                     //
                     targetX = 0.0;
                     targetY = 0.0;
-                    robot.targetHeading = 45.0;
+                    robot.targetHeading = 60.0;
+                    robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
+                    sm.waitForSingleEvent(event, State.DRIVE_TO_MID_WALL);
+                    break;
+
+                case DRIVE_TO_MID_WALL:
+                    //
+                    // Drive towards the mid wall
+                    //
+                    targetX = 0.0;
+                    targetY = -36.0;
+                    robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
+                    sm.waitForSingleEvent(event, State.TURN_AT_MID_WALL);
+                    break;
+
+                case TURN_AT_MID_WALL:
+                    //
+                    // Stop mid-wall and turn a bit to avoid the mineral
+                    //
+                    targetX = 0.0;
+                    targetY = 0.0;
+                    robot.targetHeading = 45;
                     robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
                     sm.waitForSingleEvent(event, State.DRIVE_TO_CRATER);
                     break;
@@ -204,7 +227,7 @@ class CmdAutoDepot6541 implements TrcRobot.RobotCommand
                     // Go and park at the crater.
                     //
                     targetX = 0.0;
-                    targetY = -72.0;
+                    targetY = -40.0;
                     robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
                     sm.waitForSingleEvent(event, State.DONE);
                     break;

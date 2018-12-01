@@ -46,9 +46,9 @@ class RobotInfo6541 extends RobotInfo
     // 2018-11-02: Kp=0.025, Ki=0.0, Kd=0.002
     // 2018-11-29: Kp=0.022, Ki=0.0, Kd=0.0025
     //
-    static final double GYRO_KP                                 = 0.022;
+    static final double GYRO_KP                                 = 0.02;
     static final double GYRO_KI                                 = 0.0;
-    static final double GYRO_KD                                 = 0.0025;
+    static final double GYRO_KD                                 = 0.00275;
     static final double GYRO_TOLERANCE                          = 2.0;
 
     static final double PIDDRIVE_STALL_TIMEOUT                  = 0.5;     //in seconds.
