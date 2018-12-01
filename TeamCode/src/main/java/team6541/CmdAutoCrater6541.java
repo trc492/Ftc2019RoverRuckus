@@ -189,7 +189,7 @@ public class CmdAutoCrater6541 implements TrcRobot.RobotCommand
                     // Drive to mid-wall.
                     //
                     targetX = 0.0;
-                    targetY = 52.0;
+                    targetY = 50.0;
                     robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
                     sm.waitForSingleEvent(event, State.TURN_TO_DEPOT);
                     break;

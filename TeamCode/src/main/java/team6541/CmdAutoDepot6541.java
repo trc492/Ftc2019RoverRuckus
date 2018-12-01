@@ -227,7 +227,7 @@ class CmdAutoDepot6541 implements TrcRobot.RobotCommand
                     // Go and park at the crater.
                     //
                     targetX = 0.0;
-                    targetY = -36.0;
+                    targetY = -40.0;
                     robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
                     sm.waitForSingleEvent(event, State.DONE);
                     break;
