@@ -212,7 +212,7 @@ public class CmdDisplaceMineral implements TrcRobot.RobotCommand
                     // We need to turn towards the depot.
                     //
                     targetX = targetY = 0.0;
-                    robot.targetHeading += mineralAngle == -sideMineralAngle? 90.0: -90.0; // prev: 90.0 : -90.0
+                    robot.targetHeading += mineralAngle == -sideMineralAngle? 80.0: -80.0; // prev: 90.0 : -90.0
                     robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
                     sm.waitForSingleEvent(event, State.DRIVE_TO_DEPOT);
                     break;
