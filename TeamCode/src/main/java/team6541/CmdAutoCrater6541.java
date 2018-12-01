@@ -139,7 +139,7 @@ public class CmdAutoCrater6541 implements TrcRobot.RobotCommand
                     //
                     robot.tracer.traceInfo(moduleName, "Initial heading=%f", robot.driveBase.getHeading());
                     robot.elevator.openHook();
-                    timer.set(1.5, event);
+                    timer.set(2.5, event);
                     nextState = doMineral? State.DO_MINERAL: State.TURN_TO_WALL;
                     sm.waitForSingleEvent(event, nextState);
                     break;
@@ -188,7 +188,7 @@ public class CmdAutoCrater6541 implements TrcRobot.RobotCommand
                     // Drive to mid-wall.
                     //
                     targetX = 0.0;
-                    targetY = 54.0;
+                    targetY = 50.0;
                     robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
                     sm.waitForSingleEvent(event, State.TURN_TO_DEPOT);
                     break;
@@ -220,7 +220,7 @@ public class CmdAutoCrater6541 implements TrcRobot.RobotCommand
                     // Release team marker by opening the deployer.
                     //
                     robot.teamMarkerDeployer.open();
-                    timer.set(4.0, event);
+                    timer.set(1.0, event);
                     sm.waitForSingleEvent(event, State.DRIVE_TO_CRATER);
                     break;
 
@@ -249,6 +249,9 @@ public class CmdAutoCrater6541 implements TrcRobot.RobotCommand
                     //
                     // We are done.
                     //
+                    robot.elevator.closeHook();
+                    timer.set(2.5, event);
+                    robot.elevator.zeroCalibrate();
                     sm.stop();
                     break;
             }
