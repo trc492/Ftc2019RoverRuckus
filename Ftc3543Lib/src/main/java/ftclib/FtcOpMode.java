@@ -286,9 +286,12 @@ public abstract class FtcOpMode extends LinearOpMode implements TrcRobot.RobotMo
 
         if (TrcMotor.getNumOdometryMotors() > 0)
         {
-            throw new IllegalStateException(
-                    String.format("Odometry motors list is not empty (numMotors=%d)!",
-                            TrcMotor.getNumOdometryMotors()));
+            TrcMotor.clearOdometryMotorsList();
+            if (debugEnabled)
+            {
+                dbgTrace.traceInfo(funcName, "Odometry motors list is not empty (numMotors=%d)!",
+                        TrcMotor.getNumOdometryMotors());
+            }
         }
 
         //
