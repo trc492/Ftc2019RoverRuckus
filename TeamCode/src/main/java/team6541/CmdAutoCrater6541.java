@@ -83,6 +83,7 @@ public class CmdAutoCrater6541 implements TrcRobot.RobotCommand
         DRIVE_TO_DEPOT,
         DROP_TEAM_MARKER,
         DRIVE_TO_CRATER,
+        TURN_AT_MID_WALL,
         DRIVE_FROM_MID_WALL_TO_CRATER,
         DONE
     }   //enum State
@@ -188,7 +189,7 @@ public class CmdAutoCrater6541 implements TrcRobot.RobotCommand
                     // Drive to mid-wall.
                     //
                     targetX = 0.0;
-                    targetY = 50.0;
+                    targetY = 52.0;
                     robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
                     sm.waitForSingleEvent(event, State.TURN_TO_DEPOT);
                     break;
@@ -229,9 +230,20 @@ public class CmdAutoCrater6541 implements TrcRobot.RobotCommand
                     // Go to the crater and park there.
                     //
                     targetX = 0.0;
-                    targetY = -85.0;
+                    targetY = -50.0;
                     robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
-                    sm.waitForSingleEvent(event, State.DONE);
+                    sm.waitForSingleEvent(event, State.DRIVE_FROM_MID_WALL_TO_CRATER);
+                    break;
+
+                case TURN_AT_MID_WALL:
+                    //
+                    // Stop mid-wall and turn a bit to avoid the mineral
+                    //
+                    targetX = 0.0;
+                    targetY = 0.0;
+                    robot.targetHeading -= 20;
+                    robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
+                    sm.waitForSingleEvent(event, State.DRIVE_FROM_MID_WALL_TO_CRATER);
                     break;
 
                 case DRIVE_FROM_MID_WALL_TO_CRATER:
