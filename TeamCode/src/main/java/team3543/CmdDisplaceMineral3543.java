@@ -20,19 +20,20 @@
  * SOFTWARE.
  */
 
-package common;
+package team3543;
 
+import common.Robot;
 import trclib.TrcEvent;
 import trclib.TrcRobot;
 import trclib.TrcStateMachine;
 
-public class CmdDisplaceMineral implements TrcRobot.RobotCommand
+public class CmdDisplaceMineral3543 implements TrcRobot.RobotCommand
 {
     private static final boolean debugXPid = true;
     private static final boolean debugYPid = true;
     private static final boolean debugTurnPid = true;
 
-    private static final String moduleName = "CmdDisplaceMineral";
+    private static final String moduleName = "CmdDisplaceMineral3543";
 
     private Robot robot;
     private boolean startAtDepot;
@@ -52,7 +53,7 @@ public class CmdDisplaceMineral implements TrcRobot.RobotCommand
      * @param robot specifies the robot object.
      * @param startAtDepot specifies true if starting position is at the depot side, false if at the crater side.
      */
-    public CmdDisplaceMineral(Robot robot, boolean startAtDepot, double sideMineralAngle, double unhookDisplacement)
+    public CmdDisplaceMineral3543(Robot robot, boolean startAtDepot, double sideMineralAngle, double unhookDisplacement)
     {
         this.robot = robot;
         this.startAtDepot = startAtDepot;
@@ -61,7 +62,7 @@ public class CmdDisplaceMineral implements TrcRobot.RobotCommand
         event = new TrcEvent(moduleName);
         sm = new TrcStateMachine<>(moduleName);
         sm.start(State.SCAN_MINERAL);
-    }   //CmdDisplaceMineral
+    }   //CmdDisplaceMineral3543
 
     enum State
     {
@@ -163,7 +164,6 @@ public class CmdDisplaceMineral implements TrcRobot.RobotCommand
                     targetY = 0.0;
                     robot.targetHeading = mineralAngle;
                     robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event, 2.0);
-
                     sm.waitForSingleEvent(event, State.DISPLACE_MINERAL);
                     break;
 
@@ -187,7 +187,6 @@ public class CmdDisplaceMineral implements TrcRobot.RobotCommand
                         // We are starting on the crater side. It means we will end at our starting position.
                         //
                         targetY = mineralAngle == 0.0? 30.0: mineralAngle > 0.0? 28.0: 30.0;
-                        // Elaine wants targetY = mineralAngle == 0.0? 30.0: mineralAngle > 0.0? 35.0: 35.0;
                         nextState = State.BACK_TO_START_POSITION;
                     }
                     robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
@@ -213,7 +212,7 @@ public class CmdDisplaceMineral implements TrcRobot.RobotCommand
                     // We need to turn towards the depot.
                     //
                     targetX = targetY = 0.0;
-                    robot.targetHeading += mineralAngle == -sideMineralAngle? 80.0: -80.0; // (Elaine wants 75.0 : -75.0, Victor wants an 80 degree angle), original: 90.0 : -90.0
+                    robot.targetHeading += mineralAngle == -sideMineralAngle? 80.0: -80.0; // prev: 90.0 : -90.0
                     robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
                     sm.waitForSingleEvent(event, State.DRIVE_TO_DEPOT);
                     break;
@@ -223,7 +222,7 @@ public class CmdDisplaceMineral implements TrcRobot.RobotCommand
                     // Drive forward to the depot and we are done.
                     //
                     targetX = 0.0;
-                    targetY = 44.0; // Elaine wants this changed to 42.0
+                    targetY = 44.0;
                     robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
                     sm.waitForSingleEvent(event, State.DONE);
                     break;
@@ -283,4 +282,4 @@ public class CmdDisplaceMineral implements TrcRobot.RobotCommand
         return mineralAngle;
     }   //getMineralAngle
 
-}   //class CmdDisplaceMineral
+}   //class CmdDisplaceMineral3543

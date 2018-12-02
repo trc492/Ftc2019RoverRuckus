@@ -23,7 +23,6 @@
 package team3543;
 
 import common.AutoCommon;
-import common.CmdDisplaceMineral;
 import trclib.TrcEvent;
 import trclib.TrcRobot;
 import trclib.TrcStateMachine;
@@ -160,9 +159,8 @@ class CmdAutoDepot3543 implements TrcRobot.RobotCommand
                     // Set up CmdDisplaceMineral to use vision to displace the gold mineral.
                     //
                     robot.elevator.setPosition(RobotInfo3543.ELEVATOR_MIN_HEIGHT);
-                    cmdDisplaceMineral = new CmdDisplaceMineral(
+                    cmdDisplaceMineral = new CmdDisplaceMineral3543(
                             robot, true, RobotInfo3543.SIDE_MINERAL_ANGLE, RobotInfo3543.UNHOOK_DISPLACEMENT);
-                    // sm.setState(State.DONE); // lol
                     sm.setState(State.DISPLACE_MINERAL);
                     //
                     // Intentionally falling through.
@@ -175,7 +173,6 @@ class CmdAutoDepot3543 implements TrcRobot.RobotCommand
                     if (cmdDisplaceMineral.cmdPeriodic(elapsedTime))
                     {
                         sm.setState(doTeamMarker? State.DROP_TEAM_MARKER: State.TURN_TO_CRATER);
-                        // sm.setState(State.DONE);
                     }
                     else
                     {

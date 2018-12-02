@@ -23,7 +23,6 @@
 package team6541;
 
 import common.AutoCommon;
-import common.CmdDisplaceMineral;
 import trclib.TrcEvent;
 import trclib.TrcRobot;
 import trclib.TrcStateMachine;
@@ -46,7 +45,6 @@ public class CmdAutoCrater6541 implements TrcRobot.RobotCommand
     private TrcEvent event;
     private TrcTimer timer;
     private TrcStateMachine<State> sm;
-    private double targetX = 0.0;
     private double targetY = 0.0;
     private TrcRobot.RobotCommand cmdDisplaceMineral = null;
 
@@ -83,7 +81,6 @@ public class CmdAutoCrater6541 implements TrcRobot.RobotCommand
         DRIVE_TO_DEPOT,
         DROP_TEAM_MARKER,
         DRIVE_TO_CRATER,
-        TURN_AT_MID_WALL,
         DRIVE_FROM_MID_WALL_TO_CRATER,
         DONE
     }   //enum State
@@ -149,9 +146,10 @@ public class CmdAutoCrater6541 implements TrcRobot.RobotCommand
                     //
                     // Set up CmdDisplaceMineral to use vision to displace the gold mineral.
                     //
+                    robot.elevator.closeHook();
                     robot.elevator.setPosition(RobotInfo6541.ELEVATOR_MIN_HEIGHT);
-                    cmdDisplaceMineral = new CmdDisplaceMineral(
-                            robot, false, RobotInfo6541.SIDE_MINERAL_ANGLE, 0.0);
+                    cmdDisplaceMineral = new CmdDisplaceMineral6541(
+                            robot, false, RobotInfo6541.SIDE_MINERAL_ANGLE);
                     sm.setState(State.DISPLACE_MINERAL);
                     //
                     // Intentionally falling through.
@@ -176,11 +174,11 @@ public class CmdAutoCrater6541 implements TrcRobot.RobotCommand
                     //
                     // We are at the starting position, let's turn towards mid-wall.
                     //
+                    robot.elevator.closeHook();
                     robot.elevator.setPosition(RobotInfo6541.ELEVATOR_MIN_HEIGHT);
-                    targetX = 0.0;
                     targetY = 0.0;
                     robot.targetHeading = -80.0;
-                    robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
+                    robot.pidDrive.setTarget(targetY, robot.targetHeading, false, event);
                     sm.waitForSingleEvent(event, State.DRIVE_TO_WALL);
                     break;
 
@@ -188,9 +186,8 @@ public class CmdAutoCrater6541 implements TrcRobot.RobotCommand
                     //
                     // Drive to mid-wall.
                     //
-                    targetX = 0.0;
                     targetY = 50.0;
-                    robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
+                    robot.pidDrive.setTarget(targetY, robot.targetHeading, false, event);
                     sm.waitForSingleEvent(event, State.TURN_TO_DEPOT);
                     break;
 
@@ -198,11 +195,10 @@ public class CmdAutoCrater6541 implements TrcRobot.RobotCommand
                     //
                     // Turn parallel to the wall and facing the depot.
                     //
-                    targetX = 0.0;
                     targetY = 0.0;
                     robot.targetHeading -= 55.0;
                     nextState = doTeamMarker? State.DRIVE_TO_DEPOT: State.DRIVE_FROM_MID_WALL_TO_CRATER;
-                    robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
+                    robot.pidDrive.setTarget(targetY, robot.targetHeading, false, event);
                     sm.waitForSingleEvent(event, nextState);
                     break;
 
@@ -210,9 +206,8 @@ public class CmdAutoCrater6541 implements TrcRobot.RobotCommand
                     //
                     // Go to the depot to drop off team marker.
                     //
-                    targetX = 0.0;
                     targetY = 48.0;
-                    robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
+                    robot.pidDrive.setTarget(targetY, robot.targetHeading, false, event);
                     sm.waitForSingleEvent(event, State.DROP_TEAM_MARKER);
                     break;
 
@@ -229,20 +224,8 @@ public class CmdAutoCrater6541 implements TrcRobot.RobotCommand
                     //
                     // Go to the crater and park there.
                     //
-                    targetX = 0.0;
                     targetY = -50.0;
-                    robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
-                    sm.waitForSingleEvent(event, State.DRIVE_FROM_MID_WALL_TO_CRATER);
-                    break;
-
-                case TURN_AT_MID_WALL:
-                    //
-                    // Stop mid-wall and turn a bit to avoid the mineral
-                    //
-                    targetX = 0.0;
-                    targetY = 0.0;
-                    robot.targetHeading -= 20;
-                    robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
+                    robot.pidDrive.setTarget(targetY, robot.targetHeading, false, event);
                     sm.waitForSingleEvent(event, State.DRIVE_FROM_MID_WALL_TO_CRATER);
                     break;
 
@@ -250,9 +233,8 @@ public class CmdAutoCrater6541 implements TrcRobot.RobotCommand
                     //
                     // Go to the crater and park there.
                     //
-                    targetX = 0.0;
                     targetY = -36.0;
-                    robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
+                    robot.pidDrive.setTarget(targetY, robot.targetHeading, false, event);
                     sm.waitForSingleEvent(event, State.DONE);
                     break;
 
@@ -261,16 +243,13 @@ public class CmdAutoCrater6541 implements TrcRobot.RobotCommand
                     //
                     // We are done.
                     //
-                    robot.elevator.closeHook();
-                    timer.set(2.5, event);
-                    robot.elevator.zeroCalibrate();
                     sm.stop();
                     break;
             }
 
             if (traceState)
             {
-                robot.traceStateInfo(elapsedTime, state.toString(), targetX, targetY, robot.targetHeading);
+                robot.traceStateInfo(elapsedTime, state.toString(), 0.0, targetY, robot.targetHeading);
             }
         }
 

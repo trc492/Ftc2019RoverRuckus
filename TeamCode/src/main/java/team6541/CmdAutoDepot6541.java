@@ -23,7 +23,6 @@
 package team6541;
 
 import common.AutoCommon;
-import common.CmdDisplaceMineral;
 import trclib.TrcEvent;
 import trclib.TrcRobot;
 import trclib.TrcStateMachine;
@@ -46,7 +45,6 @@ class CmdAutoDepot6541 implements TrcRobot.RobotCommand
     private TrcTimer timer;
     private TrcStateMachine<State> sm;
 
-    private double targetX = 0.0;
     private double targetY = 0.0;
     private TrcRobot.RobotCommand cmdDisplaceMineral = null;
 
@@ -146,11 +144,11 @@ class CmdAutoDepot6541 implements TrcRobot.RobotCommand
                     //
                     // We are not using vision, so just plow through the middle mineral to the depot.
                     //
+                    robot.elevator.closeHook();
                     robot.elevator.setPosition(RobotInfo6541.ELEVATOR_MIN_HEIGHT);
-                    targetX = 0.0;
                     targetY = 36.0;
                     nextState = doTeamMarker? State.DROP_TEAM_MARKER: State.TURN_TO_CRATER;
-                    robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
+                    robot.pidDrive.setTarget(targetY, robot.targetHeading, false, event);
                     sm.waitForSingleEvent(event, nextState);
                     break;
 
@@ -158,9 +156,10 @@ class CmdAutoDepot6541 implements TrcRobot.RobotCommand
                     //
                     // Set up CmdDisplaceMineral to use vision to displace the gold mineral.
                     //
+                    robot.elevator.closeHook();
                     robot.elevator.setPosition(RobotInfo6541.ELEVATOR_MIN_HEIGHT);
-                    cmdDisplaceMineral = new CmdDisplaceMineral(
-                            robot, true, RobotInfo6541.SIDE_MINERAL_ANGLE, 0.0);
+                    cmdDisplaceMineral = new CmdDisplaceMineral6541(
+                            robot, true, RobotInfo6541.SIDE_MINERAL_ANGLE);
                     sm.setState(State.DISPLACE_MINERAL);
                     //
                     // Intentionally falling through.
@@ -194,10 +193,9 @@ class CmdAutoDepot6541 implements TrcRobot.RobotCommand
                     //
                     // Turn towards the mid wall.
                     //
-                    targetX = 0.0;
                     targetY = 0.0;
                     robot.targetHeading = 60.0;
-                    robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
+                    robot.pidDrive.setTarget(targetY, robot.targetHeading, false, event);
                     sm.waitForSingleEvent(event, State.DRIVE_TO_MID_WALL);
                     break;
 
@@ -205,9 +203,8 @@ class CmdAutoDepot6541 implements TrcRobot.RobotCommand
                     //
                     // Drive towards the mid wall
                     //
-                    targetX = 0.0;
                     targetY = -36.0;
-                    robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
+                    robot.pidDrive.setTarget(targetY, robot.targetHeading, false, event);
                     sm.waitForSingleEvent(event, State.TURN_AT_MID_WALL);
                     break;
 
@@ -215,10 +212,9 @@ class CmdAutoDepot6541 implements TrcRobot.RobotCommand
                     //
                     // Stop mid-wall and turn a bit to avoid the mineral
                     //
-                    targetX = 0.0;
                     targetY = 0.0;
                     robot.targetHeading = 45;
-                    robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
+                    robot.pidDrive.setTarget(targetY, robot.targetHeading, false, event);
                     sm.waitForSingleEvent(event, State.DRIVE_TO_CRATER);
                     break;
 
@@ -226,9 +222,8 @@ class CmdAutoDepot6541 implements TrcRobot.RobotCommand
                     //
                     // Go and park at the crater.
                     //
-                    targetX = 0.0;
                     targetY = -40.0;
-                    robot.pidDrive.setTarget(targetX, targetY, robot.targetHeading, false, event);
+                    robot.pidDrive.setTarget(targetY, robot.targetHeading, false, event);
                     sm.waitForSingleEvent(event, State.DONE);
                     break;
 
@@ -237,16 +232,13 @@ class CmdAutoDepot6541 implements TrcRobot.RobotCommand
                     //
                     // We are done.
                     //
-                    robot.elevator.closeHook();
-                    timer.set(2.5, event);
-                    robot.elevator.zeroCalibrate();
                     sm.stop();
                     break;
             }
 
             if (traceState)
             {
-                robot.traceStateInfo(elapsedTime, state.toString(), targetX, targetY, robot.targetHeading);
+                robot.traceStateInfo(elapsedTime, state.toString(), 0.0, targetY, robot.targetHeading);
             }
         }
 
