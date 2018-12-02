@@ -23,6 +23,7 @@
 package team6541;
 
 import common.AutoCommon;
+import common.CmdDisplaceMineral;
 import trclib.TrcEvent;
 import trclib.TrcRobot;
 import trclib.TrcStateMachine;
@@ -148,8 +149,8 @@ public class CmdAutoCrater6541 implements TrcRobot.RobotCommand
                     //
                     robot.elevator.closeHook();
                     robot.elevator.setPosition(RobotInfo6541.ELEVATOR_MIN_HEIGHT);
-                    cmdDisplaceMineral = new CmdDisplaceMineral6541(
-                            robot, false, RobotInfo6541.SIDE_MINERAL_ANGLE);
+                    cmdDisplaceMineral = new CmdDisplaceMineral(
+                            robot, 6541, false, RobotInfo6541.SIDE_MINERAL_ANGLE, 0.0);
                     sm.setState(State.DISPLACE_MINERAL);
                     //
                     // Intentionally falling through.

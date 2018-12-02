@@ -23,6 +23,7 @@
 package team3543;
 
 import common.AutoCommon;
+import common.CmdDisplaceMineral;
 import trclib.TrcEvent;
 import trclib.TrcRobot;
 import trclib.TrcStateMachine;
@@ -151,8 +152,8 @@ public class CmdAutoCrater3543 implements TrcRobot.RobotCommand
                     // Set up CmdDisplaceMineral to use vision to displace the gold mineral.
                     //
                     robot.elevator.setPosition(RobotInfo3543.ELEVATOR_MIN_HEIGHT);
-                    cmdDisplaceMineral = new CmdDisplaceMineral3543(
-                            robot, false, RobotInfo3543.SIDE_MINERAL_ANGLE,
+                    cmdDisplaceMineral = new CmdDisplaceMineral(
+                            robot, 3543, false, RobotInfo3543.SIDE_MINERAL_ANGLE,
                             RobotInfo3543.UNHOOK_DISPLACEMENT);
                     sm.setState(State.DISPLACE_MINERAL);
                     //
