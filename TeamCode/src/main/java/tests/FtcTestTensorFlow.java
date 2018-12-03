@@ -64,24 +64,17 @@ public class FtcTestTensorFlow extends FtcOpMode
     @Override
     public void runContinuous(double elapsedTime)
     {
-        TensorFlowVision.TargetInfo targetInfo;
-
-        targetInfo = tensorFlowVision.getTargetInfo(
+        TensorFlowVision.TargetInfo[] targetsInfo = tensorFlowVision.getAllTargetInfo(
                 TensorFlowVision.LABEL_GOLD_MINERAL, TensorFlowVision.NUM_EXPECTED_TARGETS);
-        tracer.traceInfo("TensorFlow", "[%.3f] Detected=%s",
-                elapsedTime, Boolean.toString(targetInfo != null));
-        if (targetInfo != null)
-        {
-            tracer.traceInfo("TensorFlow", "[%.3f] %s", elapsedTime, targetInfo);
-            dashboard.displayPrintf(1, "%s", targetInfo);
-        }
 
-        targetInfo = tensorFlowVision.getTargetInfo(
-                TensorFlowVision.LABEL_SILVER_MINERAL, TensorFlowVision.NUM_EXPECTED_TARGETS);
-        if (targetInfo != null)
+        if (targetsInfo != null)
         {
-            tracer.traceInfo("TensorFlow", "[%.3f] %s", elapsedTime, targetInfo);
-            dashboard.displayPrintf(2, "%s", targetInfo);
+            for (int i = 0; i < targetsInfo.length; i++)
+            {
+                tracer.traceInfo("TensorFlowTest", "[%.3f] %d/%d: %s",
+                        elapsedTime, i, targetsInfo.length, targetsInfo[i]);
+                dashboard.displayPrintf(i + 1, "%s", targetsInfo[i]);
+            }
         }
     }   //runContinuous
 

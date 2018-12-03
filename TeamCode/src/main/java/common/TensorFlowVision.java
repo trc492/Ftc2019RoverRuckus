@@ -260,11 +260,62 @@ public class TensorFlowVision
                             targetInfo.position = 2;
                         }
                     }
+
+                    if (tracer != null)
+                    {
+                        tracer.traceInfo(funcName, "###TargetInfo###: [%d/%d] %s",
+                                i, targets.length, targetInfo);
+                    }
                 }
             }
         }
 
         return targetInfo;
     }   //getTargetInfo
+
+    public TargetInfo[] getAllTargetInfo(String label, int numExpectedTargets)
+    {
+        final String funcName = "getAllTargetInfo";
+        TargetInfo[] targetsInfo = null;
+        Recognition[] targets = getTargets(label, numExpectedTargets);
+
+        if (targets != null)
+        {
+            targetsInfo = new TargetInfo[targets.length];
+            for (int i = 0; i < targets.length; i++)
+            {
+                targetsInfo[i] = new TargetInfo(
+                        targets[i].getLabel(),
+                        new Rect(
+                                (int)targets[i].getTop(), (int)(targets[i].getImageWidth() - targets[i].getRight()),
+                                (int)targets[i].getHeight(), (int)targets[i].getWidth()),
+                        targets[i].estimateAngleToObject(AngleUnit.DEGREES),
+                        targets[i].getConfidence(),
+                        targets[i].getImageHeight(), targets[i].getImageWidth());
+
+                int xCenter = targetsInfo[i].rect.x + targetsInfo[i].rect.width/2;
+                if (xCenter < LEFT_THRESHOLD)
+                {
+                    targetsInfo[i].position = 0;
+                }
+                else if (xCenter < RIGHT_THRESHOLD)
+                {
+                    targetsInfo[i].position = 1;
+                }
+                else
+                {
+                    targetsInfo[i].position = 2;
+                }
+
+                if (tracer != null)
+                {
+                    tracer.traceInfo(funcName, "###TargetInfo###: [%d/%d] %s",
+                            i, targets.length, targetsInfo[i]);
+                }
+            }
+        }
+
+        return targetsInfo;
+    }   //getAllTargetInfo
 
 }   //class TensorFlowVision
