@@ -92,7 +92,8 @@ public abstract class AutoCommon extends FtcOpMode
         if (robot.tensorFlowVision != null)
         {
             TensorFlowVision.TargetInfo targetInfo =
-                    robot.tensorFlowVision.getTargetInfo(TensorFlowVision.LABEL_GOLD_MINERAL);
+                    robot.tensorFlowVision.getTargetInfo(
+                            TensorFlowVision.LABEL_GOLD_MINERAL, TensorFlowVision.NUM_EXPECTED_TARGETS);
 
             if (targetInfo != null)
             {

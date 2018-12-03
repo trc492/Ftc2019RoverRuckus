@@ -306,10 +306,12 @@ public class TestCommon
         {
             TensorFlowVision.TargetInfo targetInfo;
 
-            targetInfo = robot.tensorFlowVision.getTargetInfo(TensorFlowVision.LABEL_GOLD_MINERAL);
+            targetInfo = robot.tensorFlowVision.getTargetInfo(
+                    TensorFlowVision.LABEL_GOLD_MINERAL, TensorFlowVision.NUM_EXPECTED_TARGETS);
             robot.dashboard.displayPrintf(14, "Gold: %s", targetInfo);
 
-            targetInfo = robot.tensorFlowVision.getTargetInfo(TensorFlowVision.LABEL_SILVER_MINERAL);
+            targetInfo = robot.tensorFlowVision.getTargetInfo(
+                    TensorFlowVision.LABEL_SILVER_MINERAL, TensorFlowVision.NUM_EXPECTED_TARGETS);
             robot.dashboard.displayPrintf(15, "Silver: %s", targetInfo);
         }
     }   //doVisionTest

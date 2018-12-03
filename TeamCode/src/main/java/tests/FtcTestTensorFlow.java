@@ -66,7 +66,8 @@ public class FtcTestTensorFlow extends FtcOpMode
     {
         TensorFlowVision.TargetInfo targetInfo;
 
-        targetInfo = tensorFlowVision.getTargetInfo(TensorFlowVision.LABEL_GOLD_MINERAL);
+        targetInfo = tensorFlowVision.getTargetInfo(
+                TensorFlowVision.LABEL_GOLD_MINERAL, TensorFlowVision.NUM_EXPECTED_TARGETS);
         tracer.traceInfo("TensorFlow", "[%.3f] Detected=%s",
                 elapsedTime, Boolean.toString(targetInfo != null));
         if (targetInfo != null)
@@ -75,7 +76,8 @@ public class FtcTestTensorFlow extends FtcOpMode
             dashboard.displayPrintf(1, "%s", targetInfo);
         }
 
-        targetInfo = tensorFlowVision.getTargetInfo(TensorFlowVision.LABEL_SILVER_MINERAL);
+        targetInfo = tensorFlowVision.getTargetInfo(
+                TensorFlowVision.LABEL_SILVER_MINERAL, TensorFlowVision.NUM_EXPECTED_TARGETS);
         if (targetInfo != null)
         {
             tracer.traceInfo("TensorFlow", "[%.3f] %s", elapsedTime, targetInfo);
