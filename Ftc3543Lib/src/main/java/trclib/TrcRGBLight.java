@@ -112,7 +112,7 @@ public abstract class TrcRGBLight
          *
          * @param value specifies the ordinal value of the color.
          */
-        private RGBColor(int value)
+        RGBColor(int value)
         {
             this.value = value;
         }   //RGBColor
@@ -165,7 +165,7 @@ public abstract class TrcRGBLight
     private double onPeriod = 0.0;
     private double offPeriod = 0.0;
     private TrcEvent notifyEvent = null;
-    private TrcNotificationReceiver notifyReceiver = null;
+    private TrcNotificationReceiver<TrcRGBLight> notifyReceiver = null;
 
     /**
      * Constructor: Create an instance of the object.
@@ -355,7 +355,7 @@ public abstract class TrcRGBLight
      * @param event specifies the event to signal when done.
      * @param receiver specifies the notification receiver to call when done.
      */
-    public void setColor(RGBColor color, double onPeriod, TrcEvent event, TrcNotificationReceiver receiver)
+    public void setColor(RGBColor color, double onPeriod, TrcEvent event, TrcNotificationReceiver<TrcRGBLight> receiver)
     {
         setColor(color, onPeriod, 0.0);
         this.notifyEvent = event;
@@ -385,7 +385,7 @@ public abstract class TrcRGBLight
      * @param onPeriod specifies the period for the light to stay ON.
      * @param receiver specifies the notification receiver to call when done.
      */
-    public void setColor(RGBColor color, double onPeriod, TrcNotificationReceiver receiver)
+    public void setColor(RGBColor color, double onPeriod, TrcNotificationReceiver<TrcRGBLight> receiver)
     {
         setColor(color, onPeriod, 0.0);
         this.notifyEvent = null;

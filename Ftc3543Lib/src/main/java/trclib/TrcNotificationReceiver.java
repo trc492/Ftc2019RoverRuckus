@@ -28,14 +28,19 @@ package trclib;
  * the component that will signal the event when the operation is completed. Another way is to make yourself
  * implementing the TrcNotificationReceiver interface and pass yourself along to the component that will make a
  * callback to you when the operation is completed.
+ *
+ * @param <T> specifies the type of the context object.
  */
-public interface TrcNotificationReceiver
+public interface TrcNotificationReceiver<T>
 {
     /**
-     * This method is called to notify the occurrence of an event.
+     * This method is called to notify the occurrence of an event. In general, notification handler should do its
+     * processing and return very quickly because the notification may be running on a time critical thread. For
+     * example, if this is a timer notification, notify is called on the {@link TrcTimerMgr} thread. Any delay in
+     * the notify call will prevent other timers from expiring on-time.
      *
      * @param context specifies the context of the event, can be null.
      */
-    void notify(Object context);
+    void notify(T context);
 
 }   //interface TrcNotificationReceiver

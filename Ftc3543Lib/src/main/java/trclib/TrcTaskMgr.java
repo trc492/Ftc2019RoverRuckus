@@ -537,17 +537,7 @@ public class TrcTaskMgr
      */
     public void terminateAllThreads()
     {
-        if (inputThread != null)
-        {
-            inputThread.terminateTask();
-            inputThread = null;
-        }
-
-        if (outputThread != null)
-        {
-            outputThread.terminateTask();
-            outputThread = null;
-        }
+        TrcTimerMgr.shutdown();
 
         for (TaskObject taskObj: taskList)
         {
@@ -558,6 +548,18 @@ public class TrcTaskMgr
                 //
                 taskObj.unregisterTask(TaskType.STANDALONE_TASK);
             }
+        }
+
+        if (inputThread != null)
+        {
+            inputThread.terminateTask();
+            inputThread = null;
+        }
+
+        if (outputThread != null)
+        {
+            outputThread.terminateTask();
+            outputThread = null;
         }
     }   //terminateAllThreads
 

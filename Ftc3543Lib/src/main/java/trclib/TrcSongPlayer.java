@@ -46,7 +46,7 @@ public class TrcSongPlayer
     private double barDuration = 0.0;
     private boolean repeat = false;
     private TrcEvent event = null;
-    private TrcNotificationReceiver receiver = null;
+    private TrcNotificationReceiver<TrcSongPlayer> receiver = null;
 
     /**
      * Constructor: Create and initialize an instance of the object.
@@ -184,7 +184,7 @@ public class TrcSongPlayer
      */
     private synchronized void playSongWorker(
             TrcSong song, double barDuration, boolean repeat, boolean pause,
-            TrcEvent event, TrcNotificationReceiver receiver)
+            TrcEvent event, TrcNotificationReceiver<TrcSongPlayer> receiver)
     {
         final String funcName = "playSongWorker";
 
@@ -243,7 +243,8 @@ public class TrcSongPlayer
      * @param pause specifies true to pause the song, false to start it immediately.
      * @param receiver specifies the notification receiver on song completion.
      */
-    public void playSong(TrcSong song, double barDuration, boolean pause, TrcNotificationReceiver receiver)
+    public void playSong(
+            TrcSong song, double barDuration, boolean pause, TrcNotificationReceiver<TrcSongPlayer> receiver)
     {
         playSongWorker(song, barDuration, false, pause, null, receiver);
     }   //playSong
