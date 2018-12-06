@@ -188,10 +188,9 @@ public class TensorFlowVision
 
                 if (tracer != null)
                 {
-                    tracer.traceInfo(funcName, "[%d/%d: %s]: x=%.0f, y=%.0f, w=%.0f, h=%.0f %s",
+                    tracer.traceInfo(funcName, "[%d/%d: %s]: x=%.0f, y=%.0f, w=%.0f, h=%.0f",
                             i, updatedRecognitions.size(), object.getLabel(), object.getTop(),
-                            object.getImageWidth() - object.getRight(), object.getHeight(), object.getWidth(),
-                            object.getLabel().equals(label) ? "*** TARGET ***" : "");
+                            object.getImageWidth() - object.getRight(), object.getHeight(), object.getWidth());
                     //
                     // If we found the target and dump the info of at least numExpectedTargets, we are done.
                     //
@@ -203,6 +202,17 @@ public class TensorFlowVision
                 else if (matchingTarget != null)
                 {
                     break;
+                }
+            }
+
+            if (tracer != null)
+            {
+                for (int i = 0; i < targets.length; i++)
+                {
+                    tracer.traceInfo(funcName, "Minerals: [%d/%d: %s]: x=%.0f, y=%.0f, w=%.0f, h=%.0f",
+                            i, targets.length, targets[i].getLabel(), targets[i].getTop(),
+                            targets[i].getImageWidth() - targets[i].getRight(), targets[i].getHeight(),
+                            targets[i].getWidth());
                 }
             }
         }
