@@ -29,7 +29,7 @@ import common.CmdPidDrive;
 import common.CmdTimedDrive;
 import trclib.TrcRobot;
 
-@Autonomous(name="Autonomous6541", group="Auto")
+@Autonomous(name="Autonomous6541", group="FtcAuto")
 public class FtcAuto6541 extends AutoCommon
 {
     private static final String moduleName = "FtcAuto6541";

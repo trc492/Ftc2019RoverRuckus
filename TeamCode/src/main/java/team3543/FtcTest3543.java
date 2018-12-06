@@ -28,7 +28,7 @@ import common.TestCommon;
 import ftclib.FtcGamepad;
 import trclib.TrcGameController;
 
-@TeleOp(name="Test3543", group="Test")
+@TeleOp(name="Test3543", group="FtcTest")
 public class FtcTest3543 extends FtcTeleOp3543 implements TrcGameController.ButtonHandler
 {
     private static final String moduleName = "FtcTest3543";

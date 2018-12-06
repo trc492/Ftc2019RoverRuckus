@@ -24,8 +24,11 @@ package ftclib;
 
 import android.speech.tts.TextToSpeech;
 
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
+import java.lang.annotation.Annotation;
 import java.util.Locale;
 
 import hallib.HalDashboard;
@@ -220,6 +223,69 @@ public abstract class FtcOpMode extends LinearOpMode implements TrcRobot.RobotMo
         return getTextToSpeech(Locale.US);
     }   //getTextToSpeech
 
+    /**
+     * This method returns the annotation object of the specifies opmode type if it is present.
+     *
+     * @param opmodeType specifies the opmode type.
+     * @return annotation object of the specified opmode type if present, null if not.
+     */
+    public Annotation getOpmodeAnnotation(Class opmodeType)
+    {
+        return getClass().getAnnotation(opmodeType);
+    }   //getOpmodeAnnotation
+
+    /**
+     * This method returns the opmode type name.
+     *
+     * @param opmodeType specifies Autonomous.class for autonomous opmode and TeleOp.class for TeleOp opmode.
+     * @return opmode type name.
+     */
+    public String getOpmodeTypeName(Class opmodeType)
+    {
+        String opmodeTypeName = null;
+
+        Annotation annotation = getOpmodeAnnotation(opmodeType);
+        if (annotation != null)
+        {
+            if (opmodeType == Autonomous.class)
+            {
+                opmodeTypeName = ((Autonomous)annotation).name();
+            }
+            else if (opmodeType == TeleOp.class)
+            {
+                opmodeTypeName = ((TeleOp)annotation).name();
+            }
+        }
+
+        return opmodeTypeName;
+    }   //getOpmodeTypeName
+
+    /**
+     * This method returns the opmode type group.
+     *
+     * @param opmodeType specifies Autonomous.class for autonomous opmode and TeleOp.class for TeleOp opmode.
+     * @return opmode type group.
+     */
+    public String getOpmodeTypeGroup(Class opmodeType)
+    {
+        String opmodeTypeGroup = null;
+
+        Annotation annotation = getOpmodeAnnotation(opmodeType);
+        if (annotation != null)
+        {
+            if (opmodeType == Autonomous.class)
+            {
+                opmodeTypeGroup = ((Autonomous)annotation).group();
+            }
+            else if (opmodeType == TeleOp.class)
+            {
+                opmodeTypeGroup = ((TeleOp)annotation).group();
+            }
+        }
+
+        return opmodeTypeGroup;
+    }   //getOpmodeTypeGroup
+
     //
     // Implements LinearOpMode
     //
@@ -249,38 +315,34 @@ public abstract class FtcOpMode extends LinearOpMode implements TrcRobot.RobotMo
                         moduleName, false, TrcDbgTrace.TraceLevel.API, TrcDbgTrace.MsgLevel.INFO);
             }
         }
-
         //
-        // Determine run mode. Note that it means the OpMode must starts with "FtcAuto", "FtcTeleOp" or "FtcTest"
-        // in its name.
+        // Determine run mode. Note that it means the OpMode must be annotated with group="FtcAuto", group="FtcTeleOp"
+        // or group="FtcTest".
         //
-        String opModeFullName = this.toString();
-        opModeName = "Invalid";
-
-        if (debugEnabled)
-        {
-            dbgTrace.traceInfo(funcName, "opModeFullName=<%s>", opModeFullName);
-        }
-
-        if (opModeFullName.contains(OPMODE_AUTO))
+        opModeName = getOpmodeTypeName(Autonomous.class);
+        if (opModeName != null)
         {
             runMode = TrcRobot.RunMode.AUTO_MODE;
-            opModeName = "Auto";
-        }
-        else if (opModeFullName.contains(OPMODE_TELEOP))
-        {
-            runMode = TrcRobot.RunMode.TELEOP_MODE;
-            opModeName = "TeleOp";
-        }
-        else if (opModeFullName.contains(OPMODE_TEST))
-        {
-            runMode = TrcRobot.RunMode.TEST_MODE;
-            opModeName = "Test";
         }
         else
         {
-            throw new IllegalStateException(
-                    "Invalid OpMode, OpMode name must have prefix \"FtcAuto\", \"FtcTeleOp\" or \"FtcTest\".");
+            opModeName = getOpmodeTypeName(TeleOp.class);
+            if (opModeName != null)
+            {
+                if (getOpmodeTypeGroup(TeleOp.class).equals("FtcTest"))
+                {
+                    runMode = TrcRobot.RunMode.TEST_MODE;
+                }
+                else
+                {
+                    runMode = TrcRobot.RunMode.TELEOP_MODE;
+                }
+            }
+            else
+            {
+                throw new IllegalStateException(
+                        "Invalid OpMode annotation, OpMode must be annotated with either @Autonomous or @TeleOp.");
+            }
         }
         TrcRobot.setRunMode(runMode);
 
