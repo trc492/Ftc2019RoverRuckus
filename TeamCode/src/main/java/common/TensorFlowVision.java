@@ -30,7 +30,6 @@ import org.firstinspires.ftc.robotcore.external.tfod.TFObjectDetector;
 import org.opencv.core.Rect;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -221,7 +220,7 @@ public class TensorFlowVision
                 }
             }
 
-            if (tracer != null)
+            if (tracer != null && targets != null)
             {
                 for (int i = 0; i < targets.size(); i++)
                 {
