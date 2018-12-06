@@ -150,8 +150,8 @@ public class TensorFlowVision
         if (updatedRecognitions != null)
         {
             Recognition matchingTarget = null;
-            int targetYLowThreshold = 0;
-            int targetYHighThreshold = 0;
+            float targetYLowThreshold;
+            float targetYHighThreshold;
             //
             // Sort the list in descending Y order so that the max Y will be first.
             //
@@ -170,8 +170,11 @@ public class TensorFlowVision
                 {
                     matchingTarget = object;
                     float targetY = object.getImageWidth() - object.getRight();
-                    targetYLowThreshold = (int)(targetY - 0.05*targetY);
-                    targetYHighThreshold = (int)(targetY + 0.05*targetY);
+                    //
+                    // Set threshold to +/- 10% of its Y coordinate.
+                    //
+                    targetYLowThreshold = targetY - 0.1f*targetY;
+                    targetYHighThreshold = targetY + 0.1f*targetY;
                     //
                     // Since the list is sorted by decreasing Y, if the position of the target in the list is more
                     // than numExpectedTargets, we have picked up some false targets in the lower screen. We have
@@ -182,13 +185,15 @@ public class TensorFlowVision
                                      Math.min(numExpectedTargets, updatedRecognitions.size());
                     targets = new ArrayList<>();
                     //
-                    // Copy the targets that are on the same horizontal line into a new array to be sorted by X.
+                    // Copy the targets that are on the same Y vicinity into a new array to be sorted by X.
+                    // This will filter out the wrong targets if we only see less than numExpectedTargets on the
+                    // same Y line.
                     //
                     for (int j = 0; j < numPotentialTargets; j++)
                     {
                         Recognition obj = updatedRecognitions.get(j);
-                        float objectY = obj.getImageWidth() - obj.getRight();
-                        if (objectY >= targetYLowThreshold && objectY <= targetYHighThreshold)
+                        float objY = obj.getImageWidth() - obj.getRight();
+                        if (objY >= targetYLowThreshold && objY <= targetYHighThreshold)
                         {
                             targets.add(obj);
                         }
@@ -216,9 +221,9 @@ public class TensorFlowVision
                 }
             }
 
-            for (int i = 0; i < targets.size(); i++)
+            if (tracer != null)
             {
-                if (tracer != null)
+                for (int i = 0; i < targets.size(); i++)
                 {
                     Recognition obj = targets.get(i);
                     tracer.traceInfo(funcName, "Minerals: [%d/%d: %s]: x=%.0f, y=%.0f, w=%.0f, h=%.0f",
