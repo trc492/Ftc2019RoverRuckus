@@ -197,9 +197,6 @@ public class TensorFlowVision
                     Collections.sort(targets, this::compareTargetY);
                 }
 
-                System.out.printf("[%d/%d: %s]: x=%.0f, y=%.0f, w=%.0f, h=%.0f\n",
-                        i, updatedRecognitions.size(), object.getLabel(), object.getTop(),
-                        object.getImageWidth() - object.getRight(), object.getHeight(), object.getWidth());
                 if (tracer != null)
                 {
                     tracer.traceInfo(funcName, "[%d/%d: %s]: x=%.0f, y=%.0f, w=%.0f, h=%.0f",
@@ -224,9 +221,6 @@ public class TensorFlowVision
                 if (tracer != null)
                 {
                     Recognition obj = targets.get(i);
-                    System.out.printf("Minerals: [%d/%d: %s]: x=%.0f, y=%.0f, w=%.0f, h=%.0f\n",
-                            i, targets.size(), obj.getLabel(), obj.getTop(),
-                            obj.getImageWidth() - obj.getRight(), obj.getHeight(), obj.getWidth());
                     tracer.traceInfo(funcName, "Minerals: [%d/%d: %s]: x=%.0f, y=%.0f, w=%.0f, h=%.0f",
                             i, targets.size(), obj.getLabel(), obj.getTop(),
                             obj.getImageWidth() - obj.getRight(), obj.getHeight(), obj.getWidth());
@@ -291,7 +285,6 @@ public class TensorFlowVision
 
                     if (tracer != null)
                     {
-                        System.out.printf("###TargetInfo###: [%d/%d] %s\n", i, targets.size(), targetInfo);
                         tracer.traceInfo(funcName, "###TargetInfo###: [%d/%d] %s", i, targets.size(), targetInfo);
                     }
                 }
@@ -337,7 +330,6 @@ public class TensorFlowVision
 
                 if (tracer != null)
                 {
-                    System.out.printf("AllTargetsInfo: [%d/%d] %s\n", i, targets.size(), targetsInfo[i]);
                     tracer.traceInfo(funcName, "AllTargetsInfo: [%d/%d] %s",
                             i, targets.size(), targetsInfo[i]);
                 }
