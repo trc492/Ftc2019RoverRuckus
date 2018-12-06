@@ -29,6 +29,7 @@ import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
 import org.firstinspires.ftc.robotcore.external.tfod.TFObjectDetector;
 import org.opencv.core.Rect;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -70,8 +71,8 @@ public class TensorFlowVision
     public static final int NUM_EXPECTED_TARGETS = 3;
     public static final String LABEL_GOLD_MINERAL = "Gold Mineral";
     public static final String LABEL_SILVER_MINERAL = "Silver Mineral";
-    public static final int LEFT_THRESHOLD = 1280/3;
-    public static final int RIGHT_THRESHOLD = 1280*2/3;
+    public static final int LEFT_THRESHOLD = 425;       //210 + 215
+    public static final int RIGHT_THRESHOLD = 855;      //1280 - (210 + 215)
 
     private TrcDbgTrace tracer;
     private FtcVuforia vuforia;
@@ -134,13 +135,13 @@ public class TensorFlowVision
 
     private int compareTargetX(Recognition a, Recognition b)
     {
-        return (int)(b.getTop() - a.getTop());
+        return (int)(a.getTop() - b.getTop());
     }   //compareTargetX
 
-    private Recognition[] getTargets(String label, int numExpectedTargets)
+    private ArrayList<Recognition> getTargets(String label, int numExpectedTargets)
     {
         final String funcName = "getTargets";
-        Recognition[] targets = null;
+        ArrayList<Recognition> targets = null;
         //
         // getUpdatedRecognitions() will return null if no new information is available since
         // the last time that call was made.
@@ -149,6 +150,8 @@ public class TensorFlowVision
         if (updatedRecognitions != null)
         {
             Recognition matchingTarget = null;
+            int targetYLowThreshold = 0;
+            int targetYHighThreshold = 0;
             //
             // Sort the list in descending Y order so that the max Y will be first.
             //
@@ -166,26 +169,37 @@ public class TensorFlowVision
                 if (matchingTarget == null && object.getLabel().equals(label))
                 {
                     matchingTarget = object;
+                    float targetY = object.getImageWidth() - object.getRight();
+                    targetYLowThreshold = (int)(targetY - 0.05*targetY);
+                    targetYHighThreshold = (int)(targetY + 0.05*targetY);
                     //
                     // Since the list is sorted by decreasing Y, if the position of the target in the list is more
                     // than numExpectedTargets, we have picked up some false targets in the lower screen. We have
                     // to include them for the caller to do further filtering. If the position of the target is
                     // within numExpectedTargets, we will return all targets up to numExpectedTargets.
                     //
-                    int numTargets = i >= numExpectedTargets? i + 1:
+                    int numPotentialTargets = i >= numExpectedTargets? i + 1:
                                      Math.min(numExpectedTargets, updatedRecognitions.size());
-                    targets = new Recognition[numTargets];
+                    targets = new ArrayList<>();
                     //
-                    // Copy the targets into a new array to be sorted by X.
+                    // Copy the targets that are on the same horizontal line into a new array to be sorted by X.
                     //
-                    for (int j = 0; j < targets.length; j++)
+                    for (int j = 0; j < numPotentialTargets; j++)
                     {
-                        targets[j] = updatedRecognitions.get(j);
+                        Recognition obj = updatedRecognitions.get(j);
+                        float objectY = obj.getImageWidth() - obj.getRight();
+                        if (objectY >= targetYLowThreshold && objectY <= targetYHighThreshold)
+                        {
+                            targets.add(obj);
+                        }
                     }
 
-                    Arrays.sort(targets, this::compareTargetX);
+                    Collections.sort(targets, this::compareTargetY);
                 }
 
+                System.out.printf("[%d/%d: %s]: x=%.0f, y=%.0f, w=%.0f, h=%.0f\n",
+                        i, updatedRecognitions.size(), object.getLabel(), object.getTop(),
+                        object.getImageWidth() - object.getRight(), object.getHeight(), object.getWidth());
                 if (tracer != null)
                 {
                     tracer.traceInfo(funcName, "[%d/%d: %s]: x=%.0f, y=%.0f, w=%.0f, h=%.0f",
@@ -205,14 +219,17 @@ public class TensorFlowVision
                 }
             }
 
-            if (tracer != null)
+            for (int i = 0; i < targets.size(); i++)
             {
-                for (int i = 0; i < targets.length; i++)
+                if (tracer != null)
                 {
+                    Recognition obj = targets.get(i);
+                    System.out.printf("Minerals: [%d/%d: %s]: x=%.0f, y=%.0f, w=%.0f, h=%.0f\n",
+                            i, targets.size(), obj.getLabel(), obj.getTop(),
+                            obj.getImageWidth() - obj.getRight(), obj.getHeight(), obj.getWidth());
                     tracer.traceInfo(funcName, "Minerals: [%d/%d: %s]: x=%.0f, y=%.0f, w=%.0f, h=%.0f",
-                            i, targets.length, targets[i].getLabel(), targets[i].getTop(),
-                            targets[i].getImageWidth() - targets[i].getRight(), targets[i].getHeight(),
-                            targets[i].getWidth());
+                            i, targets.size(), obj.getLabel(), obj.getTop(),
+                            obj.getImageWidth() - obj.getRight(), obj.getHeight(), obj.getWidth());
                 }
             }
         }
@@ -224,13 +241,15 @@ public class TensorFlowVision
     {
         final String funcName = "getTargetInfo";
         TargetInfo targetInfo = null;
-        Recognition[] targets = getTargets(label, numExpectedTargets);
+        ArrayList<Recognition> targets = getTargets(label, numExpectedTargets);
 
         if (targets != null)
         {
-            for (int i = 0; i < targets.length; i++)
+            for (int i = 0; i < targets.size(); i++)
             {
-                if (targets[i].getLabel().equals(label))
+                Recognition target = targets.get(i);
+
+                if (target.getLabel().equals(label))
                 {
                     //
                     // Found the lowest target on the screen.
@@ -238,18 +257,17 @@ public class TensorFlowVision
                     // we need to transpose the rect to landscape coordinates.
                     //
                     targetInfo = new TargetInfo(
-                            targets[i].getLabel(),
+                            target.getLabel(),
                             new Rect(
-                                    (int)targets[i].getTop(), (int)(targets[i].getImageWidth() - targets[i].getRight()),
-                                    (int)targets[i].getHeight(), (int)targets[i].getWidth()),
-                            targets[i].estimateAngleToObject(AngleUnit.DEGREES),
-                            targets[i].getConfidence(),
-                            targets[i].getImageHeight(), targets[i].getImageWidth());
+                                    (int)target.getTop(), (int)(target.getImageWidth() - target.getRight()),
+                                    (int)target.getHeight(), (int)target.getWidth()),
+                            target.estimateAngleToObject(AngleUnit.DEGREES), target.getConfidence(),
+                            target.getImageHeight(), target.getImageWidth());
                     //
                     // If we found the expected number of targets, the position is the index of the array.
                     // Otherwise, we will determine the position by the target's rect on the screen.
                     //
-                    if (targets.length == numExpectedTargets)
+                    if (targets.size() == numExpectedTargets)
                     {
                         targetInfo.position = i;
                     }
@@ -273,8 +291,8 @@ public class TensorFlowVision
 
                     if (tracer != null)
                     {
-                        tracer.traceInfo(funcName, "###TargetInfo###: [%d/%d] %s",
-                                i, targets.length, targetInfo);
+                        System.out.printf("###TargetInfo###: [%d/%d] %s\n", i, targets.size(), targetInfo);
+                        tracer.traceInfo(funcName, "###TargetInfo###: [%d/%d] %s", i, targets.size(), targetInfo);
                     }
                 }
             }
@@ -287,21 +305,21 @@ public class TensorFlowVision
     {
         final String funcName = "getAllTargetInfo";
         TargetInfo[] targetsInfo = null;
-        Recognition[] targets = getTargets(label, numExpectedTargets);
+        ArrayList<Recognition> targets = getTargets(label, numExpectedTargets);
 
         if (targets != null)
         {
-            targetsInfo = new TargetInfo[targets.length];
-            for (int i = 0; i < targets.length; i++)
+            targetsInfo = new TargetInfo[targets.size()];
+            for (int i = 0; i < targetsInfo.length; i++)
             {
+                Recognition target = targets.get(i);
                 targetsInfo[i] = new TargetInfo(
-                        targets[i].getLabel(),
+                        target.getLabel(),
                         new Rect(
-                                (int)targets[i].getTop(), (int)(targets[i].getImageWidth() - targets[i].getRight()),
-                                (int)targets[i].getHeight(), (int)targets[i].getWidth()),
-                        targets[i].estimateAngleToObject(AngleUnit.DEGREES),
-                        targets[i].getConfidence(),
-                        targets[i].getImageHeight(), targets[i].getImageWidth());
+                                (int)target.getTop(), (int)(target.getImageWidth() - target.getRight()),
+                                (int)target.getHeight(), (int)target.getWidth()),
+                        target.estimateAngleToObject(AngleUnit.DEGREES), target.getConfidence(),
+                        target.getImageHeight(), target.getImageWidth());
 
                 int xCenter = targetsInfo[i].rect.x + targetsInfo[i].rect.width/2;
                 if (xCenter < LEFT_THRESHOLD)
@@ -319,8 +337,9 @@ public class TensorFlowVision
 
                 if (tracer != null)
                 {
-                    tracer.traceInfo(funcName, "###TargetInfo###: [%d/%d] %s",
-                            i, targets.length, targetsInfo[i]);
+                    System.out.printf("AllTargetsInfo: [%d/%d] %s\n", i, targets.size(), targetsInfo[i]);
+                    tracer.traceInfo(funcName, "AllTargetsInfo: [%d/%d] %s",
+                            i, targets.size(), targetsInfo[i]);
                 }
             }
         }
