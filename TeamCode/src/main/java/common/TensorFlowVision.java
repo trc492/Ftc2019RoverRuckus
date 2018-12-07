@@ -48,7 +48,8 @@ public class TensorFlowVision
         int imageHeight;
         int position;
 
-        TargetInfo(String label, Rect rect, double angle, double confidence, int imageWidth, int imageHeight)
+        TargetInfo(String label, Rect rect, double angle, double confidence, int imageWidth, int imageHeight,
+                   int targetPosition)
         {
             this.label = label;
             this.rect = rect;
@@ -56,7 +57,7 @@ public class TensorFlowVision
             this.confidence = confidence;
             this.imageWidth = imageWidth;
             this.imageHeight = imageHeight;
-            this.position = -1;
+            this.position = targetPosition;
         }   //TargetInfo
 
         public String toString()
@@ -249,43 +250,43 @@ public class TensorFlowVision
 
                 if (target.getLabel().equals(label))
                 {
-                    //
-                    // Found the lowest target on the screen.
-                    // Target object is presented in portrait mode but since the phone orientation is really landscape,
-                    // we need to transpose the rect to landscape coordinates.
-                    //
-                    targetInfo = new TargetInfo(
-                            target.getLabel(),
-                            new Rect(
-                                    (int)target.getTop(), (int)(target.getImageWidth() - target.getRight()),
-                                    (int)target.getHeight(), (int)target.getWidth()),
-                            target.estimateAngleToObject(AngleUnit.DEGREES), target.getConfidence(),
-                            target.getImageHeight(), target.getImageWidth());
+                    Rect targetRect = new Rect(
+                            (int)target.getTop(), (int)(target.getImageWidth() - target.getRight()),
+                            (int)target.getHeight(), (int)target.getWidth());
+                    int targetPosition;
                     //
                     // If we found the expected number of targets, the position is the index of the array.
                     // Otherwise, we will determine the position by the target's rect on the screen.
                     //
                     if (targets.size() == numExpectedTargets)
                     {
-                        targetInfo.position = i;
+                        targetPosition = i;
                     }
                     else
                     {
-                        int xCenter = targetInfo.rect.x + targetInfo.rect.width/2;
+                        int xCenter = targetRect.x + targetRect.width/2;
 
                         if (xCenter < LEFT_THRESHOLD)
                         {
-                            targetInfo.position = 0;
+                            targetPosition = 0;
                         }
                         else if (xCenter < RIGHT_THRESHOLD)
                         {
-                            targetInfo.position = 1;
+                            targetPosition = 1;
                         }
                         else
                         {
-                            targetInfo.position = 2;
+                            targetPosition = 2;
                         }
                     }
+                    //
+                    // Found the lowest target on the screen.
+                    // Target object is presented in portrait mode but since the phone orientation is really landscape,
+                    // we need to transpose the rect to landscape coordinates.
+                    //
+                    targetInfo = new TargetInfo(
+                            target.getLabel(), targetRect, target.estimateAngleToObject(AngleUnit.DEGREES),
+                            target.getConfidence(), target.getImageHeight(), target.getImageWidth(), targetPosition);
 
                     if (tracer != null)
                     {
@@ -307,35 +308,38 @@ public class TensorFlowVision
         if (targets != null)
         {
             targetsInfo = new TargetInfo[targets.size()];
+
             for (int i = 0; i < targetsInfo.length; i++)
             {
                 Recognition target = targets.get(i);
-                targetsInfo[i] = new TargetInfo(
-                        target.getLabel(),
-                        new Rect(
-                                (int)target.getTop(), (int)(target.getImageWidth() - target.getRight()),
-                                (int)target.getHeight(), (int)target.getWidth()),
-                        target.estimateAngleToObject(AngleUnit.DEGREES), target.getConfidence(),
-                        target.getImageHeight(), target.getImageWidth());
 
-                int xCenter = targetsInfo[i].rect.x + targetsInfo[i].rect.width/2;
+                Rect targetRect = new Rect(
+                        (int)target.getTop(), (int)(target.getImageWidth() - target.getRight()),
+                        (int)target.getHeight(), (int)target.getWidth());
+                int xCenter = targetRect.x + targetRect.width/2;
+                int targetPosition;
+
                 if (xCenter < LEFT_THRESHOLD)
                 {
-                    targetsInfo[i].position = 0;
+                    targetPosition = 0;
                 }
                 else if (xCenter < RIGHT_THRESHOLD)
                 {
-                    targetsInfo[i].position = 1;
+                    targetPosition = 1;
                 }
                 else
                 {
-                    targetsInfo[i].position = 2;
+                    targetPosition = 2;
                 }
+
+                targetsInfo[i] = new TargetInfo(
+                        target.getLabel(), targetRect, target.estimateAngleToObject(AngleUnit.DEGREES),
+                        target.getConfidence(), target.getImageHeight(), target.getImageWidth(), targetPosition);
+
 
                 if (tracer != null)
                 {
-                    tracer.traceInfo(funcName, "AllTargetsInfo: [%d/%d] %s",
-                            i, targets.size(), targetsInfo[i]);
+                    tracer.traceInfo(funcName, "AllTargetsInfo: [%d/%d] %s", i, targets.size(), targetsInfo[i]);
                 }
             }
         }
