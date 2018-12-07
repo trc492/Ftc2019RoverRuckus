@@ -106,12 +106,9 @@ public class CmdDisplaceMineral implements TrcRobot.RobotCommand
                         //
                         // Found gold mineral.
                         //
-                        int leftThird = robot.targetInfo.imageWidth/3;
-                        int rightThird = leftThird*2;
-                        int mineralX = robot.targetInfo.rect.x + robot.targetInfo.rect.width/2;
                         String sentence;
 
-                        if (mineralX < leftThird)
+                        if (robot.targetInfo.position == 0)
                         {
                             //
                             // Gold is the left mineral.
@@ -119,7 +116,7 @@ public class CmdDisplaceMineral implements TrcRobot.RobotCommand
                             mineralAngle = -sideMineralAngle;
                             sentence = "Gold mineral is on the left.";
                         }
-                        else if (mineralX < rightThird)
+                        else if (robot.targetInfo.position == 1)
                         {
                             //
                             // Gold is the right mineral.

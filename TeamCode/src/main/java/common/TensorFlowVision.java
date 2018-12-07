@@ -73,6 +73,7 @@ public class TensorFlowVision
     public static final String LABEL_SILVER_MINERAL = "Silver Mineral";
     public static final int LEFT_THRESHOLD = 425;       //210 + 215
     public static final int RIGHT_THRESHOLD = 855;      //1280 - (210 + 215)
+    public static final int Y_THRESHOLD = 50;
 
     private TrcDbgTrace tracer;
     private FtcVuforia vuforia;
@@ -173,8 +174,8 @@ public class TensorFlowVision
                     //
                     // Set threshold to +/- 10% of its Y coordinate.
                     //
-                    targetYLowThreshold = targetY - 0.1f*targetY;
-                    targetYHighThreshold = targetY + 0.1f*targetY;
+                    targetYLowThreshold = targetY - Y_THRESHOLD;
+                    targetYHighThreshold = targetY + Y_THRESHOLD;
                     //
                     // Since the list is sorted by decreasing Y, if the position of the target in the list is more
                     // than numExpectedTargets, we have picked up some false targets in the lower screen. We have
@@ -199,7 +200,7 @@ public class TensorFlowVision
                         }
                     }
 
-                    Collections.sort(targets, this::compareTargetY);
+                    Collections.sort(targets, this::compareTargetX);
                 }
 
                 if (tracer != null)
