@@ -28,29 +28,29 @@ public class MineralScooper
 {
     private final double extendPos;
     private final double retractPos;
-    private FtcServo sweeperServo;
+    private FtcServo scooperServo;
 
     public MineralScooper(double extendPos, double retractPos)
     {
         this.extendPos = extendPos;
         this.retractPos = retractPos;
-        sweeperServo = new FtcServo("sweeperServo");
-        sweeperServo.setPosition(retractPos);
-    }
+        scooperServo = new FtcServo("scooperServo");
+        scooperServo.setPosition(retractPos);
+    }   //MineralScooper
 
     public void setPosition(double pos)
     {
-        sweeperServo.setPosition(pos);
-    }
+        scooperServo.setPosition(pos);
+    }   //setPosition
 
     public void extend()
     {
-        sweeperServo.setPosition(extendPos);
-    }
+        scooperServo.setPosition(extendPos);
+    }   //extend
 
     public void retract()
     {
-        sweeperServo.setPosition(retractPos);
-    }
+        scooperServo.setPosition(retractPos);
+    }   //retract
 
 }   //class MineralSweeper

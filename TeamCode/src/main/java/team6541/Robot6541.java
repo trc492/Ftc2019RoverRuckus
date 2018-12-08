@@ -194,8 +194,8 @@ public class Robot6541 extends Robot
         elevator = new Elevator6541();
         teamMarkerDeployer = new TeamMarkerDeployer(
                 RobotInfo6541.DEPLOYER_OPEN_POSITION, RobotInfo6541.DEPLOYER_CLOSE_POSITION);
-        mineralScooper = new MineralScooper(RobotInfo6541.MINERAL_SWEEPER_EXTEND_POSITION, RobotInfo6541.MINERAL_SWEEPER_RETRACT_POSITION);
-
+        mineralScooper = new MineralScooper(
+                RobotInfo6541.MINERAL_SCOOPER_EXTEND_POSITION, RobotInfo6541.MINERAL_SCOOPER_RETRACT_POSITION);
         //
         // Tell the driver initialization is complete.
         //

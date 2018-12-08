@@ -199,7 +199,8 @@ public class Robot3543 extends Robot
         elevator = new Elevator3543();
         teamMarkerDeployer = new TeamMarkerDeployer(
                 RobotInfo3543.DEPLOYER_OPEN_POSITION, RobotInfo3543.DEPLOYER_CLOSE_POSITION);
-        mineralScooper = new MineralScooper(RobotInfo3543.MINERAL_SWEEPER_EXTEND_POSITION, RobotInfo3543.MINERAL_SWEEPER_RETRACT_POSITION);
+        mineralScooper = new MineralScooper(
+                RobotInfo3543.MINERAL_SCOOPER_EXTEND_POSITION, RobotInfo3543.MINERAL_SCOOPER_RETRACT_POSITION);
         //
         // Tell the driver initialization is complete.
         //
