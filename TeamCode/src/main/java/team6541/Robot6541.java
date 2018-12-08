@@ -26,6 +26,7 @@ import org.firstinspires.ftc.robotcore.external.matrices.OpenGLMatrix;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 
+import common.MineralScooper;
 import common.PixyVision;
 import common.Robot;
 import common.RobotInfo;
@@ -193,6 +194,8 @@ public class Robot6541 extends Robot
         elevator = new Elevator6541();
         teamMarkerDeployer = new TeamMarkerDeployer(
                 RobotInfo6541.DEPLOYER_OPEN_POSITION, RobotInfo6541.DEPLOYER_CLOSE_POSITION);
+        mineralScooper = new MineralScooper(RobotInfo6541.MINERAL_SWEEPER_EXTEND_POSITION, RobotInfo6541.MINERAL_SWEEPER_RETRACT_POSITION);
+
         //
         // Tell the driver initialization is complete.
         //
