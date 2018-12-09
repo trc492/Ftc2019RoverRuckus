@@ -217,6 +217,9 @@ public class TestCommon
             case X_DISTANCE_DRIVE:
             case Y_DISTANCE_DRIVE:
             case GYRO_TURN:
+            case TUNE_X_PID:
+            case TUNE_Y_PID:
+            case TUNE_TURN_PID:
                 robot.dashboard.displayPrintf(9, "xPos=%.1f,yPos=%.1f,heading=%.1f",
                         robot.driveBase.getXPosition(), robot.driveBase.getYPosition(), robot.driveBase.getHeading());
                 if (robot.encoderXPidCtrl != null)
