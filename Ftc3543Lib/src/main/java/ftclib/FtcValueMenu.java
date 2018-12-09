@@ -156,7 +156,10 @@ public class FtcValueMenu extends FtcMenu
     {
         final String funcName = "menuAltUp";
 
-        multiplier *= 10.0;
+        if (currValue + multiplier*valueStep*10.0 <= maxValue)
+        {
+            multiplier *= 10.0;
+        }
 
         if (debugEnabled)
         {
@@ -173,7 +176,10 @@ public class FtcValueMenu extends FtcMenu
     {
         final String funcName = "menuAltDown";
 
-        multiplier /= 10.0;
+        if (currValue - multiplier*valueStep/10.0 >= minValue)
+        {
+            multiplier /= 10.0;
+        }
 
         if (debugEnabled)
         {
