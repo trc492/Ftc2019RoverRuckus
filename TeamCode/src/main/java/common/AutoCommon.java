@@ -60,6 +60,7 @@ public abstract class AutoCommon extends FtcOpMode
 
     private static final String moduleName = "FtcAuto";
     private Robot robot;
+
     protected TrcRobot.RobotCommand autoCommand = null;
     protected MatchType matchType = MatchType.PRACTICE;
     protected int matchNumber = 0;
@@ -217,17 +218,13 @@ public abstract class AutoCommon extends FtcOpMode
 
         FtcChoiceMenu<Boolean> doTeammateMineralMenu = new FtcChoiceMenu<>(
                 "Do Teammate Mineral:", strategyMenu, robot);
-        FtcChoiceMenu<Boolean> startHungMenu = new FtcChoiceMenu<>(
-                "Start Hung:", strategyMenu, robot);
-        FtcChoiceMenu<Boolean> doMineralMenu = new FtcChoiceMenu<>(
-                "Do Mineral:", startHungMenu, robot);
-        FtcChoiceMenu<Boolean> doTeamMarkerMenu = new FtcChoiceMenu<>(
-                "Do Team Marker:", doMineralMenu, robot);
+        FtcChoiceMenu<Boolean> startHungMenu = new FtcChoiceMenu<>("Start Hung:", strategyMenu, robot);
+        FtcChoiceMenu<Boolean> doMineralMenu = new FtcChoiceMenu<>("Do Mineral:", startHungMenu, robot);
+        FtcChoiceMenu<Boolean> doTeamMarkerMenu = new FtcChoiceMenu<>("Do Team Marker:", doMineralMenu, robot);
 
         matchNumberMenu.setChildMenu(allianceMenu);
         delayMenu.setChildMenu(strategyMenu);
         driveTimeMenu.setChildMenu(drivePowerMenu);
-
         //
         // Populate choice menus.
         //
