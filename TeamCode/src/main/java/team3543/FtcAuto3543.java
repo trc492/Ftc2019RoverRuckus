@@ -55,7 +55,7 @@ public class FtcAuto3543 extends AutoCommon
         if (USE_TRACELOG)
         {
             String filePrefix = String.format("%s%02d", matchType, matchNumber);
-            robot.tracer.openTraceLog("/sdcard/FIRST/tracelog", filePrefix);
+            robot.globalTracer.openTraceLog("/sdcard/FIRST/tracelog", filePrefix);
         }
 
         //

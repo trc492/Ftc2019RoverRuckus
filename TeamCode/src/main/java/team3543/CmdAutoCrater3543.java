@@ -54,7 +54,7 @@ public class CmdAutoCrater3543 implements TrcRobot.RobotCommand
     CmdAutoCrater3543(Robot3543 robot, AutoCommon.Alliance alliance, double delay,
                       boolean startHung, boolean doMineral, boolean doTeamMarker, boolean doTeammateMineral)
     {
-        robot.tracer.traceInfo(moduleName,
+        robot.globalTracer.traceInfo(moduleName,
                 "Alliance=%s,Delay=%.0f,startHung=%s,Mineral=%s,TeamMarker=%s,TeammateMineral=%s",
                 alliance, delay, startHung, doMineral, doTeamMarker, doTeammateMineral);
 
@@ -139,7 +139,7 @@ public class CmdAutoCrater3543 implements TrcRobot.RobotCommand
                     //
                     // The robot is still hooked, need to unhook first.
                     //
-                    robot.tracer.traceInfo(moduleName, "Initial heading=%f", robot.driveBase.getHeading());
+                    robot.globalTracer.traceInfo(moduleName, "Initial heading=%f", robot.driveBase.getHeading());
                     targetX = RobotInfo3543.UNHOOK_DISPLACEMENT;
                     targetY = 0.0;
                     nextState = doMineral? State.DO_MINERAL: State.TURN_TO_WALL;
@@ -274,10 +274,10 @@ public class CmdAutoCrater3543 implements TrcRobot.RobotCommand
         {
             if (robot.battery != null)
             {
-                robot.tracer.traceInfo("Battery", "Voltage=%5.2fV (%5.2fV)",
+                robot.globalTracer.traceInfo("Battery", "Voltage=%5.2fV (%5.2fV)",
                         robot.battery.getVoltage(), robot.battery.getLowestVoltage());
             }
-            robot.tracer.traceInfo("Raw Encoder",
+            robot.globalTracer.traceInfo("Raw Encoder",
                     "lf=%.0f, rf=%.0f, lr=%.0f, rr=%.0f",
                     robot.leftFrontWheel.getPosition(),
                     robot.rightFrontWheel.getPosition(),
@@ -286,17 +286,17 @@ public class CmdAutoCrater3543 implements TrcRobot.RobotCommand
 
             if (debugXPid)
             {
-                robot.encoderXPidCtrl.printPidInfo(robot.tracer, elapsedTime);
+                robot.encoderXPidCtrl.printPidInfo(robot.globalTracer, elapsedTime);
             }
 
             if (debugYPid)
             {
-                robot.encoderYPidCtrl.printPidInfo(robot.tracer, elapsedTime);
+                robot.encoderYPidCtrl.printPidInfo(robot.globalTracer, elapsedTime);
             }
 
             if (debugTurnPid)
             {
-                robot.gyroPidCtrl.printPidInfo(robot.tracer, elapsedTime);
+                robot.gyroPidCtrl.printPidInfo(robot.globalTracer, elapsedTime);
             }
         }
 

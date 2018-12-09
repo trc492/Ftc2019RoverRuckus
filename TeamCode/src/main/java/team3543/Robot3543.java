@@ -124,9 +124,9 @@ public class Robot3543 extends Robot
             int tfodMonitorViewId = opMode.hardwareMap.appContext.getResources().getIdentifier(
                     "tfodMonitorViewId", "id", opMode.hardwareMap.appContext.getPackageName());
             final VuforiaLocalizer.CameraDirection CAMERA_DIR = BACK;
-            tensorFlowVision = new TensorFlowVision(-1/*tfodMonitorViewId*/, CAMERA_DIR, tracer);
+            tensorFlowVision = new TensorFlowVision(-1/*tfodMonitorViewId*/, CAMERA_DIR, globalTracer);
             tensorFlowVision.setEnabled(true);
-            tracer.traceInfo("Robot3543", "Enabling TensorFlow.");
+            globalTracer.traceInfo("Robot3543", "Enabling TensorFlow.");
         }
         //
         // Initialize DriveBase.
@@ -193,6 +193,7 @@ public class Robot3543 extends Robot
         pidDrive = new TrcPidDrive("pidDrive", driveBase, encoderXPidCtrl, encoderYPidCtrl, gyroPidCtrl);
         pidDrive.setStallTimeout(RobotInfo3543.PIDDRIVE_STALL_TIMEOUT);
         pidDrive.setBeep(androidTone);
+        pidDrive.setMsgTracer(globalTracer, true);
         //
         // Initialize other subsystems.
         //

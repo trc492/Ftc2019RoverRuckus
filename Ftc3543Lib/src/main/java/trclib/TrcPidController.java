@@ -70,6 +70,14 @@ public class TrcPidController
 
         /**
          * Constructor: Create an instance of the object.
+         */
+        public PidCoefficients()
+        {
+            this(1.0, 0.0, 0.0, 0.0);
+        }   //PidCoefficients
+
+        /**
+         * Constructor: Create an instance of the object.
          *
          * @param kP specifies the Proportional constant.
          * @param kI specifies the Integral constant.

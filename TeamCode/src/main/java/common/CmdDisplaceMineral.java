@@ -134,7 +134,7 @@ public class CmdDisplaceMineral implements TrcRobot.RobotCommand
                         }
 
                         robot.speak(sentence);
-                        robot.tracer.traceInfo(moduleName, "%s: %s (%s).",
+                        robot.globalTracer.traceInfo(moduleName, "%s: %s (%s).",
                                 state, sentence, robot.targetInfo);
                         sm.setState(State.TURN_TO_MINERAL);
                     }
@@ -250,10 +250,10 @@ public class CmdDisplaceMineral implements TrcRobot.RobotCommand
         {
             if (robot.battery != null)
             {
-                robot.tracer.traceInfo("Battery", "Voltage=%5.2fV (%5.2fV)",
+                robot.globalTracer.traceInfo("Battery", "Voltage=%5.2fV (%5.2fV)",
                         robot.battery.getVoltage(), robot.battery.getLowestVoltage());
             }
-            robot.tracer.traceInfo("Raw Encoder",
+            robot.globalTracer.traceInfo("Raw Encoder",
                     "lf=%.0f, rf=%.0f, lr=%.0f, rr=%.0f",
                     robot.leftFrontWheel.getPosition(),
                     robot.rightFrontWheel.getPosition(),
@@ -262,17 +262,17 @@ public class CmdDisplaceMineral implements TrcRobot.RobotCommand
 
             if (debugXPid && robot.encoderXPidCtrl != null)
             {
-                robot.encoderXPidCtrl.printPidInfo(robot.tracer, elapsedTime);
+                robot.encoderXPidCtrl.printPidInfo(robot.globalTracer, elapsedTime);
             }
 
             if (debugYPid)
             {
-                robot.encoderYPidCtrl.printPidInfo(robot.tracer, elapsedTime);
+                robot.encoderYPidCtrl.printPidInfo(robot.globalTracer, elapsedTime);
             }
 
             if (debugTurnPid)
             {
-                robot.gyroPidCtrl.printPidInfo(robot.tracer, elapsedTime);
+                robot.gyroPidCtrl.printPidInfo(robot.globalTracer, elapsedTime);
             }
         }
 

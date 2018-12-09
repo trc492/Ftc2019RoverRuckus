@@ -163,7 +163,7 @@ public class PixyVision
 
         if (debugEnabled)
         {
-            robot.tracer.traceInfo(
+            robot.globalTracer.traceInfo(
                     funcName, "%s object(s) found", detectedObjects != null? "" + detectedObjects.length: "null");
         }
 
@@ -228,7 +228,7 @@ public class PixyVision
 
                     if (debugEnabled)
                     {
-                        robot.tracer.traceInfo(funcName, "[%d] %s", i, detectedObjects[i].toString());
+                        robot.globalTracer.traceInfo(funcName, "[%d] %s", i, detectedObjects[i].toString());
                     }
                 }
             }
@@ -256,14 +256,14 @@ public class PixyVision
 
                 if (debugEnabled)
                 {
-                    robot.tracer.traceInfo(funcName, "===TargetRect===: x=%d, y=%d, w=%d, h=%d",
+                    robot.globalTracer.traceInfo(funcName, "===TargetRect===: x=%d, y=%d, w=%d, h=%d",
                             targetRect.x, targetRect.y, targetRect.width, targetRect.height);
                 }
             }
 
             if (targetRect == null)
             {
-                robot.tracer.traceInfo(funcName, "===TargetRect=== None, is now null");
+                robot.globalTracer.traceInfo(funcName, "===TargetRect=== None, is now null");
             }
 
             lastTargetRect = targetRect;
@@ -313,7 +313,7 @@ public class PixyVision
 
             if (debugEnabled)
             {
-                robot.tracer.traceInfo(
+                robot.globalTracer.traceInfo(
                         funcName, "###TargetInfo###: xDist=%.1f, yDist=%.1f, angle=%.1f",
                         targetXDistance, targetYDistance, targetAngle);
             }

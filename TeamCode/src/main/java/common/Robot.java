@@ -53,7 +53,7 @@ public class Robot implements FtcMenu.MenuButtons
     public String moduleName;
     public FtcOpMode opMode;
     public HalDashboard dashboard;
-    public TrcDbgTrace tracer;
+    public TrcDbgTrace globalTracer;
     public FtcAndroidTone androidTone;
     public TextToSpeech textToSpeech = null;
     public FtcRobotBattery battery = null;
@@ -88,6 +88,9 @@ public class Robot implements FtcMenu.MenuButtons
     public TrcPidController encoderYPidCtrl = null;
     public TrcPidController gyroPidCtrl = null;
     public TrcPidDrive pidDrive = null;
+
+    public TrcPidController.PidCoefficients tunePidCoeff = new TrcPidController.PidCoefficients();
+
     //
     // Other common subsystems.
     //
@@ -102,7 +105,7 @@ public class Robot implements FtcMenu.MenuButtons
         opMode = FtcOpMode.getInstance();
         opMode.hardwareMap.logDevices();
         dashboard = HalDashboard.getInstance();
-        tracer = FtcOpMode.getGlobalTracer();
+        globalTracer = FtcOpMode.getGlobalTracer();
         dashboard.setTextView(
                 ((FtcRobotControllerActivity)opMode.hardwareMap.appContext).findViewById(R.id.textOpMode));
         androidTone = new FtcAndroidTone("AndroidTone");
@@ -134,12 +137,12 @@ public class Robot implements FtcMenu.MenuButtons
         if (robotLocation != null)
         {
             robotOrientation = vuforiaVision.getLocationOrientation(robotLocation).thirdAngle;
-            tracer.traceInfo(funcName, "Vuforia detected heading: %.1f", robotOrientation);
+            globalTracer.traceInfo(funcName, "Vuforia detected heading: %.1f", robotOrientation);
             speak(String.format("Robot angle is %.1f degrees", robotOrientation));
         }
         else
         {
-            tracer.traceInfo(funcName, "Default heading: %.1f", robotOrientation);
+            globalTracer.traceInfo(funcName, "Default heading: %.1f", robotOrientation);
         }
 
         targetHeading = robotOrientation;
@@ -172,13 +175,13 @@ public class Robot implements FtcMenu.MenuButtons
         //
         if (vuforiaVision != null && runMode == TrcRobot.RunMode.AUTO_MODE)
         {
-            tracer.traceInfo(funcName, "Enabling Vuforia.");
+            globalTracer.traceInfo(funcName, "Enabling Vuforia.");
             vuforiaVision.setEnabled(true);
         }
 
         if (pixyVision != null && runMode == TrcRobot.RunMode.AUTO_MODE)
         {
-            tracer.traceInfo(funcName, "Enabling Pixy Camera.");
+            globalTracer.traceInfo(funcName, "Enabling Pixy Camera.");
             pixyVision.setCameraEnabled(true);
         }
         //
@@ -215,7 +218,7 @@ public class Robot implements FtcMenu.MenuButtons
 
         if (tensorFlowVision != null)
         {
-            tracer.traceInfo("RobotStopMode", "Shutting down TensorFlow.");
+            globalTracer.traceInfo("RobotStopMode", "Shutting down TensorFlow.");
             tensorFlowVision.shutdown();
             tensorFlowVision = null;
         }
@@ -227,7 +230,7 @@ public class Robot implements FtcMenu.MenuButtons
     {
         if (battery != null)
         {
-            tracer.traceInfo(
+            globalTracer.traceInfo(
                     moduleName,
                     "[%5.3f] >>>>> %s: xPos=%6.2f/%6.2f,yPos=%6.2f/%6.2f,heading=%6.1f/%6.1f,volt=%5.2fV(%5.2fV)",
                     elapsedTime, stateName,
@@ -236,7 +239,7 @@ public class Robot implements FtcMenu.MenuButtons
         }
         else
         {
-            tracer.traceInfo(
+            globalTracer.traceInfo(
                     moduleName,
                     "[%5.3f] >>>>> %s: xPos=%6.2f/%6.2f,yPos=%6.2f/%6.2f,heading=%6.1f/%6.1f",
                     elapsedTime, stateName,
@@ -259,6 +262,18 @@ public class Robot implements FtcMenu.MenuButtons
     {
         return opMode.gamepad1.dpad_down;
     }   //isMenuDownButton
+
+    @Override
+    public boolean isMenuAltUpButton()
+    {
+        return opMode.gamepad1.left_bumper;
+    }   //isMenuAltUpButton
+
+    @Override
+    public boolean isMenuAltDownButton()
+    {
+        return opMode.gamepad1.right_bumper;
+    }   //isMenuAltDownButton
 
     @Override
     public boolean isMenuEnterButton()

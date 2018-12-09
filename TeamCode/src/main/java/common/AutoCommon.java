@@ -133,9 +133,9 @@ public abstract class AutoCommon extends FtcOpMode
     {
         if (USE_TRACELOG)
         {
-            robot.tracer.setTraceLogEnabled(true);
+            robot.globalTracer.setTraceLogEnabled(true);
         }
-        robot.tracer.traceInfo(moduleName, "%s: ***** Starting autonomous *****", new Date());
+        robot.globalTracer.traceInfo(moduleName, "%s: ***** Starting autonomous *****", new Date());
         robot.startMode(nextMode);
 
         if (robot.tensorFlowVision != null)
@@ -151,10 +151,10 @@ public abstract class AutoCommon extends FtcOpMode
             {
                 msg = "Gold mineral not found";
             }
-            robot.tracer.traceInfo(moduleName, "%s: DetectionAvgTime=%.3f, SuccessCount=%d, FailedCount=%d",
+            robot.globalTracer.traceInfo(moduleName, "%s: DetectionAvgTime=%.3f, SuccessCount=%d, FailedCount=%d",
                     msg, robot.detectionIntervalTotalTime/robot.detectionSuccessCount/1000000000.0,
                     robot.detectionSuccessCount, robot.detectionFailedCount);
-            robot.tracer.traceInfo(moduleName, "Shutting down TensorFlow.");
+            robot.globalTracer.traceInfo(moduleName, "Shutting down TensorFlow.");
             robot.tensorFlowVision.shutdown();
             robot.tensorFlowVision = null;
         }
@@ -174,11 +174,11 @@ public abstract class AutoCommon extends FtcOpMode
         {
             robot.battery.setEnabled(false);
         }
-        printPerformanceMetrics(robot.tracer);
+        printPerformanceMetrics(robot.globalTracer);
 
         if (USE_TRACELOG)
         {
-            robot.tracer.closeTraceLog();
+            robot.globalTracer.closeTraceLog();
         }
     }   //stopMode
 

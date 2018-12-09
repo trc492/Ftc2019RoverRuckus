@@ -46,7 +46,10 @@ public class TestCommon
         Y_TIMED_DRIVE,
         X_DISTANCE_DRIVE,
         Y_DISTANCE_DRIVE,
-        GYRO_TURN
+        GYRO_TURN,
+        TUNE_X_PID,
+        TUNE_Y_PID,
+        TUNE_TURN_PID
     }   //enum Test
 
     private enum State
@@ -109,17 +112,38 @@ public class TestCommon
 
             case X_DISTANCE_DRIVE:
                 pidDriveCommand = new CmdPidDrive(
-                        robot, robot.pidDrive, 0.0, driveDistance*12.0, 0.0, 0.0);
+                        robot, robot.pidDrive, 0.0, driveDistance*12.0, 0.0, 0.0,
+                        drivePower, false);
                 break;
 
             case Y_DISTANCE_DRIVE:
                 pidDriveCommand = new CmdPidDrive(
-                        robot, robot.pidDrive, 0.0, 0.0, driveDistance*12.0, 0.0);
+                        robot, robot.pidDrive, 0.0, 0.0, driveDistance*12.0, 0.0,
+                        drivePower, false);
                 break;
 
             case GYRO_TURN:
                 pidDriveCommand = new CmdPidDrive(
-                        robot, robot.pidDrive, 0.0, 0.0, 0.0, turnDegrees);
+                        robot, robot.pidDrive, 0.0, 0.0, 0.0, turnDegrees,
+                        drivePower, false);
+                break;
+
+            case TUNE_X_PID:
+                pidDriveCommand = new CmdPidDrive(
+                        robot, robot.pidDrive, 0.0, driveDistance*12.0, 0.0, 0.0,
+                        drivePower, true);
+                break;
+
+            case TUNE_Y_PID:
+                pidDriveCommand = new CmdPidDrive(
+                        robot, robot.pidDrive, 0.0, 0.0, driveDistance*12.0, 0.0,
+                        drivePower, true);
+                break;
+
+            case TUNE_TURN_PID:
+                pidDriveCommand = new CmdPidDrive(
+                        robot, robot.pidDrive, 0.0, 0.0, 0.0, turnDegrees,
+                        drivePower, true);
                 break;
         }
         //
@@ -127,7 +151,7 @@ public class TestCommon
         //
         if (test != Test.SENSORS_TEST && robot.tensorFlowVision != null)
         {
-            robot.tracer.traceInfo("TestInit", "Shutting down TensorFlow.");
+            robot.globalTracer.traceInfo("TestInit", "Shutting down TensorFlow.");
             robot.tensorFlowVision.shutdown();
             robot.tensorFlowVision = null;
         }
@@ -218,6 +242,18 @@ public class TestCommon
         FtcValueMenu turnDegreesMenu = new FtcValueMenu(
                 "Turn degrees:", testMenu, robot, -360.0, 360.0, 5.0, 90.0,
                 " %.0f deg");
+        FtcValueMenu tuneKpMenu = new FtcValueMenu(
+                "Kp:", testMenu, robot, 0.0, 1.0, 0.001,
+                robot.tunePidCoeff.kP, " %f");
+        FtcValueMenu tuneKiMenu = new FtcValueMenu(
+                "Ki:", testMenu, robot, 0.0, 1.0, 0.0001,
+                robot.tunePidCoeff.kI, " %f");
+        FtcValueMenu tuneKdMenu = new FtcValueMenu(
+                "Kd:", testMenu, robot, 0.0, 1.0, 0.0001,
+                robot.tunePidCoeff.kD, " %f");
+        FtcValueMenu tuneKfMenu = new FtcValueMenu(
+                "Kf:", testMenu, robot, 0.0, 1.0, 0.001,
+                robot.tunePidCoeff.kF, " %f");
 
         //
         // Populate menus.
@@ -229,8 +265,16 @@ public class TestCommon
         testMenu.addChoice("X Distance drive", Test.X_DISTANCE_DRIVE, false, driveDistanceMenu);
         testMenu.addChoice("Y Distance drive", Test.Y_DISTANCE_DRIVE, false, driveDistanceMenu);
         testMenu.addChoice("Degrees turn", Test.GYRO_TURN, false, turnDegreesMenu);
+        testMenu.addChoice("Tune X PID", Test.TUNE_X_PID, false, tuneKpMenu);
+        testMenu.addChoice("Tune Y PID", Test.TUNE_Y_PID, false, tuneKpMenu);
+        testMenu.addChoice("Tune Turn PID", Test.TUNE_TURN_PID, false, tuneKpMenu);
 
         driveTimeMenu.setChildMenu(drivePowerMenu);
+        driveDistanceMenu.setChildMenu(drivePowerMenu);
+        turnDegreesMenu.setChildMenu(drivePowerMenu);
+        tuneKpMenu.setChildMenu(tuneKiMenu);
+        tuneKiMenu.setChildMenu(tuneKdMenu);
+        tuneKdMenu.setChildMenu(tuneKfMenu);
 
         //
         // Traverse menus.
