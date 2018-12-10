@@ -570,6 +570,7 @@ public class TrcTaskMgr
     public void shutdown()
     {
         terminateAllThreads();
+        TrcNotifier.shutdown();
         taskList.clear();
     }   //shutdown
 

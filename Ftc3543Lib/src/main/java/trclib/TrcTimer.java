@@ -42,7 +42,7 @@ public class TrcTimer
     private boolean expired = false;
     private boolean canceled = false;
     private TrcEvent notifyEvent = null;
-    private TrcNotificationReceiver<TrcTimer> notifyReceiver = null;
+    private TrcNotifier.Receiver notifyReceiver = null;
     private double securityKey = -1.0;
 
     /**
@@ -82,7 +82,7 @@ public class TrcTimer
      * @param receiver specifies the notification receiver to call when time has expired.
      * @throws IllegalStateException when set is called more than once without a call to {@link #cancel()} between them.
      */
-    public synchronized void set(double time, TrcEvent event, TrcNotificationReceiver<TrcTimer> receiver)
+    public synchronized void set(double time, TrcEvent event, TrcNotifier.Receiver receiver)
             throws IllegalStateException
     {
         final String funcName = "set";
@@ -143,7 +143,7 @@ public class TrcTimer
      * @param time specifies the expire time in seconds relative to the current time.
      * @param receiver specifies the notification receiver to call when time has expired.
      */
-    public void set(double time, TrcNotificationReceiver<TrcTimer> receiver)
+    public void set(double time, TrcNotifier.Receiver receiver)
     {
         set(time, null, receiver);
     }   //set

@@ -46,7 +46,7 @@ public class TrcSongPlayer
     private double barDuration = 0.0;
     private boolean repeat = false;
     private TrcEvent event = null;
-    private TrcNotificationReceiver<TrcSongPlayer> receiver = null;
+    private TrcNotifier.Receiver receiver = null;
 
     /**
      * Constructor: Create and initialize an instance of the object.
@@ -184,7 +184,7 @@ public class TrcSongPlayer
      */
     private synchronized void playSongWorker(
             TrcSong song, double barDuration, boolean repeat, boolean pause,
-            TrcEvent event, TrcNotificationReceiver<TrcSongPlayer> receiver)
+            TrcEvent event, TrcNotifier.Receiver receiver)
     {
         final String funcName = "playSongWorker";
 
@@ -244,7 +244,7 @@ public class TrcSongPlayer
      * @param receiver specifies the notification receiver on song completion.
      */
     public void playSong(
-            TrcSong song, double barDuration, boolean pause, TrcNotificationReceiver<TrcSongPlayer> receiver)
+            TrcSong song, double barDuration, boolean pause, TrcNotifier.Receiver receiver)
     {
         playSongWorker(song, barDuration, false, pause, null, receiver);
     }   //playSong
