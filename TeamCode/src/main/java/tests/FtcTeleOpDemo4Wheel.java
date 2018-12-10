@@ -147,7 +147,6 @@ public class FtcTeleOpDemo4Wheel extends FtcOpMode implements TrcGameController.
                     break;
 
                 case FtcGamepad.GAMEPAD_LBUMPER:
-                    invertedDrive = pressed;
                     break;
 
                 case FtcGamepad.GAMEPAD_RBUMPER:
