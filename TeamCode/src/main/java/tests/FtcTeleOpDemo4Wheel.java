@@ -28,7 +28,6 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import ftclib.FtcDcMotor;
 import ftclib.FtcGamepad;
 import ftclib.FtcOpMode;
-import ftclib.FtcServo;
 import hallib.HalDashboard;
 import trclib.TrcGameController;
 import trclib.TrcMecanumDriveBase;
@@ -37,7 +36,10 @@ import trclib.TrcMecanumDriveBase;
 @Disabled
 public class FtcTeleOpDemo4Wheel extends FtcOpMode implements TrcGameController.ButtonHandler
 {
-    private static String moduleName = "FtcTeleOpDemo4Wheel";
+    private static final String moduleName = "FtcTeleOpDemo4Wheel";
+    private static final boolean LEFT_WHEEL_INVERTED = false;
+    private static final boolean RIGHT_WHEEL_INVERTED = true;
+    private static final boolean BRAKE_MODE_ENABLED = true;
 
     protected enum DriveMode
     {
@@ -45,9 +47,8 @@ public class FtcTeleOpDemo4Wheel extends FtcOpMode implements TrcGameController.
         MECANUM_MODE,
     }   //enum DriveMode
 
-    private HalDashboard dashboard = HalDashboard.getInstance();
+    private HalDashboard dashboard;
     private DriveMode driveMode = DriveMode.MECANUM_MODE;
-
     private FtcGamepad driverGamepad;
     private boolean invertedDrive = false;
 
@@ -60,7 +61,9 @@ public class FtcTeleOpDemo4Wheel extends FtcOpMode implements TrcGameController.
     @Override
     public void initRobot()
     {
+        dashboard = HalDashboard.getInstance();
         driverGamepad = new FtcGamepad("DriverGamepad", gamepad1, this);
+        driverGamepad.setYInverted(true);
         //
         // Initializing robot objects.
         // FtcTeleOp is also extended by FtcTest so we cannot assume runMode is TELEOP.
@@ -69,6 +72,14 @@ public class FtcTeleOpDemo4Wheel extends FtcOpMode implements TrcGameController.
         rfWheel = new FtcDcMotor("rfWheel");
         lrWheel = new FtcDcMotor("lrWheel");
         rrWheel = new FtcDcMotor("rrWheel");
+        lfWheel.setInverted(LEFT_WHEEL_INVERTED);
+        lrWheel.setInverted(LEFT_WHEEL_INVERTED);
+        rfWheel.setInverted(RIGHT_WHEEL_INVERTED);
+        rrWheel.setInverted(RIGHT_WHEEL_INVERTED);
+        lfWheel.setBrakeModeEnabled(BRAKE_MODE_ENABLED);
+        rfWheel.setBrakeModeEnabled(BRAKE_MODE_ENABLED);
+        lrWheel.setBrakeModeEnabled(BRAKE_MODE_ENABLED);
+        rrWheel.setBrakeModeEnabled(BRAKE_MODE_ENABLED);
         driveBase = new TrcMecanumDriveBase(lfWheel, lrWheel, rfWheel, rrWheel);
     }   //initRobot
 
@@ -116,9 +127,17 @@ public class FtcTeleOpDemo4Wheel extends FtcOpMode implements TrcGameController.
             switch (button)
             {
                 case FtcGamepad.GAMEPAD_A:
+                    if (pressed)
+                    {
+                        driveMode = DriveMode.MECANUM_MODE;
+                    }
                     break;
 
                 case FtcGamepad.GAMEPAD_B:
+                    if (pressed)
+                    {
+                        driveMode = DriveMode.TANK_MODE;
+                    }
                     break;
 
                 case FtcGamepad.GAMEPAD_X:
@@ -128,6 +147,7 @@ public class FtcTeleOpDemo4Wheel extends FtcOpMode implements TrcGameController.
                     break;
 
                 case FtcGamepad.GAMEPAD_LBUMPER:
+                    invertedDrive = pressed;
                     break;
 
                 case FtcGamepad.GAMEPAD_RBUMPER:
