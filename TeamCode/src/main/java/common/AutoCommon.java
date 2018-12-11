@@ -23,6 +23,7 @@
 package common;
 
 import java.util.Date;
+import java.util.Locale;
 
 import ftclib.FtcChoiceMenu;
 import ftclib.FtcMenu;
@@ -88,8 +89,6 @@ public abstract class AutoCommon extends FtcOpMode
     @Override
     public void initPeriodic()
     {
-        final String funcName = "initPeriodic";
-
         if (robot.tensorFlowVision != null)
         {
             TensorFlowVision.TargetInfo targetInfo =
@@ -145,7 +144,7 @@ public abstract class AutoCommon extends FtcOpMode
 
             if (robot.targetInfo != null)
             {
-                msg = String.format("Gold mineral found at position %d",
+                msg = String.format(Locale.US, "Gold mineral found at position %d",
                         robot.targetInfo.rect.x + robot.targetInfo.rect.width/2);
             }
             else
