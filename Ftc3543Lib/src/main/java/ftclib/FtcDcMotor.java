@@ -32,7 +32,7 @@ import trclib.TrcDbgTrace;
 import trclib.TrcMotor;
 
 /**
- * This class implements the Modern Robotics Motor Controller extending TrcMotor. It provides implementation of the
+ * This class implements the generic DC Motor Controller extending TrcMotor. It provides implementation of the
  * abstract methods in TrcMotor. It supports limit switches. When this class is constructed with limit switches,
  * setPower will respect them and will not move the motor into the direction where the limit switch is activated.
  * It also provides a software encoder reset without switching the Modern Robotics motor controller mode which is
@@ -250,7 +250,7 @@ public class FtcDcMotor extends TrcMotor
     }   //getMotorPosition
 
     /**
-     * This method sets the motor power.
+     * This method sets the raw motor power.
      *
      * @param power specifies the percentage power (range -1.0 to 1.0) to be set.
      */

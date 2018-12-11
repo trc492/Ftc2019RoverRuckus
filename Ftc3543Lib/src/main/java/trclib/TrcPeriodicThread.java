@@ -356,8 +356,8 @@ public class TrcPeriodicThread<T>
     public void run()
     {
         final String funcName = "run";
-        long totalThreadNanoTime = 0;
-        int loopCount = 0;
+        @SuppressWarnings("unused") long totalThreadNanoTime = 0;
+        @SuppressWarnings("unused") int loopCount = 0;
 
         numActiveThreads++;
         if (debugEnabled)
