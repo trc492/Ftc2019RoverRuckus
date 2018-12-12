@@ -22,6 +22,13 @@
 
 package common;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.Date;
+
 import trclib.TrcEvent;
 import trclib.TrcPidController;
 import trclib.TrcPidController.PidCoefficients;
@@ -29,6 +36,7 @@ import trclib.TrcPidDrive;
 import trclib.TrcRobot;
 import trclib.TrcStateMachine;
 import trclib.TrcTimer;
+import trclib.TrcUtil;
 
 /**
  * This class implements a generic PID control drive command. It is agnostic to the PID controller sensors.
@@ -75,6 +83,8 @@ public class CmdPidDrive implements TrcRobot.RobotCommand
     private Double savedYOutputLimit = null;
     private Double savedTurnOutputLimit = null;
 
+    private PrintWriter logWriter = null;
+
     /**
      * Constructor: Create an instance of the object.
      *
@@ -108,6 +118,22 @@ public class CmdPidDrive implements TrcRobot.RobotCommand
         xPidCtrl = pidDrive.getXPidCtrl();
         yPidCtrl = pidDrive.getYPidCtrl();
         turnPidCtrl = pidDrive.getTurnPidCtrl();
+
+        if (tuneMode)
+        {
+            try
+            {
+                File folder = new File("/sdcard/FIRST/tracelog");
+                folder.mkdir();
+                String logFileName = folder + File.separator + "PID_RESULTS_" + TrcUtil.getTimestamp();
+                logWriter = new PrintWriter(new BufferedWriter(new FileWriter(logFileName)));
+            }
+            catch (IOException e)
+            {
+                e.printStackTrace();
+            }
+
+        }
 
         event = new TrcEvent(moduleName);
         timer = new TrcTimer(moduleName);
@@ -183,7 +209,33 @@ public class CmdPidDrive implements TrcRobot.RobotCommand
                         //
                         // We are in tune mode, we are tuning PID. We tune PID one direction at a time.
                         // Read PID constants from the robot and change the corresponding PID controller with them.
+                        // Write the PID coefficients to disk.
                         //
+
+                        logWriter.printf("<<< PID Tuning Started >>> %s\n", new Date().toString());
+                        logWriter.printf("KP: %.1f\n", robot.tunePidCoeff.kD);
+                        logWriter.printf("KI: %.1f\n", robot.tunePidCoeff.kI);
+                        logWriter.printf("KD: %.1f\n", robot.tunePidCoeff.kD);
+                        logWriter.printf("KF: %.1f\n", robot.tunePidCoeff.kF);
+                        logWriter.print("PID Mode: ");
+
+                        if (pidDrive.getXPidCtrl() != null)
+                        {
+                            logWriter.println("X PID Drive");
+                        }
+                        else if (pidDrive.getYPidCtrl() != null)
+                        {
+                            logWriter.println("Y PID Drive");
+                        }
+                        else if (pidDrive.getTurnPidCtrl() != null)
+                        {
+                            logWriter.println("Turn PID Drive");
+                        }
+                        else
+                        {
+                            logWriter.println("Other");
+                        }
+
                         if (xDistance != 0.0 && (tunePidCtrl = pidDrive.getXPidCtrl()) != null ||
                             yDistance != 0.0 && (tunePidCtrl = pidDrive.getYPidCtrl()) != null ||
                             heading != 0.0 && (tunePidCtrl = pidDrive.getTurnPidCtrl()) != null)
@@ -224,6 +276,16 @@ public class CmdPidDrive implements TrcRobot.RobotCommand
                     //
                     // We are done, restore everything.
                     //
+                    if (tuneMode)
+                    {
+                        logWriter.printf("<<< PID Tuning Results >>> %s\n", new Date().toString());
+                        logWriter.printf("Target: %.1f\n", tunePidCtrl.getTarget());
+                        logWriter.printf("Output: %.1f\n", tunePidCtrl.getOutput());
+                        logWriter.printf("Output Limit: %.1f", tunePidCtrl.getOutputLimit());
+                        logWriter.printf("Error: %.1f\n", tunePidCtrl.getError());
+                        logWriter.printf("PID on target: %b", tunePidCtrl.isOnTarget());
+                        logWriter.close();
+                    }
                     if (savedXOutputLimit != null) xPidCtrl.setOutputLimit(savedXOutputLimit);
                     if (savedYOutputLimit != null) yPidCtrl.setOutputLimit(savedYOutputLimit);
                     if (savedTurnOutputLimit != null) turnPidCtrl.setOutputLimit(savedTurnOutputLimit);
