@@ -293,6 +293,7 @@ public class CmdDisplaceMineral implements TrcRobot.RobotCommand
      *
      * @return mineral angle from the starting position.
      */
+    @SuppressWarnings("unused")
     public double getMineralAngle()
     {
         return mineralAngle;

@@ -142,6 +142,7 @@ public class CmdPidDrive implements TrcRobot.RobotCommand
      * @return true if the command sequence is completed, false otherwise.
      */
     @Override
+    @SuppressWarnings("unused")
     public boolean cmdPeriodic(double elapsedTime)
     {
         State state = sm.checkReadyAndGetState();

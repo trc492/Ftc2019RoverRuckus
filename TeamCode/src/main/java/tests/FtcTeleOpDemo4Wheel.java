@@ -28,16 +28,15 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import ftclib.FtcDcMotor;
 import ftclib.FtcGamepad;
 import ftclib.FtcOpMode;
-import ftclib.FtcServo;
 import hallib.HalDashboard;
 import trclib.TrcGameController;
 import trclib.TrcMecanumDriveBase;
 
 @TeleOp(name="Test: Demo 4-Wheel", group="Test")
-@Disabled
-public class FtcTeleOpDemo4Wheel extends FtcOpMode implements TrcGameController.ButtonHandler
+//@Disabled
+public class FtcTeleOpDemo4Wheel extends FtcOpMode
 {
-    private static String moduleName = "FtcTeleOpDemo4Wheel";
+    private static final String moduleName = "FtcTeleOpDemo4Wheel";
 
     protected enum DriveMode
     {
@@ -45,11 +44,12 @@ public class FtcTeleOpDemo4Wheel extends FtcOpMode implements TrcGameController.
         MECANUM_MODE,
     }   //enum DriveMode
 
-    private HalDashboard dashboard = HalDashboard.getInstance();
-    private DriveMode driveMode = DriveMode.MECANUM_MODE;
+    private static final boolean LEFT_WHEEL_INVERTED = false;
+    private static final boolean RIGHT_WHEEL_INVERTED = true;
+    private static final boolean BRAKE_MODE_ENABLED = true;
 
+    private HalDashboard dashboard;
     private FtcGamepad driverGamepad;
-    private boolean invertedDrive = false;
 
     private FtcDcMotor lfWheel;
     private FtcDcMotor rfWheel;
@@ -57,18 +57,32 @@ public class FtcTeleOpDemo4Wheel extends FtcOpMode implements TrcGameController.
     private FtcDcMotor rrWheel;
     private TrcMecanumDriveBase driveBase;
 
+    private DriveMode driveMode = DriveMode.MECANUM_MODE;
+    private boolean invertedDrive = false;
+
     @Override
     public void initRobot()
     {
-        driverGamepad = new FtcGamepad("DriverGamepad", gamepad1, this);
-        //
-        // Initializing robot objects.
-        // FtcTeleOp is also extended by FtcTest so we cannot assume runMode is TELEOP.
-        //
+        dashboard = HalDashboard.getInstance();
+
+        driverGamepad = new FtcGamepad("DriverGamepad", gamepad1, this::buttonEvent);
+        driverGamepad.setYInverted(true);
+
         lfWheel = new FtcDcMotor("lfWheel");
         rfWheel = new FtcDcMotor("rfWheel");
         lrWheel = new FtcDcMotor("lrWheel");
         rrWheel = new FtcDcMotor("rrWheel");
+
+        lfWheel.setInverted(LEFT_WHEEL_INVERTED);
+        lrWheel.setInverted(LEFT_WHEEL_INVERTED);
+        rfWheel.setInverted(RIGHT_WHEEL_INVERTED);
+        rrWheel.setInverted(RIGHT_WHEEL_INVERTED);
+
+        lfWheel.setBrakeModeEnabled(BRAKE_MODE_ENABLED);
+        rfWheel.setBrakeModeEnabled(BRAKE_MODE_ENABLED);
+        lrWheel.setBrakeModeEnabled(BRAKE_MODE_ENABLED);
+        rrWheel.setBrakeModeEnabled(BRAKE_MODE_ENABLED);
+
         driveBase = new TrcMecanumDriveBase(lfWheel, lrWheel, rfWheel, rrWheel);
     }   //initRobot
 
@@ -102,23 +116,27 @@ public class FtcTeleOpDemo4Wheel extends FtcOpMode implements TrcGameController.
                 driveBase.getXPosition(), driveBase.getYPosition(), driveBase.getHeading());
     }   //runPeriodic
 
-    //
-    // Implements TrcGameController.ButtonHandler interface.
-    //
-
-    @Override
     public void buttonEvent(TrcGameController gamepad, int button, boolean pressed)
     {
         dashboard.displayPrintf(
                 7, "%s: %04x->%s", gamepad.toString(), button, pressed? "Pressed": "Released");
+
         if (gamepad == driverGamepad)
         {
             switch (button)
             {
                 case FtcGamepad.GAMEPAD_A:
+                    if (pressed)
+                    {
+                        driveMode = DriveMode.MECANUM_MODE;
+                    }
                     break;
 
                 case FtcGamepad.GAMEPAD_B:
+                    if (pressed)
+                    {
+                        driveMode = DriveMode.TANK_MODE;
+                    }
                     break;
 
                 case FtcGamepad.GAMEPAD_X:
@@ -137,4 +155,4 @@ public class FtcTeleOpDemo4Wheel extends FtcOpMode implements TrcGameController.
         }
     }   //buttonEvent
 
-}   //class FtcTeleOp3543
+}   //class FtcTeleOpDemo4Wheel

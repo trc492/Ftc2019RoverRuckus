@@ -23,8 +23,6 @@
 package trclib;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.PrintStream;
 
 import hallib.HalDbgLog;
 
@@ -196,8 +194,6 @@ public class TrcDbgTrace
      */
     public void closeTraceLog()
     {
-        final String funcName = "closeTraceLog";
-
         if (traceLogger != null)
         {
             traceLogger.setEnabled(false);

@@ -37,6 +37,13 @@ import trclib.TrcUtil;
 public class TestCommon
 {
     private static final String moduleName = "FtcTest";
+    //
+    // Made the following menus static so their values will persist across different runs of PID tuning.
+    //
+    private static FtcValueMenu tuneKpMenu = null;
+    private static FtcValueMenu tuneKiMenu = null;
+    private static FtcValueMenu tuneKdMenu = null;
+    private static FtcValueMenu tuneKfMenu = null;
 
     private enum Test
     {
@@ -210,6 +217,9 @@ public class TestCommon
             case X_DISTANCE_DRIVE:
             case Y_DISTANCE_DRIVE:
             case GYRO_TURN:
+            case TUNE_X_PID:
+            case TUNE_Y_PID:
+            case TUNE_TURN_PID:
                 robot.dashboard.displayPrintf(9, "xPos=%.1f,yPos=%.1f,heading=%.1f",
                         robot.driveBase.getXPosition(), robot.driveBase.getYPosition(), robot.driveBase.getHeading());
                 if (robot.encoderXPidCtrl != null)
@@ -242,18 +252,34 @@ public class TestCommon
         FtcValueMenu turnDegreesMenu = new FtcValueMenu(
                 "Turn degrees:", testMenu, robot, -360.0, 360.0, 5.0, 90.0,
                 " %.0f deg");
-        FtcValueMenu tuneKpMenu = new FtcValueMenu(
-                "Kp:", testMenu, robot, 0.0, 1.0, 0.001,
-                robot.tunePidCoeff.kP, " %f");
-        FtcValueMenu tuneKiMenu = new FtcValueMenu(
-                "Ki:", testMenu, robot, 0.0, 1.0, 0.0001,
-                robot.tunePidCoeff.kI, " %f");
-        FtcValueMenu tuneKdMenu = new FtcValueMenu(
-                "Kd:", testMenu, robot, 0.0, 1.0, 0.0001,
-                robot.tunePidCoeff.kD, " %f");
-        FtcValueMenu tuneKfMenu = new FtcValueMenu(
-                "Kf:", testMenu, robot, 0.0, 1.0, 0.001,
-                robot.tunePidCoeff.kF, " %f");
+
+        if (tuneKpMenu == null)
+        {
+            tuneKpMenu = new FtcValueMenu(
+                    "Kp:", testMenu, robot, 0.0, 1.0, 0.001,
+                    robot.tunePidCoeff.kP, " %f");
+        }
+
+        if (tuneKiMenu == null)
+        {
+            tuneKiMenu = new FtcValueMenu(
+                    "Ki:", testMenu, robot, 0.0, 1.0, 0.0001,
+                    robot.tunePidCoeff.kI, " %f");
+        }
+
+        if (tuneKdMenu == null)
+        {
+            tuneKdMenu = new FtcValueMenu(
+                    "Kd:", testMenu, robot, 0.0, 1.0, 0.0001,
+                    robot.tunePidCoeff.kD, " %f");
+        }
+
+        if (tuneKfMenu == null)
+        {
+            tuneKfMenu = new FtcValueMenu(
+                    "Kf:", testMenu, robot, 0.0, 1.0, 0.001,
+                    robot.tunePidCoeff.kF, " %f");
+        }
 
         //
         // Populate menus.

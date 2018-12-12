@@ -55,7 +55,9 @@ public abstract class TrcMotor implements TrcMotorController
     public abstract double getMotorPosition();
 
     /**
-     * This method sets the motor power.
+     * This method sets the raw motor power. It is called by the Velocity Control task. If the subclass is
+     * implementing its own native velocity control, it does not really need to do anything for this method.
+     * But for completeness, it can just set the raw motor power in the motor controller.
      *
      * @param power specifies the percentage power (range -1.0 to 1.0) to be set.
      */

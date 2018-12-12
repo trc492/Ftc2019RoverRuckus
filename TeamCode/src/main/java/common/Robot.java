@@ -90,7 +90,6 @@ public class Robot implements FtcMenu.MenuButtons
     public TrcPidDrive pidDrive = null;
 
     public TrcPidController.PidCoefficients tunePidCoeff = new TrcPidController.PidCoefficients();
-
     //
     // Other common subsystems.
     //

@@ -25,6 +25,7 @@ package common;
 import org.opencv.core.Rect;
 
 import java.util.ArrayList;
+import java.util.Locale;
 
 import ftclib.FtcDcMotor;
 import ftclib.FtcPixyCam;
@@ -33,8 +34,8 @@ import trclib.TrcUtil;
 
 public class PixyVision
 {
-    public static final int PIXYCAM_WIDTH = 320;
-    public static final int PIXYCAM_HEIGHT = 200;
+    private static final int PIXYCAM_WIDTH = 320;
+    private static final int PIXYCAM_HEIGHT = 200;
     private static final boolean debugEnabled = false;
 
     // If last target rect is this old, its stale data.
@@ -57,7 +58,7 @@ public class PixyVision
 
         public String toString()
         {
-            return String.format("Rect[%d,%d,%d,%d], xDistance=%.1f, yDistance=%.1f, angle=%.1f",
+            return String.format(Locale.US, "Rect[%d,%d,%d,%d], xDistance=%.1f, yDistance=%.1f, angle=%.1f",
                     rect.x, rect.y, rect.width, rect.height, xDistance, yDistance, angle);
         }
     }   //class TargetInfo
