@@ -204,7 +204,7 @@ class CmdAutoDepot6541 implements TrcRobot.RobotCommand
                     //
                     // Drive towards the mid wall
                     //
-                    targetY = -36.0;
+                    targetY = -26.0;
                     robot.pidDrive.setTarget(targetY, robot.targetHeading, false, event);
                     sm.waitForSingleEvent(event, State.TURN_AT_MID_WALL);
                     break;
@@ -223,7 +223,7 @@ class CmdAutoDepot6541 implements TrcRobot.RobotCommand
                     //
                     // Go and park at the crater.
                     //
-                    targetY = -40.0;
+                    targetY = -55.0;
                     robot.pidDrive.setTarget(targetY, robot.targetHeading, false, event);
                     sm.waitForSingleEvent(event, State.DONE);
                     break;

@@ -81,8 +81,8 @@ public class CmdAutoCrater6541 implements TrcRobot.RobotCommand
         TURN_TO_DEPOT,
         DRIVE_TO_DEPOT,
         DROP_TEAM_MARKER,
+        TURN_TO_CRATER,
         DRIVE_TO_CRATER,
-        DRIVE_FROM_MID_WALL_TO_CRATER,
         DONE
     }   //enum State
 
@@ -198,7 +198,7 @@ public class CmdAutoCrater6541 implements TrcRobot.RobotCommand
                     //
                     targetY = 0.0;
                     robot.targetHeading -= 55.0;
-                    nextState = doTeamMarker? State.DRIVE_TO_DEPOT: State.DRIVE_FROM_MID_WALL_TO_CRATER;
+                    nextState = doTeamMarker? State.DRIVE_TO_DEPOT: State.TURN_TO_CRATER;
                     robot.pidDrive.setTarget(targetY, robot.targetHeading, false, event);
                     sm.waitForSingleEvent(event, nextState);
                     break;
@@ -218,6 +218,16 @@ public class CmdAutoCrater6541 implements TrcRobot.RobotCommand
                     //
                     robot.teamMarkerDeployer.open();
                     timer.set(1.0, event);
+                    sm.waitForSingleEvent(event, State.TURN_TO_CRATER);
+                    break;
+
+                case TURN_TO_CRATER:
+                    //
+                    // Turn so we go near the wall.
+                    //
+                    targetY = 0.0;
+                    robot.targetHeading -= 3.0;
+                    robot.pidDrive.setTarget(targetY, robot.targetHeading, false, event);
                     sm.waitForSingleEvent(event, State.DRIVE_TO_CRATER);
                     break;
 
@@ -225,16 +235,7 @@ public class CmdAutoCrater6541 implements TrcRobot.RobotCommand
                     //
                     // Go to the crater and park there.
                     //
-                    targetY = -50.0;
-                    robot.pidDrive.setTarget(targetY, robot.targetHeading, false, event);
-                    sm.waitForSingleEvent(event, State.DRIVE_FROM_MID_WALL_TO_CRATER);
-                    break;
-
-                case DRIVE_FROM_MID_WALL_TO_CRATER:
-                    //
-                    // Go to the crater and park there.
-                    //
-                    targetY = -36.0;
+                    targetY = -78.0;
                     robot.pidDrive.setTarget(targetY, robot.targetHeading, false, event);
                     sm.waitForSingleEvent(event, State.DONE);
                     break;
