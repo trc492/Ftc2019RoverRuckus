@@ -76,6 +76,11 @@ public class TrcTraceLogger
         return traceLogName;
     }   //toString
 
+    /**
+     * This method enables/disables the trace logger thread.
+     *
+     * @param enabled specifies true to enable logger thread, false to disable.
+     */
     public synchronized void setEnabled(boolean enabled)
     {
         if (loggerThread == null && enabled)
@@ -120,7 +125,7 @@ public class TrcTraceLogger
      *
      * @return true if trace log is enabled, false if disabled.
      */
-    public boolean isEnabled()
+    public synchronized boolean isEnabled()
     {
         return enabled;
     }   //isEnabled
@@ -147,7 +152,7 @@ public class TrcTraceLogger
 
         if (isEnabled())
         {
-            success = msgQueue.offer(msg);
+            success = msgQueue.add(msg);
         }
 
         return success;
