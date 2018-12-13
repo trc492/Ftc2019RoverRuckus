@@ -23,7 +23,9 @@
 
 package ftclib;
 
+import com.qualcomm.robotcore.hardware.HardwareDevice;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.I2cDeviceSynch;
 
 import trclib.TrcDbgTrace;
 import trclib.TrcSensor;
@@ -107,7 +109,6 @@ public class FtcI2cAdaFruitColorSensor extends FtcI2cDevice
     private static final byte STATUS_AVALID = ((byte)(1 << 0)); //RGBC Valid.
     private static final byte STATUS_AINT   = ((byte)(1 << 4)); //RGBC clear channel Interrupt.
 
-    private int readerId = -1;
     private int deviceID = 0;
     private TrcSensor.SensorData<Integer> clearValue = new TrcSensor.SensorData<>(0.0, null);
     private TrcSensor.SensorData<Integer> redValue = new TrcSensor.SensorData<>(0.0, null);
@@ -132,10 +133,12 @@ public class FtcI2cAdaFruitColorSensor extends FtcI2cDevice
             dbgTrace = new TrcDbgTrace(moduleName + "." + instanceName, tracingEnabled, traceLevel, msgLevel);
         }
 
+        deviceSynch.setDeviceInfo(HardwareDevice.Manufacturer.Adafruit, "Adafruit Color Sensor");
+        deviceSynch.setBufferedReadWindow(READ_START, READ_LENGTH, I2cDeviceSynch.ReadMode.REPEAT, READ_LENGTH);
+
         setSensorEnabled(true);
         byte[] data = syncRead(REG_ID, 1);
         deviceID = TrcUtil.bytesToInt(data[0]);
-        readerId = addReader(instanceName, READ_START, READ_LENGTH);
     }   //FtcI2cAdaFruitColorSensor
 
     /**
@@ -237,12 +240,12 @@ public class FtcI2cAdaFruitColorSensor extends FtcI2cDevice
      */
     public synchronized int getStatus()
     {
-        byte[] regData = getData(readerId);
+        byte[] regData = readData(READ_START, READ_LENGTH);
 
         int deviceStatus = TrcUtil.bytesToInt(regData[REG_STATUS - READ_START]);
         if ((deviceStatus & STATUS_AVALID) != 0)
         {
-            double timestamp = getDataTimestamp(readerId);
+            double timestamp = TrcUtil.getCurrentTime();
 
             clearValue.timestamp = timestamp;
             clearValue.value = TrcUtil.bytesToInt(
